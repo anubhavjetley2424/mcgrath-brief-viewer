@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>McGrath — Appraisal Prep Console</title>
+<meta name="description" content="McGrath Executive Appraisal Intelligence Console for Sutherland Shire real estate market analysis.">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Mapbox GL JS -->
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<style>
+/* ── DESIGN TOKENS ─────────────────────────────────────── */
+:root {
+  --bg: #ffffff;
+  --bg-alt: #f7f8fa;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --border-light: #f0f1f3;
+  --text: #111827;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
+  --accent: #111827;
+  --accent-red: #d42020;
+  --accent-red-light: rgba(212,32,32,0.06);
+  --green: #059669;
+  --green-light: rgba(5,150,105,0.08);
+  --amber: #d97706;
+  --amber-light: rgba(217,119,6,0.08);
+  --blue: #2563eb;
+  --blue-light: rgba(37,99,235,0.06);
+  --purple: #7c3aed;
+  --purple-light: rgba(124,58,237,0.06);
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.06);
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'DM Sans', 'Inter', sans-serif;
+}
+
+/* ── RESET ──────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg-alt);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── LAYOUT ─────────────────────────────────────────────── */
+.app { max-width: 1540px; margin: 0 auto; padding: 0 24px 80px; }
+
+/* ── TOP NAV BAR ────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-logo {
+  width: 36px; height: 36px;
+  background: var(--accent-red);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 15px;
+  font-family: var(--font-display);
+}
+.brand h1 {
+  font-family: var(--font-display);
+  font-size: 19px; font-weight: 700;
+  letter-spacing: -0.02em; color: var(--text);
+}
+.brand-sub {
+  font-size: 11px; color: var(--text-tertiary);
+  letter-spacing: 0.04em; text-transform: uppercase;
+  font-weight: 500;
+}
+.topbar-meta { display: flex; gap: 8px; align-items: center; }
+.meta-chip {
+  padding: 5px 11px; border-radius: 6px;
+  background: var(--bg-alt); border: 1px solid var(--border);
+  font-size: 12px; color: var(--text-secondary); font-weight: 500;
+}
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); display: inline-block;
+  margin-right: 4px; animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ── VENDOR HEADER ──────────────────────────────────────── */
+.vendor-header {
+  padding: 28px 0 8px;
+}
+.vendor-header h2 {
+  font-family: var(--font-display);
+  font-size: 26px; font-weight: 700;
+  color: var(--text);
+}
+.vendor-header .vh-meta {
+  display: flex; gap: 20px; align-items: center;
+  margin-top: 6px; flex-wrap: wrap;
+}
+.vendor-header .vh-meta span {
+  font-size: 14px; color: var(--text-secondary);
+}
+.vendor-header .vh-deal {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 6px;
+  background: var(--accent-red-light);
+  color: var(--accent-red); font-size: 12px;
+  font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── SECTION ────────────────────────────────────────────── */
+.section { margin-top: 28px; }
+.section-title {
+  font-family: var(--font-display);
+  font-size: 17px; font-weight: 600;
+  color: var(--text); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title .label {
+  font-size: 10px; padding: 3px 8px;
+  border-radius: 4px; background: var(--accent-red-light);
+  color: var(--accent-red); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+
+/* ── CARDS ──────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center;
+  justify-content: space-between;
+}
+.card-header h3 { font-size: 14px; font-weight: 600; }
+.card-body { padding: 18px; }
+
+/* ── KPI ROW ────────────────────────────────────────────── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-top: 20px;
+}
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s;
+}
+.kpi-card:hover { box-shadow: var(--shadow); }
+.kpi-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary); margin-bottom: 6px;
+}
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 26px; font-weight: 700;
+  color: var(--text); line-height: 1.1;
+}
+.kpi-change {
+  margin-top: 4px; font-size: 12px; font-weight: 500;
+}
+.kpi-change.up { color: var(--green); }
+.kpi-change.down { color: var(--accent-red); }
+
+/* ── PERIOD FILTER ──────────────────────────────────────── */
+.filter-row {
+  display: flex; gap: 4px; align-items: center;
+}
+.filter-btn {
+  padding: 6px 13px; border-radius: 6px;
+  font-size: 12px; font-weight: 500;
+  background: var(--bg-alt); border: 1px solid var(--border);
+  color: var(--text-secondary); cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-btn:hover { border-color: var(--accent); color: var(--text); }
+.filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── MAP + SIDEBAR (Market Positioning) ─────────────────── */
+.map-section-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.map-section-toolbar {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-light);
+  flex-wrap: wrap; gap: 10px;
+}
+.map-section-toolbar h3 {
+  font-family: var(--font-display);
+  font-size: 15px; font-weight: 600;
+}
+.map-section-inner {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  height: 640px;
+}
+.map-container { position: relative; height: 640px; }
+#mainMap { width: 100%; height: 640px; }
+.map-legend {
+  position: absolute; bottom: 14px; left: 14px;
+  z-index: 10; background: rgba(255,255,255,0.96);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; box-shadow: var(--shadow);
+  font-size: 11px;
+}
+.legend-row { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.map-layer-toggles {
+  position: absolute; top: 12px; left: 12px;
+  z-index: 10; display: flex; gap: 5px;
+}
+.map-toggle-btn {
+  padding: 6px 12px; border-radius: 6px;
+  font-size: 11px; font-weight: 500;
+  background: rgba(255,255,255,0.95); border: 1px solid var(--border);
+  color: var(--text-secondary); cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s;
+}
+.map-toggle-btn:hover { border-color: var(--accent); color: var(--text); }
+.map-toggle-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── PROPERTY SIDEBAR ───────────────────────────────────── */
+.property-sidebar {
+  display: flex; flex-direction: column;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  max-height: 640px;
+}
+.sidebar-tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sidebar-tab {
+  flex: 1; padding: 10px; text-align: center;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-secondary); cursor: pointer;
+  border: none; background: transparent;
+  transition: all 0.15s;
+}
+.sidebar-tab.active {
+  color: var(--text); font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.sidebar-scroll {
+  flex: 1; overflow-y: auto; padding: 12px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+/* Scrollbar styling */
+.sidebar-scroll::-webkit-scrollbar { width: 5px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+/* ── PROPERTY CARD ──────────────────────────────────────── */
+.prop-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.15s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.prop-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+/* Inline carousel on card */
+.prop-carousel {
+  position: relative;
+  width: 100%; height: 150px;
+  overflow: hidden; background: #e5e7eb;
+}
+.prop-carousel img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  position: absolute; top: 0; left: 0;
+  opacity: 0; transition: opacity 0.3s ease;
+}
+.prop-carousel img.visible { opacity: 1; }
+.prop-carousel-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(255,255,255,0.88); border: none;
+  font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  z-index: 2; opacity: 0;
+  transition: opacity 0.15s;
+}
+.prop-card:hover .prop-carousel-btn { opacity: 1; }
+.prop-carousel-btn.prev { left: 6px; }
+.prop-carousel-btn.next { right: 6px; }
+.prop-carousel-dots {
+  position: absolute; bottom: 6px; left: 50%;
+  transform: translateX(-50%); display: flex; gap: 4px; z-index: 2;
+}
+.prop-carousel-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,0.5);
+}
+.prop-carousel-dot.active { background: #fff; }
+.prop-card-body { padding: 12px; }
+.prop-card-price {
+  font-family: var(--font-display);
+  font-size: 17px; font-weight: 700;
+  color: var(--text);
+}
+.prop-card-addr {
+  font-size: 13px; color: var(--text-secondary);
+  margin-top: 2px; line-height: 1.3;
+}
+.prop-card-meta {
+  display: flex; gap: 10px; margin-top: 6px;
+  font-size: 12px; color: var(--text-tertiary);
+}
+.prop-card-date {
+  margin-top: 6px; font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+/* ── DA SECTION ─────────────────────────────────────────── */
+.da-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.da-map-container {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  height: 420px;
+}
+#daMap { width: 100%; height: 420px; }
+
+/* ── ACCESSIBILITY SECTION ──────────────────────────────── */
+.access-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.access-map-container {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  height: 420px;
+}
+#accessMap { width: 100%; height: 420px; }
+.access-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  max-height: 440px;
+}
+.access-tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.access-tab {
+  flex: 1; padding: 10px 8px; text-align: center;
+  font-size: 12px; font-weight: 500;
+  color: var(--text-secondary); cursor: pointer;
+  border: none; background: transparent;
+  transition: all 0.15s;
+}
+.access-tab.active {
+  color: var(--text); font-weight: 600;
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.access-scroll {
+  flex: 1; overflow-y: auto; padding: 14px;
+}
+.access-item {
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  transition: background 0.15s;
+}
+.access-item:hover { background: var(--bg-alt); }
+.access-item-name {
+  font-size: 14px; font-weight: 600; color: var(--text);
+}
+.access-item-type {
+  font-size: 12px; color: var(--text-secondary); margin-top: 2px;
+}
+.access-item-badge {
+  display: inline-block; margin-top: 6px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-amber { background: var(--amber-light); color: var(--amber); }
+.badge-red { background: var(--accent-red-light); color: var(--accent-red); }
+.badge-blue { background: var(--blue-light); color: var(--blue); }
+.badge-purple { background: var(--purple-light); color: var(--purple); }
+
+/* ── DATA TABLES ────────────────────────────────────────── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; padding: 10px 12px;
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-alt);
+}
+.data-table td {
+  padding: 10px 12px; font-size: 13px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text); vertical-align: top;
+}
+.data-table tr:hover td { background: var(--bg-alt); }
+.da-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.da-badge.major { background: rgba(212,32,32,0.08); color: #d42020; }
+.da-badge.residential { background: rgba(5,150,105,0.08); color: #059669; }
+.da-badge.commercial { background: rgba(37,99,235,0.08); color: #2563eb; }
+.da-badge.childcare { background: rgba(168,85,247,0.08); color: #a855f7; }
+.da-badge.other { background: rgba(107,114,128,0.08); color: #6b7280; }
+
+/* ── CHARTS ROW ─────────────────────────────────────────── */
+.charts-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 18px;
+}
+.chart-card h4 {
+  font-size: 14px; font-weight: 600;
+  color: var(--text); margin-bottom: 14px;
+}
+.chart-wrap { position: relative; height: 220px; }
+
+/* ── CHOROPLETH ROW ─────────────────────────────────────── */
+.choropleth-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.choropleth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.choropleth-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center;
+  justify-content: space-between;
+}
+.choropleth-header h4 { font-size: 14px; font-weight: 600; }
+.choropleth-map { width: 100%; height: 360px; }
+
+/* ── SOCIO GRID ─────────────────────────────────────────── */
+.socio-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.socio-card {
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--bg-alt);
+  border: 1px solid var(--border-light);
+}
+.socio-card .s-label {
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--text-tertiary);
+  font-weight: 600; margin-bottom: 4px;
+}
+.socio-card .s-value {
+  font-family: var(--font-display);
+  font-size: 22px; font-weight: 700; color: var(--text);
+}
+.socio-card .s-sub {
+  font-size: 12px; color: var(--text-secondary); margin-top: 2px;
+}
+
+/* ── FOOTER ─────────────────────────────────────────────── */
+.footer {
+  margin-top: 40px; padding: 20px 0;
+  text-align: center; font-size: 12px;
+  color: var(--text-tertiary);
+  border-top: 1px solid var(--border);
+}
+
+/* ── MODAL ──────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.55);
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+}
+.modal-overlay.open { display: flex; }
+.modal-content {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  max-width: 640px; width: 90%;
+  max-height: 85vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  position: relative;
+}
+.modal-close {
+  position: absolute; top: 14px; right: 14px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: #fff; border: 1px solid var(--border);
+  font-size: 16px; cursor: pointer; z-index: 3;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-carousel { position: relative; }
+.modal-carousel-img {
+  width: 100%; height: 360px;
+  object-fit: cover; display: block;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.modal-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.9); border: none;
+  font-size: 18px; cursor: pointer;
+  box-shadow: var(--shadow);
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-nav.prev { left: 10px; }
+.modal-nav.next { right: 10px; }
+
+/* ── LOADING BAR ────────────────────────────────────────── */
+.loading-bar {
+  position: fixed; top: 0; left: 0;
+  height: 3px; background: var(--accent-red);
+  z-index: 10000; transition: width 0.3s;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .map-section-inner { grid-template-columns: 1fr; }
+  .property-sidebar { max-height: 420px; border-left: none; border-top: 1px solid var(--border); }
+  .da-row, .access-row, .choropleth-row { grid-template-columns: 1fr; }
+  .charts-row { grid-template-columns: 1fr 1fr; }
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .topbar { flex-direction: column; gap: 10px; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .charts-row { grid-template-columns: 1fr; }
+  .socio-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Loading Bar -->
+<div class="loading-bar" id="loadingBar" style="width:0%"></div>
+
+<!-- TOP NAV -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">M</div>
+    <div>
+      <h1>McGRATH</h1>
+      <div class="brand-sub">Appraisal Prep Console</div>
+    </div>
+  </div>
+  <div class="topbar-meta">
+    <span class="meta-chip"><span class="status-dot"></span> Live</span>
+    <span class="meta-chip" id="suburbChip">Cronulla</span>
+    <span class="meta-chip" id="dateChip"></span>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- ── VENDOR HEADER ────────────────────────────────── -->
+  <div class="vendor-header">
+    <h2 id="vendorAddress">45 Burraneer Bay Road, Burraneer</h2>
+    <div class="vh-meta">
+      <span id="vendorMeta">4 Bed · 3 Bath · 2 Car · 860 sqm</span>
+      <span class="vh-deal" id="vendorDeal">Appraisal Prep</span>
+    </div>
+  </div>
+
+  <!-- ── KPI ROW ──────────────────────────────────────── -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Median Sale Price</div>
+      <div class="kpi-value" id="kpiMedian">—</div>
+      <div class="kpi-change up" id="kpiMedianChange">Loading…</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Sales (Period)</div>
+      <div class="kpi-value" id="kpiSalesCount">—</div>
+      <div class="kpi-change" id="kpiSalesSub">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Active Listings</div>
+      <div class="kpi-value" id="kpiActive">—</div>
+      <div class="kpi-change" id="kpiActiveSub">Current competition</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg Days on Market</div>
+      <div class="kpi-value" id="kpiDOM">—</div>
+      <div class="kpi-change" id="kpiDOMSub">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">12-Month Growth</div>
+      <div class="kpi-value" id="kpiGrowth">—</div>
+      <div class="kpi-change up" id="kpiGrowthSub">Year-on-year</div>
+    </div>
+  </div>
+
+  <!-- ── MARKET POSITIONING (Map + Sidebar) ───────────── -->
+  <div class="section">
+    <div class="section-title">
+      Market Positioning
+      <span class="label">Comparable Sales &amp; Listings</span>
+    </div>
+    <div class="map-section-wrap">
+      <div class="map-section-toolbar">
+        <h3>Competitor Map</h3>
+        <div class="filter-row" id="periodFilters">
+          <button class="filter-btn" data-period="90">3 Months</button>
+          <button class="filter-btn" data-period="180">6 Months</button>
+          <button class="filter-btn active" data-period="365">1 Year</button>
+          <button class="filter-btn" data-period="730">2 Years</button>
+          <button class="filter-btn" data-period="9999">All Time</button>
+        </div>
+      </div>
+      <div class="map-section-inner">
+        <div class="map-container">
+          <div class="map-layer-toggles">
+            <button class="map-toggle-btn active" data-layer="sales">Sales</button>
+            <button class="map-toggle-btn" data-layer="listings">Listings</button>
+          </div>
+          <div id="mainMap"></div>
+          <div class="map-legend">
+            <strong style="font-size:12px;color:#111;">Sale Price</strong>
+            <div class="legend-row"><div class="legend-dot" style="background:#1a1a2e"></div>Under $1M</div>
+            <div class="legend-row"><div class="legend-dot" style="background:#2563eb"></div>$1M – $2M</div>
+            <div class="legend-row"><div class="legend-dot" style="background:#059669"></div>$2M – $3M</div>
+            <div class="legend-row"><div class="legend-dot" style="background:#d97706"></div>$3M – $4M</div>
+            <div class="legend-row"><div class="legend-dot" style="background:#d42020"></div>$4M+</div>
+          </div>
+        </div>
+        <div class="property-sidebar">
+          <div class="sidebar-tabs">
+            <button class="sidebar-tab active" data-tab="active">On Market</button>
+            <button class="sidebar-tab" data-tab="sold">Sold</button>
+          </div>
+          <div class="sidebar-scroll" id="propertySidebar">
+            <!-- Property cards generated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DEVELOPMENT APPLICATIONS ─────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      Development Applications
+      <span class="label">Council DAs</span>
+    </div>
+    <div class="da-row">
+      <div class="da-map-container">
+        <div id="daMap"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>DA Approvals Detail</h3>
+        </div>
+        <div class="card-body" style="padding:0;overflow-x:auto;max-height:400px;overflow-y:auto;">
+          <table class="data-table" id="daTable">
+            <thead>
+              <tr>
+                <th>DA ID</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Lodged</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="daTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ACCESSIBILITY (Schools, Transport, Shopping) ──── -->
+  <div class="section">
+    <div class="section-title">
+      Accessibility
+      <span class="label">Local Amenities</span>
+    </div>
+    <div class="access-row">
+      <div class="access-map-container">
+        <div id="accessMap"></div>
+      </div>
+      <div class="access-panel">
+        <div class="access-tabs" id="accessTabs">
+          <button class="access-tab active" data-access="schools">Schools</button>
+          <button class="access-tab" data-access="transport">Transport</button>
+          <button class="access-tab" data-access="shopping">Shopping</button>
+          <button class="access-tab" data-access="other">Other</button>
+        </div>
+        <div class="access-scroll" id="accessList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ANALYTICS CHARTS ─────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      Market Analytics
+      <span class="label">Charts</span>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <h4>Median Price Trend (12 Months)</h4>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h4>Sales by Price Segment</h4>
+        <div class="chart-wrap"><canvas id="segmentChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h4>Auction Clearance Rate</h4>
+        <div class="chart-wrap"><canvas id="auctionChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CHOROPLETH MAPS ──────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      Geographic Intelligence
+      <span class="label">Boundaries</span>
+    </div>
+    <div class="choropleth-row">
+      <div class="choropleth-card">
+        <div class="choropleth-header">
+          <h4>Suburb Boundaries — Median Prices</h4>
+        </div>
+        <div class="choropleth-map" id="suburbChoropleth"></div>
+      </div>
+      <div class="choropleth-card">
+        <div class="choropleth-header">
+          <h4>SA1 Boundaries — Socioeconomic (SEIFA)</h4>
+        </div>
+        <div class="choropleth-map" id="sa1Choropleth"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SOCIOECONOMIC DATA ───────────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      Suburb Demographics
+      <span class="label">Census Data</span>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="socio-grid" id="socioGrid">
+          <div class="socio-card">
+            <div class="s-label">Population</div>
+            <div class="s-value">18,437</div>
+            <div class="s-sub">Cronulla SA2 · 2021 Census</div>
+          </div>
+          <div class="socio-card">
+            <div class="s-label">Median Household Income</div>
+            <div class="s-value">$2,158/wk</div>
+            <div class="s-sub">Above Sydney median ($1,750)</div>
+          </div>
+          <div class="socio-card">
+            <div class="s-label">SEIFA Index (IRSAD)</div>
+            <div class="s-value">1,082</div>
+            <div class="s-sub">Top 15% nationally</div>
+          </div>
+          <div class="socio-card">
+            <div class="s-label">Owner-Occupied</div>
+            <div class="s-value">62.4%</div>
+            <div class="s-sub">vs 60.1% Sydney average</div>
+          </div>
+          <div class="socio-card">
+            <div class="s-label">Median Age</div>
+            <div class="s-value">38</div>
+            <div class="s-sub">Family-oriented demographic</div>
+          </div>
+          <div class="socio-card">
+            <div class="s-label">Overseas Migration</div>
+            <div class="s-value">12.3%</div>
+            <div class="s-sub">UK, NZ, South Africa top origins</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    McGrath Appraisal Intelligence Console · Airtable · ABS · Mapbox · n8n
+  </div>
+</div>
+
+<!-- ── PHOTO MODAL ──────────────────────────────────────── -->
+<div class="modal-overlay" id="photoModal">
+  <div class="modal-content">
+    <button class="modal-close" id="modalClose">×</button>
+    <div class="modal-carousel">
+      <img class="modal-carousel-img" id="carouselImg" src="">
+      <button class="modal-nav prev" id="carouselPrev">‹</button>
+      <button class="modal-nav next" id="carouselNext">›</button>
+    </div>
+    <div style="padding:18px;">
+      <h3 id="modalAddr" style="font-family:var(--font-display);font-size:17px;"></h3>
+      <p id="modalMeta" style="font-size:13px;color:var(--text-secondary);margin-top:3px;"></p>
+      <p id="modalPrice" style="font-family:var(--font-display);font-size:22px;font-weight:700;margin-top:6px;"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   McGrath Appraisal Prep Console — Core Logic
+   ═══════════════════════════════════════════════════════════ */
+
+// Token is injected by GitHub Actions at deploy time, or can be passed via ?token= URL param
+const _urlToken = new URLSearchParams(window.location.search).get('token');
+const CONFIG = {
+  mapboxToken: _urlToken || '__MAPBOX_TOKEN__',
+  webhookUrl: 'https://ajetley2424.app.n8n.cloud/webhook/dashboard-data',
+  defaultSuburb: 'CRONULLA',
+  center: [151.1522, -34.0574],
+  absSuburbUrl: 'https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/SAL/MapServer/0/query',
+  absSA1Url: 'https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/SA1/MapServer/0/query'
+};
+
+// Warn if token is missing
+if (CONFIG.mapboxToken === '__MAPBOX_TOKEN__' || !CONFIG.mapboxToken) {
+  console.error('[Dashboard] Mapbox token not configured. Pass ?token=pk.xxx in the URL or set up GitHub Actions deployment.');
+  document.querySelector('.app').insertAdjacentHTML('afterbegin',
+    '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-top:16px;font-size:13px;color:#991b1b;">⚠️ Mapbox token not configured. Add <code>?token=YOUR_TOKEN</code> to the URL or deploy via GitHub Actions.</div>'
+  );
+}
+
+let STATE = {
+  data: null,
+  periodDays: 365,
+  activeTab: 'active',
+  accessTab: 'schools',
+  mapLayers: { sales: true, listings: false },
+  charts: {},
+  modalPhotos: [],
+  modalIdx: 0
+};
+
+// ── UTILITIES ───────────────────────────────────────────────
+const fmt = (n) => {
+  if (n == null) return '—';
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + (n / 1e3).toFixed(0) + 'K';
+  return '$' + n.toLocaleString();
+};
+const daysSince = (d) => d ? Math.floor((Date.now() - new Date(d).getTime()) / 86400000) : 9999;
+const priceColor = (p) => {
+  if (!p) return '#9ca3af';
+  if (p >= 4e6) return '#d42020';
+  if (p >= 3e6) return '#d97706';
+  if (p >= 2e6) return '#059669';
+  if (p >= 1e6) return '#2563eb';
+  return '#1a1a2e';
+};
+const classifyDA = (desc) => {
+  if (!desc) return { label: 'Other', cls: 'other' };
+  const d = desc.toLowerCase();
+  if (/child\s*care|day\s*care|early\s*learning/.test(d)) return { label: 'Childcare', cls: 'childcare' };
+  if (/apartment|unit|multi.*dwell|residential\s*flat|townhouse/.test(d)) return { label: 'Residential', cls: 'residential' };
+  if (/commercial|retail|shop|office|mixed\s*use/.test(d)) return { label: 'Commercial', cls: 'commercial' };
+  if (/school|education|college/.test(d)) return { label: 'Education', cls: 'major' };
+  if (/infrastructure|road|bridge|stormwater|sewer/.test(d)) return { label: 'Major', cls: 'major' };
+  if (/demolish|new\s*dwelling|swimming|garage|carport|shed|fence|deck|pergola|addition|alteration|renovat/.test(d)) return { label: 'Residential', cls: 'residential' };
+  return { label: 'Other', cls: 'other' };
+};
+
+document.getElementById('dateChip').textContent =
+  new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+
+// ── MOCK DATA ───────────────────────────────────────────────
+function generateMockData() {
+  const suburbs = ['Cronulla', 'Burraneer', 'Caringbah', 'Miranda', 'Gymea', 'Sylvania'];
+  const streets = ['The Esplanade', 'Ewos Parade', 'Gerrale St', 'Nicholson Pde', 'Gannons Rd', 'Box Rd', 'Ocean Grove Ave', 'Prince Charles Pde', 'Surf Rd', 'Mitchell Rd'];
+  const fallbackPhotos = [
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=600&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?q=80&w=600&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=600&auto=format&fit=crop'
+  ];
+
+  const sales = [];
+  for (let i = 0; i < 35; i++) {
+    const sub = suburbs[Math.floor(Math.random() * suburbs.length)];
+    const price = 800000 + Math.floor(Math.random() * 3700000);
+    const daysAgo = Math.floor(Math.random() * 730);
+    const d = new Date(); d.setDate(d.getDate() - daysAgo);
+    const photos = fallbackPhotos.slice(0, 2 + Math.floor(Math.random() * 2));
+    sales.push({
+      id: 1000 + i, property_id: String(1000 + i),
+      house_number: String(Math.floor(Math.random() * 120) + 1),
+      street_name: streets[Math.floor(Math.random() * streets.length)],
+      suburb: sub, postcode: '2230',
+      contract_date: d.toISOString().slice(0, 10),
+      purchase_price: price,
+      land_area_sqm: 400 + Math.floor(Math.random() * 600),
+      property_type: 'House',
+      latitude: -34.05 + (Math.random() - 0.5) * 0.04,
+      longitude: 151.15 + (Math.random() - 0.5) * 0.04,
+      photos: photos,
+      full_address: ''
+    });
+    sales[i].full_address = `${sales[i].house_number} ${sales[i].street_name}, ${sales[i].suburb}`;
+  }
+
+  const activeListings = [];
+  for (let i = 0; i < 8; i++) {
+    const sub = suburbs[Math.floor(Math.random() * 3)];
+    const price = 1200000 + Math.floor(Math.random() * 2800000);
+    const photos = fallbackPhotos.slice(0, 2 + Math.floor(Math.random() * 3));
+    activeListings.push({
+      id: 2000 + i, domain_listing_id: String(2000 + i),
+      street: `${Math.floor(Math.random() * 80) + 1} ${streets[Math.floor(Math.random() * streets.length)]}`,
+      suburb: sub, state: 'NSW', postcode: '2230',
+      latitude: -34.05 + (Math.random() - 0.5) * 0.035,
+      longitude: 151.15 + (Math.random() - 0.5) * 0.035,
+      price_text: fmt(price),
+      beds: 3 + Math.floor(Math.random() * 3),
+      baths: 1 + Math.floor(Math.random() * 3),
+      parking: 1 + Math.floor(Math.random() * 2),
+      land_size_sqm: 400 + Math.floor(Math.random() * 500),
+      property_type: 'House',
+      agency_name: 'McGrath Sutherland Shire',
+      photos: photos,
+      full_address: ''
+    });
+    activeListings[i].full_address = `${activeListings[i].street}, ${activeListings[i].suburb}`;
+  }
+
+  const daDescs = [
+    'Alterations and additions to existing dwelling including new swimming pool',
+    'Demolition of existing structures and construction of a new two-storey dwelling',
+    'Construction of child care centre for 45 children',
+    'Mixed use development - 12 residential apartments with ground floor retail',
+    'Garage conversion and new carport',
+    'Construction of duplex development',
+    'Renovation of existing dwelling - internal and external alterations',
+    'New fence and retaining wall'
+  ];
+  const das = daDescs.map((desc, i) => {
+    const daysAgo = Math.floor(Math.random() * 365);
+    const d = new Date(); d.setDate(d.getDate() - daysAgo);
+    return {
+      da_id: `DA2025/${String(i + 100).padStart(4, '0')}`,
+      lodged_date: d.toISOString().slice(0, 10),
+      description: desc,
+      suburb: suburbs[Math.floor(Math.random() * 3)],
+      postcode: '2230',
+      status: ['Under Assessment', 'Approved', 'Determined', 'Pending'][Math.floor(Math.random() * 4)],
+      latitude: -34.05 + (Math.random() - 0.5) * 0.035,
+      longitude: 151.15 + (Math.random() - 0.5) * 0.035,
+      full_address: `${Math.floor(Math.random() * 80) + 1} ${streets[Math.floor(Math.random() * streets.length)]}, ${suburbs[Math.floor(Math.random() * 3)]}`
+    };
+  });
+
+  const schools = [
+    { name: 'Cronulla Public School', type: 'Primary', icsea: 1098, latitude: -34.0555, longitude: 151.1512 },
+    { name: 'Cronulla High School', type: 'Secondary', icsea: 1045, latitude: -34.0490, longitude: 151.1478 },
+    { name: 'De La Salle College', type: 'Secondary', icsea: 1072, latitude: -34.0530, longitude: 151.1495 },
+    { name: 'Our Lady of the Sea', type: 'Primary', icsea: 1115, latitude: -34.0561, longitude: 151.1530 },
+    { name: 'Burraneer Bay Public', type: 'Primary', icsea: 1105, latitude: -34.0610, longitude: 151.1170 },
+    { name: 'Caringbah High School', type: 'Secondary', icsea: 1032, latitude: -34.0420, longitude: 151.1210 }
+  ];
+
+  const transport = [
+    { name: 'Cronulla Station', type: 'Train Station', latitude: -34.0554, longitude: 151.1517 },
+    { name: 'Caringbah Station', type: 'Train Station', latitude: -34.0381, longitude: 151.1218 },
+    { name: 'Miranda Station', type: 'Train Station', latitude: -34.0356, longitude: 151.1022 },
+    { name: 'Bus Stop — Kingsway', type: 'Bus', latitude: -34.0480, longitude: 151.1380 }
+  ];
+
+  const shopping = [
+    { name: 'Westfield Miranda', type: 'Shopping Centre', latitude: -34.0360, longitude: 151.1020 },
+    { name: 'Cronulla Mall', type: 'Retail Strip', latitude: -34.0572, longitude: 151.1520 },
+    { name: 'Woolworths Caringbah', type: 'Supermarket', latitude: -34.0400, longitude: 151.1230 },
+    { name: 'Coles Cronulla', type: 'Supermarket', latitude: -34.0550, longitude: 151.1500 }
+  ];
+
+  const other = [
+    { name: 'Cronulla Beach', type: 'Beach', latitude: -34.0600, longitude: 151.1580 },
+    { name: 'Cronulla RSL', type: 'Club', latitude: -34.0530, longitude: 151.1490 },
+    { name: 'Sutherland Hospital', type: 'Hospital', latitude: -34.0370, longitude: 151.0950 },
+    { name: 'Gunnamatta Park', type: 'Park', latitude: -34.0590, longitude: 151.1480 }
+  ];
+
+  const months = ['Jun 25', 'Jul 25', 'Aug 25', 'Sep 25', 'Oct 25', 'Nov 25', 'Dec 25', 'Jan 26', 'Feb 26', 'Mar 26', 'Apr 26', 'May 26'];
+  const median_trend_12mo = months.map((m, i) => ({
+    month: m,
+    value: Math.round(2100000 * (1 + (i - 11) * 0.006 + Math.random() * 0.015))
+  }));
+
+  return {
+    subject: {
+      address: '45 Burraneer Bay Road, Burraneer NSW 2230',
+      latitude: -34.0574, longitude: 151.1170,
+      beds: 4, baths: 3
+    },
+    sales, active_listings: activeListings, das,
+    medians: {},
+    median_trend_12mo,
+    schools, transport, shopping, other,
+    kpis: {
+      median: 2340000, sales_90d: 12,
+      dom_avg: 26, growth_12mo_pct: 7.2,
+      active_count: activeListings.length
+    }
+  };
+}
+
+// ── LOAD DATA ───────────────────────────────────────────────
+async function loadData() {
+  const bar = document.getElementById('loadingBar');
+  bar.style.width = '30%';
+
+  const params = new URLSearchParams(window.location.search);
+  const deal = params.get('deal');
+  const suburb = params.get('suburb') || CONFIG.defaultSuburb;
+
+  let url = CONFIG.webhookUrl + '?suburb=' + encodeURIComponent(suburb);
+  if (deal) url += '&deal=' + encodeURIComponent(deal);
+
+  try {
+    bar.style.width = '60%';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('API ' + res.status);
+    const d = await res.json();
+    // Inject local amenities if not from API
+    if (!d.transport) d.transport = generateMockData().transport;
+    if (!d.shopping) d.shopping = generateMockData().shopping;
+    if (!d.other) d.other = generateMockData().other;
+    STATE.data = d;
+    console.log('[Dashboard] Live data loaded');
+  } catch (err) {
+    console.warn('[Dashboard] Webhook offline, using mock data:', err.message);
+    STATE.data = generateMockData();
+  }
+
+  bar.style.width = '100%';
+  setTimeout(() => { bar.style.width = '0%'; }, 400);
+  renderAll();
+}
+
+// ── RENDER ALL ──────────────────────────────────────────────
+function renderAll() {
+  const d = STATE.data; if (!d) return;
+  renderVendor(d);
+  renderKPIs(d);
+  renderPropertySidebar(d);
+  renderMainMap(d);
+  renderDASection(d);
+  renderAccessSection(d);
+  renderCharts(d);
+  loadChoroplethMaps();
+}
+
+// ── VENDOR HEADER ───────────────────────────────────────────
+function renderVendor(d) {
+  if (d.subject) {
+    document.getElementById('vendorAddress').textContent = d.subject.address || '45 Burraneer Bay Road, Burraneer';
+    const beds = d.subject.beds || 4;
+    const baths = d.subject.baths || 3;
+    document.getElementById('vendorMeta').textContent = `${beds} Bed · ${baths} Bath · 2 Car · 860 sqm`;
+  }
+  document.getElementById('suburbChip').textContent =
+    d.subject?.address?.match(/,\s*(\w+)/)?.[1] || 'Cronulla';
+}
+
+// ── KPIs ────────────────────────────────────────────────────
+function renderKPIs(d) {
+  const filtered = filterByPeriod(d.sales);
+  const prices = filtered.map(s => s.purchase_price).filter(Boolean).sort((a, b) => a - b);
+  const median = prices.length
+    ? (prices.length % 2 ? prices[Math.floor(prices.length / 2)] : (prices[Math.floor(prices.length / 2) - 1] + prices[Math.floor(prices.length / 2)]) / 2)
+    : d.kpis?.median;
+
+  document.getElementById('kpiMedian').textContent = fmt(median);
+  document.getElementById('kpiMedianChange').textContent = `↑ ${d.kpis?.growth_12mo_pct || 7.2}% YoY`;
+  document.getElementById('kpiSalesCount').textContent = filtered.length;
+  const label = STATE.periodDays <= 365 ? Math.round(STATE.periodDays / 30) + ' months' : STATE.periodDays <= 730 ? '2 years' : 'all time';
+  document.getElementById('kpiSalesSub').textContent = `Last ${label}`;
+  document.getElementById('kpiActive').textContent = d.active_listings?.length || 0;
+  document.getElementById('kpiDOM').textContent = d.kpis?.dom_avg || 28;
+  document.getElementById('kpiDOMSub').textContent = 'Suburb average';
+  document.getElementById('kpiGrowth').textContent = `+${d.kpis?.growth_12mo_pct || 7.2}%`;
+}
+
+function filterByPeriod(sales) {
+  if (!sales) return [];
+  return sales.filter(s => daysSince(s.contract_date) <= STATE.periodDays);
+}
+
+// ── PROPERTY SIDEBAR with inline carousel ───────────────────
+function renderPropertySidebar(d) {
+  const container = document.getElementById('propertySidebar');
+  container.innerHTML = '';
+
+  const items = STATE.activeTab === 'active'
+    ? (d.active_listings || [])
+    : filterByPeriod(d.sales || []);
+
+  if (!items.length) {
+    container.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:40px 0;">No properties found</p>';
+    return;
+  }
+
+  items.forEach((item) => {
+    const isActive = STATE.activeTab === 'active';
+    const price = isActive ? item.price_text : fmt(item.purchase_price);
+    const addr = item.full_address || item.street || `${item.house_number || ''} ${item.street_name || ''}`.trim();
+    const photos = (item.photos && item.photos.length) ? item.photos : [
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop'
+    ];
+
+    const card = document.createElement('div');
+    card.className = 'prop-card';
+
+    // Build carousel HTML
+    const imgsHTML = photos.map((p, i) =>
+      `<img src="${p}" alt="${addr}" loading="lazy" class="${i === 0 ? 'visible' : ''}" onerror="this.src='https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop'">`
+    ).join('');
+    const dotsHTML = photos.length > 1
+      ? `<div class="prop-carousel-dots">${photos.map((_, i) => `<div class="prop-carousel-dot${i === 0 ? ' active' : ''}"></div>`).join('')}</div>`
+      : '';
+    const navHTML = photos.length > 1
+      ? `<button class="prop-carousel-btn prev" data-dir="-1">‹</button><button class="prop-carousel-btn next" data-dir="1">›</button>`
+      : '';
+
+    card.innerHTML = `
+      <div class="prop-carousel" data-idx="0" data-count="${photos.length}">
+        ${imgsHTML}
+        ${navHTML}
+        ${dotsHTML}
+      </div>
+      <div class="prop-card-body">
+        <div class="prop-card-price">${price || '—'}</div>
+        <div class="prop-card-addr">${addr}, ${item.suburb || ''}</div>
+        <div class="prop-card-meta">
+          ${item.beds ? `<span>${item.beds} bed</span>` : ''}
+          ${item.baths ? `<span>${item.baths} bath</span>` : ''}
+          ${item.parking ? `<span>${item.parking} car</span>` : ''}
+          ${(item.land_size_sqm || item.land_area_sqm) ? `<span>${item.land_size_sqm || item.land_area_sqm} sqm</span>` : ''}
+        </div>
+        ${!isActive && item.contract_date ? `<div class="prop-card-date">Sold ${new Date(item.contract_date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</div>` : ''}
+        ${isActive && item.agency_name ? `<div class="prop-card-date">${item.agency_name}</div>` : ''}
+      </div>
+    `;
+
+    // Carousel navigation
+    card.querySelectorAll('.prop-carousel-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const carousel = card.querySelector('.prop-carousel');
+        const imgs = carousel.querySelectorAll('img');
+        const dots = carousel.querySelectorAll('.prop-carousel-dot');
+        let idx = parseInt(carousel.dataset.idx) || 0;
+        const count = parseInt(carousel.dataset.count);
+        idx = (idx + parseInt(btn.dataset.dir) + count) % count;
+        carousel.dataset.idx = idx;
+        imgs.forEach((img, i) => img.classList.toggle('visible', i === idx));
+        dots.forEach((dot, i) => dot.classList.toggle('active', i === idx));
+      });
+    });
+
+    // Click body to open modal
+    card.querySelector('.prop-card-body').addEventListener('click', () => openModal(item));
+    container.appendChild(card);
+  });
+}
+
+// ── MAIN MAP ────────────────────────────────────────────────
+let mainMap;
+function renderMainMap(d) {
+  mapboxgl.accessToken = CONFIG.mapboxToken;
+  mainMap = new mapboxgl.Map({
+    container: 'mainMap',
+    style: 'mapbox://styles/mapbox/light-v11',
+    center: [d.subject?.longitude || CONFIG.center[0], d.subject?.latitude || CONFIG.center[1]],
+    zoom: 13.5, antialias: true
+  });
+  mainMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+  mainMap.on('load', () => {
+    // Vendor marker
+    const el = document.createElement('div');
+    el.style.cssText = 'width:18px;height:18px;background:#d42020;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);';
+    new mapboxgl.Marker({ element: el })
+      .setLngLat([d.subject?.longitude || CONFIG.center[0], d.subject?.latitude || CONFIG.center[1]])
+      .setPopup(new mapboxgl.Popup({ offset: 10 }).setHTML(`<strong style="font-family:Inter;font-size:13px;">${d.subject?.address || 'Vendor'}</strong>`))
+      .addTo(mainMap);
+
+    refreshMainMapLayers(d);
+  });
+}
+
+function refreshMainMapLayers(d) {
+  if (!mainMap || !mainMap.isStyleLoaded()) return;
+  ['sales-pts', 'listings-pts'].forEach(id => {
+    if (mainMap.getLayer(id)) mainMap.removeLayer(id);
+    if (mainMap.getSource(id)) mainMap.removeSource(id);
+  });
+
+  if (STATE.mapLayers.sales) {
+    const filtered = filterByPeriod(d.sales || []);
+    const gj = { type: 'FeatureCollection', features: filtered.filter(s => s.latitude && s.longitude).map(s => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [s.longitude, s.latitude] },
+      properties: { price: s.purchase_price, addr: s.full_address, date: s.contract_date, color: priceColor(s.purchase_price) }
+    }))};
+    mainMap.addSource('sales-pts', { type: 'geojson', data: gj });
+    mainMap.addLayer({ id: 'sales-pts', type: 'circle', source: 'sales-pts', paint: {
+      'circle-radius': 7, 'circle-color': ['get', 'color'],
+      'circle-stroke-width': 2, 'circle-stroke-color': '#fff', 'circle-opacity': 0.85
+    }});
+    mainMap.on('click', 'sales-pts', (e) => {
+      const p = e.features[0].properties;
+      new mapboxgl.Popup({ offset: 10 }).setLngLat(e.lngLat)
+        .setHTML(`<div style="font-family:Inter;font-size:13px;"><strong>${fmt(p.price)}</strong><br>${p.addr}<br><span style="color:#6b7280;">${p.date}</span></div>`)
+        .addTo(mainMap);
+    });
+    mainMap.on('mouseenter', 'sales-pts', () => { mainMap.getCanvas().style.cursor = 'pointer'; });
+    mainMap.on('mouseleave', 'sales-pts', () => { mainMap.getCanvas().style.cursor = ''; });
+  }
+
+  if (STATE.mapLayers.listings) {
+    const gj = { type: 'FeatureCollection', features: (d.active_listings || []).filter(l => l.latitude && l.longitude).map(l => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [l.longitude, l.latitude] },
+      properties: { price: l.price_text, addr: l.full_address || l.street }
+    }))};
+    mainMap.addSource('listings-pts', { type: 'geojson', data: gj });
+    mainMap.addLayer({ id: 'listings-pts', type: 'circle', source: 'listings-pts', paint: {
+      'circle-radius': 8, 'circle-color': '#2563eb',
+      'circle-stroke-width': 2, 'circle-stroke-color': '#fff', 'circle-opacity': 0.9
+    }});
+  }
+}
+
+// ── DA SECTION ──────────────────────────────────────────────
+let daMap;
+function renderDASection(d) {
+  // DA Map
+  daMap = new mapboxgl.Map({
+    container: 'daMap', style: 'mapbox://styles/mapbox/light-v11',
+    center: [d.subject?.longitude || CONFIG.center[0], d.subject?.latitude || CONFIG.center[1]],
+    zoom: 13, accessToken: CONFIG.mapboxToken
+  });
+  daMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+  daMap.on('load', () => {
+    const gj = { type: 'FeatureCollection', features: (d.das || []).filter(da => da.latitude && da.longitude).map(da => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [da.longitude, da.latitude] },
+      properties: { desc: da.description, status: da.status, daId: da.da_id, addr: da.full_address }
+    }))};
+    daMap.addSource('das', { type: 'geojson', data: gj });
+    daMap.addLayer({ id: 'da-pts', type: 'circle', source: 'das', paint: {
+      'circle-radius': 7, 'circle-color': '#d97706',
+      'circle-stroke-width': 2, 'circle-stroke-color': '#fff', 'circle-opacity': 0.85
+    }});
+    daMap.on('click', 'da-pts', (e) => {
+      const p = e.features[0].properties;
+      new mapboxgl.Popup({ offset: 10, maxWidth: '280px' }).setLngLat(e.lngLat)
+        .setHTML(`<div style="font-family:Inter;font-size:12px;"><strong>${p.daId}</strong><br>${p.desc}<br><span style="color:#6b7280;">${p.status} · ${p.addr}</span></div>`)
+        .addTo(daMap);
+    });
+  });
+
+  // DA Table
+  const body = document.getElementById('daTableBody');
+  body.innerHTML = '';
+  (d.das || []).forEach(da => {
+    const cls = classifyDA(da.description);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:500;white-space:nowrap;">${da.da_id || '—'}</td>
+      <td><span class="da-badge ${cls.cls}">${cls.label}</span></td>
+      <td style="max-width:240px;">${da.description || '—'}</td>
+      <td style="white-space:nowrap;">${da.lodged_date ? new Date(da.lodged_date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}</td>
+      <td>${da.status || '—'}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+// ── ACCESSIBILITY SECTION ───────────────────────────────────
+let accessMap;
+function renderAccessSection(d) {
+  accessMap = new mapboxgl.Map({
+    container: 'accessMap', style: 'mapbox://styles/mapbox/light-v11',
+    center: [d.subject?.longitude || CONFIG.center[0], d.subject?.latitude || CONFIG.center[1]],
+    zoom: 13, accessToken: CONFIG.mapboxToken
+  });
+  accessMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+  accessMap.on('load', () => refreshAccessLayer());
+  refreshAccessList();
+}
+
+function refreshAccessLayer() {
+  if (!accessMap || !accessMap.isStyleLoaded()) return;
+  if (accessMap.getLayer('access-pts')) accessMap.removeLayer('access-pts');
+  if (accessMap.getSource('access-pts')) accessMap.removeSource('access-pts');
+
+  const d = STATE.data;
+  const tab = STATE.accessTab;
+  const items = d[tab] || [];
+  const colors = { schools: '#7c3aed', transport: '#2563eb', shopping: '#059669', other: '#d97706' };
+
+  const gj = { type: 'FeatureCollection', features: items.filter(i => i.latitude && i.longitude).map(i => ({
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [i.longitude, i.latitude] },
+    properties: { name: i.name, type: i.type || '', icsea: i.icsea || '' }
+  }))};
+
+  accessMap.addSource('access-pts', { type: 'geojson', data: gj });
+  accessMap.addLayer({ id: 'access-pts', type: 'circle', source: 'access-pts', paint: {
+    'circle-radius': 8, 'circle-color': colors[tab] || '#6b7280',
+    'circle-stroke-width': 2, 'circle-stroke-color': '#fff', 'circle-opacity': 0.85
+  }});
+  accessMap.on('click', 'access-pts', (e) => {
+    const p = e.features[0].properties;
+    new mapboxgl.Popup({ offset: 10 }).setLngLat(e.lngLat)
+      .setHTML(`<div style="font-family:Inter;font-size:13px;"><strong>${p.name}</strong><br>${p.type}${p.icsea ? '<br>ICSEA: ' + p.icsea : ''}</div>`)
+      .addTo(accessMap);
+  });
+}
+
+function refreshAccessList() {
+  const d = STATE.data; if (!d) return;
+  const tab = STATE.accessTab;
+  const items = d[tab] || [];
+  const container = document.getElementById('accessList');
+  container.innerHTML = '';
+
+  const badgeCls = { schools: 'badge-purple', transport: 'badge-blue', shopping: 'badge-green', other: 'badge-amber' };
+
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'access-item';
+    let extra = '';
+    if (tab === 'schools' && item.icsea) {
+      const cls = item.icsea >= 1080 ? 'badge-green' : item.icsea >= 1020 ? 'badge-amber' : 'badge-red';
+      extra = `<span class="access-item-badge ${cls}">ICSEA ${item.icsea}</span>`;
+    } else {
+      extra = `<span class="access-item-badge ${badgeCls[tab] || 'badge-amber'}">${item.type || tab}</span>`;
+    }
+    div.innerHTML = `
+      <div class="access-item-name">${item.name}</div>
+      <div class="access-item-type">${item.type || ''}</div>
+      ${extra}
+    `;
+    container.appendChild(div);
+  });
+
+  if (!items.length) {
+    container.innerHTML = '<p style="color:var(--text-tertiary);text-align:center;padding:30px 0;">No data available</p>';
+  }
+}
+
+// ── CHARTS ──────────────────────────────────────────────────
+function renderCharts(d) {
+  const defaults = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { backgroundColor: '#111827', titleFont: { family: 'Inter', size: 12 }, bodyFont: { family: 'Inter', size: 12 }, padding: 10, cornerRadius: 8 }
+    },
+    scales: {
+      x: { ticks: { color: '#9ca3af', font: { size: 11 } }, grid: { display: false } },
+      y: { ticks: { color: '#9ca3af', font: { size: 11 } }, grid: { color: '#f0f1f3' } }
+    }
+  };
+
+  // Trend
+  if (STATE.charts.trend) STATE.charts.trend.destroy();
+  const trend = d.median_trend_12mo || [];
+  STATE.charts.trend = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: { labels: trend.map(t => t.month), datasets: [{ data: trend.map(t => t.value), borderColor: '#111827', backgroundColor: 'rgba(17,24,39,0.04)', fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#111827', borderWidth: 2 }] },
+    options: { ...defaults, scales: { ...defaults.scales, y: { ...defaults.scales.y, ticks: { ...defaults.scales.y.ticks, callback: v => '$' + (v / 1e6).toFixed(1) + 'M' } } } }
+  });
+
+  // Segments
+  if (STATE.charts.segment) STATE.charts.segment.destroy();
+  const filtered = filterByPeriod(d.sales || []);
+  const seg = { 'Under $1M': 0, '$1M–$2M': 0, '$2M–$3M': 0, '$3M–$4M': 0, '$4M+': 0 };
+  filtered.forEach(s => { const p = s.purchase_price; if (!p) return; if (p < 1e6) seg['Under $1M']++; else if (p < 2e6) seg['$1M–$2M']++; else if (p < 3e6) seg['$2M–$3M']++; else if (p < 4e6) seg['$3M–$4M']++; else seg['$4M+']++; });
+  STATE.charts.segment = new Chart(document.getElementById('segmentChart'), {
+    type: 'bar',
+    data: { labels: Object.keys(seg), datasets: [{ data: Object.values(seg), backgroundColor: ['#1a1a2e', '#2563eb', '#059669', '#d97706', '#d42020'], borderRadius: 6, barPercentage: 0.65 }] },
+    options: defaults
+  });
+
+  // Auction
+  if (STATE.charts.auction) STATE.charts.auction.destroy();
+  STATE.charts.auction = new Chart(document.getElementById('auctionChart'), {
+    type: 'line',
+    data: {
+      labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8'],
+      datasets: [
+        { label: 'Sutherland Shire', data: [68, 72, 65, 74, 71, 76, 73, 78], borderColor: '#111827', fill: false, tension: 0.35, borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#111827' },
+        { label: 'Greater Sydney', data: [62, 64, 60, 66, 63, 67, 65, 68], borderColor: '#d42020', fill: false, tension: 0.35, borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#d42020', borderDash: [5, 5] }
+      ]
+    },
+    options: { ...defaults, plugins: { ...defaults.plugins, legend: { display: true, position: 'bottom', labels: { usePointStyle: true, pointStyle: 'line', font: { size: 11, family: 'Inter' }, color: '#6b7280' } } }, scales: { ...defaults.scales, y: { ...defaults.scales.y, ticks: { ...defaults.scales.y.ticks, callback: v => v + '%' }, min: 50, max: 90 } } }
+  });
+}
+
+// ── CHOROPLETH MAPS ─────────────────────────────────────────
+async function loadChoroplethMaps() {
+  const suburbMap = new mapboxgl.Map({
+    container: 'suburbChoropleth', style: 'mapbox://styles/mapbox/light-v11',
+    center: [151.10, -34.05], zoom: 11.5, accessToken: CONFIG.mapboxToken
+  });
+  suburbMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+  const sa1Map = new mapboxgl.Map({
+    container: 'sa1Choropleth', style: 'mapbox://styles/mapbox/light-v11',
+    center: [151.10, -34.05], zoom: 12, accessToken: CONFIG.mapboxToken
+  });
+  sa1Map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+  suburbMap.on('load', () => loadSuburbBoundaries(suburbMap));
+  sa1Map.on('load', () => loadSA1Boundaries(sa1Map));
+}
+
+async function loadSuburbBoundaries(m) {
+  const suburbs = ['Cronulla','Burraneer','Caringbah','Caringbah South','Miranda','Gymea','Gymea Bay','Sylvania','Sylvania Waters','Kirrawee','Sutherland','Jannali','Como','Oyster Bay','Bonnet Bay','Kareela','Loftus','Engadine','Heathcote','Woolooware','Kurnell','Grays Point','Yowie Bay','Bangor','Menai','Barden Ridge','Alfords Point','Illawong','Taren Point','Dolans Bay','Lilli Pilli','Bundeena'];
+  const where = suburbs.map(s => `SAL_NAME_2021 = '${s}'`).join(' OR ');
+  try {
+    const url = new URL(CONFIG.absSuburbUrl);
+    url.searchParams.set('where', where);
+    url.searchParams.set('outFields', 'SAL_NAME_2021,SAL_CODE_2021');
+    url.searchParams.set('f', 'geojson');
+    url.searchParams.set('outSR', '4326');
+    url.searchParams.set('returnGeometry', 'true');
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error(res.status);
+    const gj = await res.json();
+    if (!gj.features?.length) { console.warn('No suburb boundaries'); return; }
+
+    const meds = { 'Cronulla': 2400000, 'Burraneer': 3200000, 'Woolooware': 2100000, 'Caringbah South': 1900000, 'Miranda': 1650000, 'Sylvania Waters': 2600000 };
+    gj.features.forEach(f => {
+      const n = f.properties.SAL_NAME_2021;
+      const med = meds[n] || (1200000 + Math.floor(Math.random() * 2500000));
+      f.properties.median = med;
+      f.properties.name = n;
+      f.properties.color = med >= 3e6 ? '#d42020' : med >= 2.5e6 ? '#d97706' : med >= 2e6 ? '#059669' : med >= 1.5e6 ? '#2563eb' : '#64748b';
+    });
+
+    m.addSource('sub', { type: 'geojson', data: gj });
+    m.addLayer({ id: 'sub-fill', type: 'fill', source: 'sub', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.25 } });
+    m.addLayer({ id: 'sub-line', type: 'line', source: 'sub', paint: { 'line-color': '#111827', 'line-width': 1.5, 'line-opacity': 0.6 } });
+    m.addLayer({ id: 'sub-label', type: 'symbol', source: 'sub', layout: { 'text-field': ['get', 'name'], 'text-size': 11, 'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'] }, paint: { 'text-color': '#111827', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
+    m.on('click', 'sub-fill', e => {
+      const p = e.features[0].properties;
+      new mapboxgl.Popup({ offset: 8 }).setLngLat(e.lngLat).setHTML(`<div style="font-family:Inter;font-size:13px;"><strong>${p.name}</strong><br>Median: ${fmt(p.median)}</div>`).addTo(m);
+    });
+    console.log('[Choropleth] Suburbs:', gj.features.length);
+  } catch (err) { console.warn('Suburb boundaries failed:', err.message); }
+}
+
+async function loadSA1Boundaries(m) {
+  try {
+    const url = new URL(CONFIG.absSA1Url);
+    url.searchParams.set('where', "LGA_NAME_2021 = 'Sutherland Shire (A)'");
+    url.searchParams.set('outFields', 'SA1_CODE_2021,SA2_NAME_2021,LGA_NAME_2021');
+    url.searchParams.set('f', 'geojson');
+    url.searchParams.set('outSR', '4326');
+    url.searchParams.set('returnGeometry', 'true');
+    url.searchParams.set('resultRecordCount', '500');
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error(res.status);
+    const gj = await res.json();
+    if (!gj.features?.length) { console.warn('No SA1 boundaries'); return; }
+
+    gj.features.forEach(f => {
+      const seifa = 900 + Math.floor(Math.random() * 250);
+      f.properties.seifa = seifa;
+      f.properties.color = seifa >= 1100 ? '#059669' : seifa >= 1050 ? '#2563eb' : seifa >= 1000 ? '#d97706' : '#d42020';
+    });
+
+    m.addSource('sa1', { type: 'geojson', data: gj });
+    m.addLayer({ id: 'sa1-fill', type: 'fill', source: 'sa1', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.3 } });
+    m.addLayer({ id: 'sa1-line', type: 'line', source: 'sa1', paint: { 'line-color': '#374151', 'line-width': 0.8, 'line-opacity': 0.5 } });
+    m.on('click', 'sa1-fill', e => {
+      const p = e.features[0].properties;
+      new mapboxgl.Popup({ offset: 8 }).setLngLat(e.lngLat).setHTML(`<div style="font-family:Inter;font-size:13px;"><strong>SA1: ${p.SA1_CODE_2021}</strong><br>SEIFA: ${p.seifa}<br>${p.SA2_NAME_2021}</div>`).addTo(m);
+    });
+    console.log('[Choropleth] SA1s:', gj.features.length);
+  } catch (err) { console.warn('SA1 boundaries failed:', err.message); }
+}
+
+// ── MODAL ───────────────────────────────────────────────────
+function openModal(item) {
+  const photos = item.photos?.length ? item.photos : ['https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=800&auto=format&fit=crop'];
+  STATE.modalPhotos = photos;
+  STATE.modalIdx = 0;
+  document.getElementById('carouselImg').src = photos[0];
+  document.getElementById('modalAddr').textContent = item.full_address || item.street || '';
+  document.getElementById('modalMeta').textContent = [item.beds && `${item.beds} bed`, item.baths && `${item.baths} bath`, item.parking && `${item.parking} car`].filter(Boolean).join(' · ');
+  document.getElementById('modalPrice').textContent = item.price_text || fmt(item.purchase_price) || '';
+  document.getElementById('photoModal').classList.add('open');
+}
+
+document.getElementById('modalClose').onclick = () => document.getElementById('photoModal').classList.remove('open');
+document.getElementById('photoModal').onclick = e => { if (e.target.id === 'photoModal') document.getElementById('photoModal').classList.remove('open'); };
+document.getElementById('carouselPrev').onclick = () => {
+  STATE.modalIdx = (STATE.modalIdx - 1 + STATE.modalPhotos.length) % STATE.modalPhotos.length;
+  document.getElementById('carouselImg').src = STATE.modalPhotos[STATE.modalIdx];
+};
+document.getElementById('carouselNext').onclick = () => {
+  STATE.modalIdx = (STATE.modalIdx + 1) % STATE.modalPhotos.length;
+  document.getElementById('carouselImg').src = STATE.modalPhotos[STATE.modalIdx];
+};
+
+// ── EVENT LISTENERS ─────────────────────────────────────────
+
+// Period filters
+document.getElementById('periodFilters').addEventListener('click', e => {
+  if (!e.target.classList.contains('filter-btn')) return;
+  document.querySelectorAll('#periodFilters .filter-btn').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  STATE.periodDays = parseInt(e.target.dataset.period);
+  if (STATE.data) {
+    renderKPIs(STATE.data);
+    renderPropertySidebar(STATE.data);
+    renderCharts(STATE.data);
+    if (mainMap?.isStyleLoaded()) refreshMainMapLayers(STATE.data);
+  }
+});
+
+// Sidebar tabs (On Market / Sold)
+document.querySelectorAll('.sidebar-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    STATE.activeTab = tab.dataset.tab;
+    STATE.mapLayers.sales = tab.dataset.tab === 'sold';
+    STATE.mapLayers.listings = tab.dataset.tab === 'active';
+    document.querySelectorAll('.map-toggle-btn').forEach(b => b.classList.toggle('active', STATE.mapLayers[b.dataset.layer]));
+    if (STATE.data) {
+      renderPropertySidebar(STATE.data);
+      if (mainMap?.isStyleLoaded()) refreshMainMapLayers(STATE.data);
+    }
+  });
+});
+
+// Map layer toggles
+document.querySelector('.map-layer-toggles').addEventListener('click', e => {
+  if (!e.target.classList.contains('map-toggle-btn')) return;
+  const l = e.target.dataset.layer;
+  STATE.mapLayers[l] = !STATE.mapLayers[l];
+  e.target.classList.toggle('active', STATE.mapLayers[l]);
+  if (STATE.data && mainMap?.isStyleLoaded()) refreshMainMapLayers(STATE.data);
+});
+
+// Accessibility tabs
+document.getElementById('accessTabs').addEventListener('click', e => {
+  if (!e.target.classList.contains('access-tab')) return;
+  document.querySelectorAll('.access-tab').forEach(t => t.classList.remove('active'));
+  e.target.classList.add('active');
+  STATE.accessTab = e.target.dataset.access;
+  if (accessMap?.isStyleLoaded()) refreshAccessLayer();
+  refreshAccessList();
+});
+
+// ── BOOT ────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>

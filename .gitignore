@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.*
+*.log
+api-server.log
+api-server.err.log
+api-cmd.log
+api-live.log
+.claude/
+.mcp.json
+web/node_modules/
+web/dist/
+web/.env
+workflow-jsons/
+
