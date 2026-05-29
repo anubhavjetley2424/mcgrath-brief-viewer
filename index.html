@@ -1710,24 +1710,24 @@ const getCalculatedPrice = (suburb, profile) => {
 };
 
 async function loadChoroplethMaps() {
-  // 1. Suburb Price Map
+  // 1. Suburb Price Map (Centering on Simon's active Caringbah-Cronulla Peninsula farm area)
   const suburbPriceMap = new mapboxgl.Map({
     container: 'suburbPriceMap', style: 'mapbox://styles/mapbox/light-v11',
-    center: [151.10, -34.05], zoom: 11.2, accessToken: CONFIG.mapboxToken
+    center: [151.13, -34.058], zoom: 12.0, accessToken: CONFIG.mapboxToken
   });
   suburbPriceMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
-  // 2. SA1 Price Map
+  // 2. SA1 Price Map (Centering on Simon's active Caringbah-Cronulla Peninsula farm area)
   const sa1PriceMap = new mapboxgl.Map({
     container: 'sa1PriceMap', style: 'mapbox://styles/mapbox/light-v11',
-    center: [151.10, -34.05], zoom: 11.2, accessToken: CONFIG.mapboxToken
+    center: [151.13, -34.058], zoom: 12.0, accessToken: CONFIG.mapboxToken
   });
   sa1PriceMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
-  // 3. SA1 Demographic Map
+  // 3. SA1 Demographic Map (Centering on Simon's active Caringbah-Cronulla Peninsula farm area)
   const sa1DemographicMap = new mapboxgl.Map({
     container: 'sa1Choropleth', style: 'mapbox://styles/mapbox/light-v11',
-    center: [151.10, -34.05], zoom: 11.6, accessToken: CONFIG.mapboxToken
+    center: [151.13, -34.058], zoom: 12.2, accessToken: CONFIG.mapboxToken
   });
   sa1DemographicMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
