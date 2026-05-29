@@ -69,8 +69,8 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 14px 32px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: #000000;
+  border-bottom: 2px solid #E2231A;
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -97,8 +97,8 @@ body {
 .topbar-meta { display: flex; gap: 8px; align-items: center; }
 .meta-chip {
   padding: 5px 11px; border-radius: 6px;
-  background: var(--bg-alt); border: 1px solid var(--border);
-  font-size: 12px; color: var(--text-secondary); font-weight: 500;
+  background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 12px; color: rgba(255, 255, 255, 0.9); font-weight: 500;
 }
 .status-dot {
   width: 7px; height: 7px; border-radius: 50%;
@@ -304,7 +304,7 @@ body {
 /* Inline carousel on card */
 .prop-carousel {
   position: relative;
-  width: 100%; height: 150px;
+  width: 100%; height: 190px;
   overflow: hidden; background: #e5e7eb;
 }
 .prop-carousel img {
@@ -683,12 +683,10 @@ body {
 
 <!-- TOP NAV -->
 <div class="topbar">
-  <div class="brand">
-    <div class="brand-logo">M</div>
-    <div>
-      <h1>McGRATH</h1>
-      <div class="brand-sub">Appraisal Prep Console</div>
-    </div>
+  <div class="brand" style="display:flex; align-items:center;">
+    <div style="font-family:'Times New Roman', Times, serif; font-size:26px; font-weight:800; letter-spacing:2.5px; color:#ffffff; line-height:1; text-transform:uppercase;">McGrath</div>
+    <div style="height: 20px; width: 1px; background: rgba(255,255,255,0.22); margin: 0 4px 0 12px;"></div>
+    <div class="brand-sub" style="color: rgba(255,255,255,0.55); font-family:'Inter', sans-serif; letter-spacing:1.5px; font-size:9.5px; font-weight:600; text-transform:uppercase; margin-left: 8px;">Appraisal Prep Console</div>
   </div>
   <div class="topbar-meta">
     <span class="meta-chip"><span class="status-dot"></span> Live</span>
@@ -973,6 +971,23 @@ body {
             <div class="s-sub">UK, NZ, South Africa top origins</div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- ── AI AGENT NOTES SUMMARY ────────────────────────── -->
+  <div class="section" id="aiAgentNotesSection" style="display:none; margin-top: 32px; margin-bottom: 48px;">
+    <div class="section-title">
+      AI Appraisal Intelligence
+      <span class="label">Simon's Agent Prep Notes Summary</span>
+    </div>
+    <div class="card" style="background: linear-gradient(135deg, #1e40af, #1d4ed8); border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(29, 78, 216, 0.25); color: #ffffff; padding: 28px;">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 16px;">
+        <span style="font-size: 28px; line-height: 1;">⚡</span>
+        <h3 style="margin:0; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #ffffff; font-family: 'Inter';">Simon's AI Agent Notes (Concise Summary)</h3>
+      </div>
+      <div id="aiAgentNotesContent" style="font-size: 14px; line-height: 1.6; display: flex; flex-direction: column; gap: 12px; color: rgba(255, 255, 255, 0.95); font-weight: 500; font-family: 'Inter';">
+        <!-- Dynamically rendered 6-8 bullet points -->
       </div>
     </div>
   </div>
@@ -1328,6 +1343,9 @@ function renderPropertySidebar(d) {
       ? `<button class="prop-carousel-btn prev" data-dir="-1">‹</button><button class="prop-carousel-btn next" data-dir="1">›</button>`
       : '';
 
+    const itemId = isActive ? item.domain_listing_id : item.property_id;
+    card.id = `card-${itemId}`;
+    card.style.transition = 'all 0.4s ease';
     card.innerHTML = `
       <div class="prop-carousel" data-idx="0" data-count="${photos.length}">
         ${imgsHTML}
@@ -1395,6 +1413,13 @@ function renderMainMap(d) {
   });
 }
 
+// Global Hover Popup for Main Map competitor hovers
+let hoverPopup = new mapboxgl.Popup({
+  closeButton: false,
+  closeOnClick: false,
+  offset: 10
+});
+
 function refreshMainMapLayers(d) {
   if (!mainMap || !mainMap.isStyleLoaded()) return;
   ['sales-pts', 'listings-pts'].forEach(id => {
@@ -1402,39 +1427,81 @@ function refreshMainMapLayers(d) {
     if (mainMap.getSource(id)) mainMap.removeSource(id);
   });
 
+  // Helper: setup premium hover and scroll-into-view click actions
+  function setupMapInteractions(id, type) {
+    // Hover Popup showing price and address
+    mainMap.on('mouseenter', id, (e) => {
+      mainMap.getCanvas().style.cursor = 'pointer';
+      const p = e.features[0].properties;
+      const coordinates = e.features[0].geometry.coordinates.slice();
+      
+      const priceText = type === 'sales' ? fmt(p.price) : p.price;
+      const addrText = p.addr || 'Address Unavailable';
+      
+      hoverPopup.setLngLat(coordinates)
+        .setHTML(`<div style="font-family:'Inter', sans-serif;font-size:12px;padding:4px 6px;line-height:1.45;">
+                    <strong style="color:#E2231A;font-size:14px;font-weight:800;">${priceText}</strong><br>
+                    <span style="font-weight:600;color:#111827;">${addrText}</span>
+                  </div>`)
+        .addTo(mainMap);
+    });
+    
+    mainMap.on('mouseleave', id, () => {
+      mainMap.getCanvas().style.cursor = '';
+      hoverPopup.remove();
+    });
+    
+    // Click action: scroll and highlight corresponding card in sidebar
+    mainMap.on('click', id, (e) => {
+      const p = e.features[0].properties;
+      const cardId = `card-${p.id}`;
+      const cardElement = document.getElementById(cardId);
+      if (cardElement) {
+        cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        // Trigger high-end highlight transition
+        cardElement.style.borderColor = '#E2231A';
+        cardElement.style.borderWidth = '2px';
+        cardElement.style.boxShadow = '0 0 20px rgba(226,35,26,0.35)';
+        
+        setTimeout(() => {
+          cardElement.style.borderColor = '';
+          cardElement.style.borderWidth = '';
+          cardElement.style.boxShadow = '';
+        }, 2200);
+      }
+    });
+  }
+
   if (STATE.mapLayers.sales) {
     const filtered = filterByPeriod(d.sales || []);
     const gj = { type: 'FeatureCollection', features: filtered.filter(s => s.latitude && s.longitude).map(s => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [s.longitude, s.latitude] },
-      properties: { price: s.purchase_price, addr: s.full_address, date: s.contract_date, color: priceColor(s.purchase_price) }
+      properties: { id: s.property_id, price: s.purchase_price, addr: s.full_address, date: s.contract_date, color: priceColor(s.purchase_price) }
     }))};
     mainMap.addSource('sales-pts', { type: 'geojson', data: gj });
     mainMap.addLayer({ id: 'sales-pts', type: 'circle', source: 'sales-pts', paint: {
-      'circle-radius': 7, 'circle-color': ['get', 'color'],
+      'circle-radius': 8, 'circle-color': ['get', 'color'],
       'circle-stroke-width': 2, 'circle-stroke-color': '#fff', 'circle-opacity': 0.85
     }});
-    mainMap.on('click', 'sales-pts', (e) => {
-      const p = e.features[0].properties;
-      new mapboxgl.Popup({ offset: 10 }).setLngLat(e.lngLat)
-        .setHTML(`<div style="font-family:Inter;font-size:13px;"><strong>${fmt(p.price)}</strong><br>${p.addr}<br><span style="color:#6b7280;">${p.date}</span></div>`)
-        .addTo(mainMap);
-    });
-    mainMap.on('mouseenter', 'sales-pts', () => { mainMap.getCanvas().style.cursor = 'pointer'; });
-    mainMap.on('mouseleave', 'sales-pts', () => { mainMap.getCanvas().style.cursor = ''; });
+    
+    setupMapInteractions('sales-pts', 'sales');
   }
 
   if (STATE.mapLayers.listings) {
     const gj = { type: 'FeatureCollection', features: (d.active_listings || []).filter(l => l.latitude && l.longitude).map(l => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [l.longitude, l.latitude] },
-      properties: { price: l.price_text, addr: l.full_address || l.street }
+      properties: { id: l.domain_listing_id, price: l.price_text, addr: l.full_address || l.street }
     }))};
     mainMap.addSource('listings-pts', { type: 'geojson', data: gj });
     mainMap.addLayer({ id: 'listings-pts', type: 'circle', source: 'listings-pts', paint: {
-      'circle-radius': 8, 'circle-color': '#2563eb',
+      'circle-radius': 9, 'circle-color': '#2563eb',
       'circle-stroke-width': 2, 'circle-stroke-color': '#fff', 'circle-opacity': 0.9
     }});
+    
+    setupMapInteractions('listings-pts', 'listings');
   }
 }
 
@@ -2169,13 +2236,31 @@ document.querySelectorAll('.sidebar-tab').forEach(tab => {
   });
 });
 
-// Map layer toggles
+// Map layer toggles (Mutually exclusive listings vs sales + sidebar tab synchronization)
 document.querySelector('.map-layer-toggles').addEventListener('click', e => {
   if (!e.target.classList.contains('map-toggle-btn')) return;
-  const l = e.target.dataset.layer;
-  STATE.mapLayers[l] = !STATE.mapLayers[l];
-  e.target.classList.toggle('active', STATE.mapLayers[l]);
-  if (STATE.data && mainMap?.isStyleLoaded()) refreshMainMapLayers(STATE.data);
+  const layer = e.target.dataset.layer;
+  
+  // Set mutual exclusivity
+  STATE.mapLayers.sales = (layer === 'sales');
+  STATE.mapLayers.listings = (layer === 'listings');
+  
+  // Update toggle button active classes
+  document.querySelectorAll('.map-toggle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.layer === layer);
+  });
+  
+  // Synchronize sidebar tabs instantly
+  const targetTab = (layer === 'sales') ? 'sold' : 'active';
+  STATE.activeTab = targetTab;
+  document.querySelectorAll('.sidebar-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.tab === targetTab);
+  });
+  
+  if (STATE.data) {
+    renderPropertySidebar(STATE.data);
+    if (mainMap?.isStyleLoaded()) refreshMainMapLayers(STATE.data);
+  }
 });
 
 function renderAIAgentNotes(d) {
