@@ -978,7 +978,11 @@ body {
         </div>
         
         <!-- Fused Demographic Cards Directly Below Map -->
-        <div style="padding:20px; background:#ffffff;">
+        <div style="padding:20px; background:#ffffff; border-top: 1px solid var(--border-light);">
+          <div style="margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <h4 id="socioGridTitle" style="margin:0; font-size:15px; font-weight:700; color:#111827; font-family:'Inter', sans-serif;">Cronulla (Broad Suburb Baseline)</h4>
+            <span id="socioGridSubtitle" style="font-size:12px; color:#6b7280; font-family:'Inter', sans-serif;">Census Demographic Data Profile</span>
+          </div>
           <div class="socio-grid" id="socioGrid">
             <!-- Populated dynamically inside renderSocioGrid -->
           </div>
@@ -1823,6 +1827,19 @@ function renderSocioGrid(suburb, sa1Props = null) {
   if (!grid) return;
   
   const isSA1 = sa1Props !== null;
+  
+  // Dynamically update the socioeconomic grid titles above the cards
+  const socioTitle = document.getElementById('socioGridTitle');
+  const socioSub = document.getElementById('socioGridSubtitle');
+  if (socioTitle && socioSub) {
+    if (isSA1) {
+      socioTitle.textContent = `SA1 Micro-Locality: ${sa1Props.SA1_CODE_2021}`;
+      socioSub.textContent = `Sub-region Profile (vs Suburb Baseline ${norm})`;
+    } else {
+      socioTitle.textContent = `${norm} (Broad Suburb Baseline)`;
+      socioSub.textContent = `Census Demographic Data Profile`;
+    }
+  }
   const seifa = isSA1 ? sa1Props.seifa : demo.seifa;
   const popDensity = isSA1 ? sa1Props.popDensity : demo.popDensity;
   const medianAge = isSA1 ? sa1Props.medianAge : demo.medianAge;
