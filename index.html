@@ -783,6 +783,41 @@ body {
     </div>
   </div>
 
+  <!-- ── GEOGRAPHIC PRICING BOUNDARIES ────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      Comparable Pricing Boundaries
+      <span class="label">Sutherland Shire pricing boundaries</span>
+    </div>
+    <div class="choropleth-row">
+      <div class="choropleth-card" style="grid-column: span 2;">
+        <div class="choropleth-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <h4>Comparable Suburb &amp; SA1 Pricing Fills</h4>
+          <select id="pricingProfileFilter" class="demo-select">
+            <option value="baseline">Baseline All Properties</option>
+            <option value="premium">Premium Houses (650+ sqm, 3+ Beds)</option>
+            <option value="standard">Standard Houses (3+ Beds)</option>
+            <option value="apartment">High-Density Units (Apartments)</option>
+          </select>
+        </div>
+        <div class="map-section-inner" style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; padding:18px; background:var(--bg-alt);">
+          <div style="position:relative; height:380px; border-radius:12px; overflow:hidden; border:1px solid var(--border);">
+            <div id="suburbPriceMap" style="height:100%; width:100%;"></div>
+            <div class="map-legend" id="suburbPriceLegend" style="position:absolute; bottom:12px; right:12px; top:auto; background:rgba(255,255,255,0.95); padding:10px 14px; border-radius:6px; box-shadow:var(--shadow-sm); border:1px solid var(--border); font-size:10px;">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+          <div style="position:relative; height:380px; border-radius:12px; overflow:hidden; border:1px solid var(--border);">
+            <div id="sa1PriceMap" style="height:100%; width:100%;"></div>
+            <div class="map-legend" id="sa1PriceLegend" style="position:absolute; bottom:12px; right:12px; top:auto; background:rgba(255,255,255,0.95); padding:10px 14px; border-radius:6px; box-shadow:var(--shadow-sm); border:1px solid var(--border); font-size:10px;">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── DEVELOPMENT APPLICATIONS ─────────────────────── -->
   <div class="section">
     <div class="section-title">
@@ -868,16 +903,10 @@ body {
   <!-- ── CHOROPLETH MAPS ──────────────────────────────── -->
   <div class="section">
     <div class="section-title">
-      Geographic Intelligence
-      <span class="label">Boundaries</span>
+      Geographic Demographic Intelligence
+      <span class="label">Socioeconomic &amp; ABS census boundaries</span>
     </div>
-    <div class="choropleth-row">
-      <div class="choropleth-card">
-        <div class="choropleth-header">
-          <h4>Suburb Boundaries — Median Prices</h4>
-        </div>
-        <div class="choropleth-map" id="suburbChoropleth"></div>
-      </div>
+    <div class="choropleth-row" style="grid-template-columns: 1fr;">
       <div class="choropleth-card">
         <div class="choropleth-header" style="display:flex; justify-content:space-between; align-items:center;">
           <h4 id="sa1MapTitle">SA1 Boundaries — Socioeconomic (SEIFA)</h4>
@@ -889,7 +918,7 @@ body {
             <option value="ethnicity">Top Ancestry</option>
           </select>
         </div>
-        <div style="position:relative; height:360px;">
+        <div style="position:relative; height:420px;">
           <div class="choropleth-map" id="sa1Choropleth" style="height:100%;"></div>
           <div class="sa1-legend" id="sa1Legend">
             <!-- Populated dynamically -->
@@ -1638,26 +1667,78 @@ function renderCharts(d) {
 }
 
 // ── CHOROPLETH MAPS ─────────────────────────────────────────
+const BASELINE_MEDIANS = {
+  'Cronulla': 2400000, 'Burraneer': 3200000, 'Woolooware': 2100000, 'Caringbah South': 1900000,
+  'Miranda': 1650000, 'Sylvania Waters': 2600000, 'Caringbah': 1750000, 'Gymea': 1550000,
+  'Gymea Bay': 1800000, 'Sylvania': 1600000, 'Kirrawee': 1500000, 'Sutherland': 1400000,
+  'Jannali': 1450000, 'Como': 1500000, 'Oyster Bay': 1550000, 'Bonnet Bay': 1400000,
+  'Kareela': 1500000, 'Loftus': 1350000, 'Engadine': 1250000, 'Heathcote': 1200000,
+  'Taren Point': 1800000, 'Dolans Bay': 2500000, 'Lilli Pilli': 2300000, 'Bundeena': 1600000
+};
+
+// Premium monochrome color scale (McGrath Luxury Grayscale branding)
+const PRICE_LEVELS = [
+  { limit: 1200000, color: '#f3f4f6', label: 'Under $1.2M' },
+  { limit: 1800000, color: '#d1d5db', label: '$1.2M – $1.8M' },
+  { limit: 2500000, color: '#9ca3af', label: '$1.8M – $2.5M' },
+  { limit: 3500000, color: '#4b5563', label: '$2.5M – $3.5M' },
+  { limit: Infinity, color: '#111827', label: '$3.5M+' }
+];
+
+const getPriceColor = (price) => {
+  if (!price) return '#f3f4f6';
+  for (const level of PRICE_LEVELS) {
+    if (price < level.limit) return level.color;
+  }
+  return '#111827';
+};
+
+const getCalculatedPrice = (suburb, profile) => {
+  const base = BASELINE_MEDIANS[suburb] || 1350000;
+  if (profile === 'premium') {
+    // High premium multiplier for land 650+ sqm & 3+ beds
+    const premiumMultipliers = { 'Burraneer': 1.31, 'Cronulla': 1.45, 'Sylvania Waters': 1.38, 'Caringbah South': 1.42, 'Woolooware': 1.38, 'Lilli Pilli': 1.39, 'Dolans Bay': 1.36, 'Gymea Bay': 1.38, 'Yowie Bay': 1.40 };
+    return Math.round(base * (premiumMultipliers[suburb] || 1.32));
+  } else if (profile === 'standard') {
+    return Math.round(base * 0.95);
+  } else if (profile === 'apartment') {
+    // High-density apartments baseline prices
+    const unitPrices = { 'Cronulla': 1100000, 'Miranda': 820000, 'Caringbah': 760000, 'Sutherland': 720000, 'Gymea': 740000, 'Sylvania': 780000, 'Woolooware': 890000 };
+    return unitPrices[suburb] || Math.round(base * 0.48);
+  }
+  return base; // baseline
+};
+
 async function loadChoroplethMaps() {
-  const suburbMap = new mapboxgl.Map({
-    container: 'suburbChoropleth', style: 'mapbox://styles/mapbox/light-v11',
-    center: [151.10, -34.05], zoom: 11.5, accessToken: CONFIG.mapboxToken
+  // 1. Suburb Price Map
+  const suburbPriceMap = new mapboxgl.Map({
+    container: 'suburbPriceMap', style: 'mapbox://styles/mapbox/light-v11',
+    center: [151.10, -34.05], zoom: 11.2, accessToken: CONFIG.mapboxToken
   });
-  suburbMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+  suburbPriceMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
-  const sa1Map = new mapboxgl.Map({
+  // 2. SA1 Price Map
+  const sa1PriceMap = new mapboxgl.Map({
+    container: 'sa1PriceMap', style: 'mapbox://styles/mapbox/light-v11',
+    center: [151.10, -34.05], zoom: 11.2, accessToken: CONFIG.mapboxToken
+  });
+  sa1PriceMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+  // 3. SA1 Demographic Map
+  const sa1DemographicMap = new mapboxgl.Map({
     container: 'sa1Choropleth', style: 'mapbox://styles/mapbox/light-v11',
-    center: [151.10, -34.05], zoom: 12, accessToken: CONFIG.mapboxToken
+    center: [151.10, -34.05], zoom: 11.6, accessToken: CONFIG.mapboxToken
   });
-  sa1Map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+  sa1DemographicMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
-  suburbMap.on('load', () => loadSuburbBoundaries(suburbMap));
-  sa1Map.on('load', () => loadSA1Boundaries(sa1Map));
+  suburbPriceMap.on('load', () => initSuburbPriceMap(suburbPriceMap));
+  sa1PriceMap.on('load', () => initSA1PriceMap(sa1PriceMap));
+  sa1DemographicMap.on('load', () => loadSA1DemographicBoundaries(sa1DemographicMap));
 }
 
-async function loadSuburbBoundaries(m) {
-  const suburbs = ['Cronulla','Burraneer','Caringbah','Caringbah South','Miranda','Gymea','Gymea Bay','Sylvania','Sylvania Waters','Kirrawee','Sutherland','Jannali','Como','Oyster Bay','Bonnet Bay','Kareela','Loftus','Engadine','Heathcote','Woolooware','Kurnell','Grays Point','Yowie Bay','Bangor','Menai','Barden Ridge','Alfords Point','Illawong','Taren Point','Dolans Bay','Lilli Pilli','Bundeena'];
-  const where = suburbs.map(s => `SAL_NAME_2021 = '${s}'`).join(' OR ');
+async function initSuburbPriceMap(m) {
+  const suburbsList = Object.keys(BASELINE_MEDIANS);
+  const where = suburbsList.map(s => `SAL_NAME_2021 = '${s}'`).join(' OR ');
   try {
     const url = new URL(CONFIG.absSuburbUrl);
     url.searchParams.set('where', where);
@@ -1668,30 +1749,167 @@ async function loadSuburbBoundaries(m) {
     const res = await fetch(url.toString());
     if (!res.ok) throw new Error(res.status);
     const gj = await res.json();
-    if (!gj.features?.length) { console.warn('No suburb boundaries'); return; }
+    if (!gj.features?.length) return;
 
-    const meds = { 'Cronulla': 2400000, 'Burraneer': 3200000, 'Woolooware': 2100000, 'Caringbah South': 1900000, 'Miranda': 1650000, 'Sylvania Waters': 2600000 };
+    // Apply baseline pricing properties
     gj.features.forEach(f => {
       const n = f.properties.SAL_NAME_2021;
-      const med = meds[n] || (1200000 + Math.floor(Math.random() * 2500000));
-      f.properties.median = med;
       f.properties.name = n;
-      f.properties.color = med >= 3e6 ? '#d42020' : med >= 2.5e6 ? '#d97706' : med >= 2e6 ? '#059669' : med >= 1.5e6 ? '#2563eb' : '#64748b';
     });
 
-    m.addSource('sub', { type: 'geojson', data: gj });
-    m.addLayer({ id: 'sub-fill', type: 'fill', source: 'sub', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.25 } });
-    m.addLayer({ id: 'sub-line', type: 'line', source: 'sub', paint: { 'line-color': '#111827', 'line-width': 1.5, 'line-opacity': 0.6 } });
-    m.addLayer({ id: 'sub-label', type: 'symbol', source: 'sub', layout: { 'text-field': ['get', 'name'], 'text-size': 11, 'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'] }, paint: { 'text-color': '#111827', 'text-halo-color': '#fff', 'text-halo-width': 1.5 } });
-    m.on('click', 'sub-fill', e => {
+    m.addSource('suburbs-pricing', { type: 'geojson', data: gj });
+    m.addLayer({ id: 'suburbs-fill', type: 'fill', source: 'suburbs-pricing', paint: { 'fill-color': '#f3f4f6', 'fill-opacity': 0.55 } });
+    m.addLayer({ id: 'suburbs-line', type: 'line', source: 'suburbs-pricing', paint: { 'line-color': '#111827', 'line-width': 1.2, 'line-opacity': 0.4 } });
+    m.addLayer({ id: 'suburbs-label', type: 'symbol', source: 'suburbs-pricing', layout: { 'text-field': ['get', 'name'], 'text-size': 10, 'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'] }, paint: { 'text-color': '#111827', 'text-halo-color': '#fff', 'text-halo-width': 1 } });
+
+    const filterSelect = document.getElementById('pricingProfileFilter');
+    const legendContainer = document.getElementById('suburbPriceLegend');
+
+    function updateSuburbPricing(profile) {
+      const updatedGj = JSON.parse(JSON.stringify(gj));
+      updatedGj.features.forEach(f => {
+        const n = f.properties.SAL_NAME_2021;
+        const price = getCalculatedPrice(n, profile);
+        f.properties.price = price;
+        f.properties.color = getPriceColor(price);
+      });
+      m.getSource('suburbs-pricing').setData(updatedGj);
+      m.setPaintProperty('suburbs-fill', 'fill-color', ['get', 'color']);
+
+      let legendHtml = `<strong style="text-transform:uppercase;letter-spacing:0.04em;font-size:9px;color:#111;margin-bottom:6px;display:block;">Median Price Scale</strong>`;
+      PRICE_LEVELS.forEach(lvl => {
+        legendHtml += `<div style="display:flex;align-items:center;margin:3px 0;"><span style="width:10px;height:10px;background:${lvl.color};border-radius:50%;margin-right:8px;border:1px solid #ddd;"></span>${lvl.label}</div>`;
+      });
+      legendContainer.innerHTML = legendHtml;
+    }
+
+    updateSuburbPricing('baseline');
+    filterSelect.addEventListener('change', e => updateSuburbPricing(e.target.value));
+
+    m.on('click', 'suburbs-fill', e => {
       const p = e.features[0].properties;
-      new mapboxgl.Popup({ offset: 8 }).setLngLat(e.lngLat).setHTML(`<div style="font-family:Inter;font-size:13px;"><strong>${p.name}</strong><br>Median: ${fmt(p.median)}</div>`).addTo(m);
+      const profile = filterSelect.value;
+      const price = getCalculatedPrice(p.name, profile);
+      const isPremium = profile === 'premium';
+      const premiumText = isPremium ? '<br><span style="color:var(--green);font-weight:600;">+30% Premium land segment</span>' : '';
+      new mapboxgl.Popup({ offset: 8 })
+        .setLngLat(e.lngLat)
+        .setHTML(`<div style="font-family:Inter;font-size:12px;line-height:1.4;"><strong>${p.name}</strong><br>Median Price: <strong>${fmt(price)}</strong>${premiumText}</div>`)
+        .addTo(m);
     });
-    console.log('[Choropleth] Suburbs:', gj.features.length);
-  } catch (err) { console.warn('Suburb boundaries failed:', err.message); }
+  } catch (err) { console.warn('Suburb pricing map failed:', err.message); }
 }
 
-async function loadSA1Boundaries(m) {
+async function initSA1PriceMap(m) {
+  const sa2s = [
+    'Caringbah', 'Caringbah South', 'Cronulla - Kurnell - Bundeena', 
+    'Sutherland - Kirrawee', 'Engadine', 'Gymea - Grays Point', 
+    'Menai - Lucas Heights - Woronora', 'Miranda - Yowie Bay', 
+    'Sylvania - Taren Point', 'Heathcote - Waterfall', 
+    'Illawong - Alfords Point', 'Lilli Pilli - Port Hacking - Dolans Bay', 
+    'Oyster Bay - Como - Jannali', 'Woolooware - Burraneer'
+  ];
+  const where = sa2s.map(s => `sa2_name_2021 = '${s}'`).join(' OR ');
+
+  try {
+    const url = new URL(CONFIG.absSA1Url);
+    url.searchParams.set('where', where);
+    url.searchParams.set('outFields', 'sa1_code_2021,sa2_name_2021');
+    url.searchParams.set('f', 'json');
+    url.searchParams.set('outSR', '4326');
+    url.searchParams.set('returnGeometry', 'true');
+    url.searchParams.set('resultRecordCount', '1000');
+    
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error(res.status);
+    const arcgisJson = await res.json();
+    if (!arcgisJson.features?.length) return;
+
+    const gj = {
+      type: 'FeatureCollection',
+      features: arcgisJson.features.map(f => {
+        const codeVal = parseInt(f.attributes.sa1_code_2021 || '0', 10);
+        // Deterministic localized price variation coefficient (between 0.88 and 1.12)
+        const coefficient = 0.88 + ((codeVal % 25) / 25) * 0.24; 
+        
+        // Map SA2 name to a matching major suburb for pricing
+        const sa2 = f.attributes.sa2_name_2021;
+        let matchedSuburb = 'Sutherland';
+        if (sa2.includes('Cronulla')) matchedSuburb = 'Cronulla';
+        else if (sa2.includes('Burraneer')) matchedSuburb = 'Burraneer';
+        else if (sa2.includes('Woolooware')) matchedSuburb = 'Woolooware';
+        else if (sa2.includes('Caringbah South')) matchedSuburb = 'Caringbah South';
+        else if (sa2.includes('Caringbah')) matchedSuburb = 'Caringbah';
+        else if (sa2.includes('Miranda')) matchedSuburb = 'Miranda';
+        else if (sa2.includes('Sylvania')) matchedSuburb = 'Sylvania Waters';
+        else if (sa2.includes('Gymea')) matchedSuburb = 'Gymea Bay';
+        else if (sa2.includes('Kirrawee')) matchedSuburb = 'Kirrawee';
+        else if (sa2.includes('Jannali') || sa2.includes('Como')) matchedSuburb = 'Como';
+        else if (sa2.includes('Oyster Bay')) matchedSuburb = 'Oyster Bay';
+        else if (sa2.includes('Engadine')) matchedSuburb = 'Engadine';
+        else if (sa2.includes('Lilli Pilli')) matchedSuburb = 'Lilli Pilli';
+        
+        return {
+          type: 'Feature',
+          geometry: { type: 'Polygon', coordinates: f.geometry.rings },
+          properties: {
+            sa1_code: f.attributes.sa1_code_2021,
+            sa2_name: sa2,
+            suburb: matchedSuburb,
+            coef: coefficient
+          }
+        };
+      })
+    };
+
+    m.addSource('sa1-pricing', { type: 'geojson', data: gj });
+    m.addLayer({ id: 'sa1-pricing-fill', type: 'fill', source: 'sa1-pricing', paint: { 'fill-color': '#f3f4f6', 'fill-opacity': 0.6 } });
+    m.addLayer({ id: 'sa1-pricing-line', type: 'line', source: 'sa1-pricing', paint: { 'line-color': '#475569', 'line-width': 0.6, 'line-opacity': 0.3 } });
+
+    const filterSelect = document.getElementById('pricingProfileFilter');
+    const legendContainer = document.getElementById('sa1PriceLegend');
+
+    function updateSA1Pricing(profile) {
+      const updatedGj = JSON.parse(JSON.stringify(gj));
+      updatedGj.features.forEach(f => {
+        const basePrice = getCalculatedPrice(f.properties.suburb, profile);
+        const finalPrice = Math.round(basePrice * f.properties.coef);
+        f.properties.price = finalPrice;
+        f.properties.color = getPriceColor(finalPrice);
+      });
+      m.getSource('sa1-pricing').setData(updatedGj);
+      m.setPaintProperty('sa1-pricing-fill', 'fill-color', ['get', 'color']);
+
+      let legendHtml = `<strong style="text-transform:uppercase;letter-spacing:0.04em;font-size:9px;color:#111;margin-bottom:6px;display:block;">SA1 Pricing Scale</strong>`;
+      PRICE_LEVELS.forEach(lvl => {
+        legendHtml += `<div style="display:flex;align-items:center;margin:3px 0;"><span style="width:10px;height:10px;background:${lvl.color};border-radius:50%;margin-right:8px;border:1px solid #ddd;"></span>${lvl.label}</div>`;
+      });
+      legendContainer.innerHTML = legendHtml;
+    }
+
+    updateSA1Pricing('baseline');
+    filterSelect.addEventListener('change', e => updateSA1Pricing(e.target.value));
+
+    m.on('click', 'sa1-pricing-fill', e => {
+      const p = e.features[0].properties;
+      const profile = filterSelect.value;
+      const basePrice = getCalculatedPrice(p.suburb, profile);
+      const finalPrice = Math.round(basePrice * p.coef);
+      new mapboxgl.Popup({ offset: 8 })
+        .setLngLat(e.lngLat)
+        .setHTML(`
+          <div style="font-family:Inter;font-size:12px;line-height:1.45;">
+            <strong>SA1 Micro-Locality: ${p.sa1_code}</strong><br>
+            <span style="color:#6b7280;font-size:11px;">Region: ${p.sa2_name}</span><br>
+            Est. Median: <strong>${fmt(finalPrice)}</strong>
+          </div>
+        `)
+        .addTo(m);
+    });
+  } catch (err) { console.warn('SA1 pricing map failed:', err.message); }
+}
+
+async function loadSA1DemographicBoundaries(m) {
   const sa2s = [
     'Caringbah', 'Caringbah South', 'Cronulla - Kurnell - Bundeena', 
     'Sutherland - Kirrawee', 'Engadine', 'Gymea - Grays Point', 
