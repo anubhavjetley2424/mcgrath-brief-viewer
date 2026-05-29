@@ -356,6 +356,48 @@ def get_suburb_demographics():
             "remigration_pct": 10.4,
             "overseas_migration_pct": 12.1,
             "top_ancestry": "English, Australian, Irish"
+        },
+        {
+            "suburb": "LILLI PILLI",
+            "postcode": "2229",
+            "population": 3182,
+            "population_forecast_5yr": 3300,
+            "population_density": 1780,
+            "median_weekly_income": 2780,
+            "seifa_index": 1108,
+            "owner_occupancy_pct": 82.5,
+            "median_age": 43,
+            "remigration_pct": 6.1,
+            "overseas_migration_pct": 8.0,
+            "top_ancestry": "Australian, English, Irish"
+        },
+        {
+            "suburb": "DOLANS BAY",
+            "postcode": "2229",
+            "population": 620,
+            "population_forecast_5yr": 650,
+            "population_density": 1550,
+            "median_weekly_income": 2950,
+            "seifa_index": 1110,
+            "owner_occupancy_pct": 85.0,
+            "median_age": 45,
+            "remigration_pct": 5.5,
+            "overseas_migration_pct": 7.2,
+            "top_ancestry": "English, Australian, Scottish"
+        },
+        {
+            "suburb": "TAREN POINT",
+            "postcode": "2229",
+            "population": 1720,
+            "population_forecast_5yr": 1850,
+            "population_density": 1980,
+            "median_weekly_income": 2150,
+            "seifa_index": 1068,
+            "owner_occupancy_pct": 72.8,
+            "median_age": 44,
+            "remigration_pct": 9.0,
+            "overseas_migration_pct": 11.5,
+            "top_ancestry": "English, Australian, Greek"
         }
     ]
 

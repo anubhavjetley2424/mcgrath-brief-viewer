@@ -791,12 +791,18 @@ body {
       <div class="choropleth-card" style="grid-column: span 2;">
         <div class="choropleth-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom: none;">
           <h4>Comparable Suburb &amp; SA1 Pricing Fills</h4>
-          <select id="pricingProfileFilter" class="demo-select">
-            <option value="baseline">Baseline All Properties</option>
-            <option value="premium">Premium Houses (650+ sqm, 3+ Beds)</option>
-            <option value="standard">Standard Houses (3+ Beds)</option>
-            <option value="apartment">High-Density Units (Apartments)</option>
-          </select>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="toggle-group" style="display:flex; background:#f3f4f6; padding:3px; border-radius:8px; border:1px solid #e5e7eb; font-family:'Inter', sans-serif;">
+              <button id="toggleSuburbPricing" class="toggle-btn active" style="padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:none; background:#ffffff; color:#111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Suburb View</button>
+              <button id="toggleSA1Pricing" class="toggle-btn" style="padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">SA1 View</button>
+            </div>
+            <select id="pricingProfileFilter" class="demo-select">
+              <option value="baseline">Baseline All Properties</option>
+              <option value="premium">Premium Houses (650+ sqm, 3+ Beds)</option>
+              <option value="standard">Standard Houses (3+ Beds)</option>
+              <option value="apartment">High-Density Units (Apartments)</option>
+            </select>
+          </div>
         </div>
         
         <!-- Unified Horizontal Price Legend -->
@@ -809,11 +815,11 @@ body {
           <div style="display:flex; align-items:center; gap:6px;"><span style="width:10px;height:10px;background:#111827;border-radius:50%;border:1px solid #ddd;display:inline-block;"></span>$3.5M+</div>
         </div>
 
-        <div class="map-section-inner" style="display:grid; grid-template-columns: 1fr 1fr; gap:18px; padding:18px; background:var(--bg-alt); height:auto;">
-          <div style="position:relative; height:380px; border-radius:12px; overflow:hidden; border:1px solid var(--border);">
+        <div class="map-section-inner" style="padding:18px; background:var(--bg-alt); height:auto;">
+          <div id="suburbPriceMapContainer" style="position:relative; height:450px; border-radius:12px; overflow:hidden; border:1px solid var(--border); display: block;">
             <div id="suburbPriceMap" style="height:100%; width:100%;"></div>
           </div>
-          <div style="position:relative; height:380px; border-radius:12px; overflow:hidden; border:1px solid var(--border);">
+          <div id="sa1PriceMapContainer" style="position:relative; height:450px; border-radius:12px; overflow:hidden; border:1px solid var(--border); display: none;">
             <div id="sa1PriceMap" style="height:100%; width:100%;"></div>
           </div>
         </div>
@@ -913,13 +919,19 @@ body {
       <div class="choropleth-card">
         <div class="choropleth-header" style="display:flex; justify-content:space-between; align-items:center;">
           <h4 id="sa1MapTitle">SA1 Boundaries — Socioeconomic (SEIFA)</h4>
-          <select id="sa1DemographicFilter" class="demo-select">
-            <option value="seifa">SEIFA Index (IRSAD)</option>
-            <option value="popDensity">Population Density</option>
-            <option value="medianAge">Median Age</option>
-            <option value="remigration">Re-Migration Rate</option>
-            <option value="ethnicity">Top Ancestry</option>
-          </select>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="toggle-group" style="display:flex; background:#f3f4f6; padding:3px; border-radius:8px; border:1px solid #e5e7eb; font-family:'Inter', sans-serif;">
+              <button id="toggleDemoSuburb" class="toggle-btn" style="padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">Suburb View</button>
+              <button id="toggleDemoSA1" class="toggle-btn active" style="padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:none; background:#ffffff; color:#111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">SA1 View</button>
+            </div>
+            <select id="sa1DemographicFilter" class="demo-select">
+              <option value="seifa">SEIFA Index (IRSAD)</option>
+              <option value="popDensity">Population Density</option>
+              <option value="medianAge">Median Age</option>
+              <option value="remigration">Re-Migration Rate</option>
+              <option value="ethnicity">Top Ancestry</option>
+            </select>
+          </div>
         </div>
         <div style="position:relative; height:420px;">
           <div class="choropleth-map" id="sa1Choropleth" style="height:100%;"></div>
@@ -1459,16 +1471,16 @@ function refreshMainMapLayers(d) {
       if (cardElement) {
         cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         
-        // Trigger high-end highlight transition
-        cardElement.style.borderColor = '#E2231A';
+        // Trigger high-end highlight transition (Solid Black Focus)
+        cardElement.style.borderColor = '#000000';
         cardElement.style.borderWidth = '2px';
-        cardElement.style.boxShadow = '0 0 20px rgba(226,35,26,0.35)';
+        cardElement.style.boxShadow = '0 0 20px rgba(0,0,0,0.45)';
         
         setTimeout(() => {
           cardElement.style.borderColor = '';
           cardElement.style.borderWidth = '';
           cardElement.style.boxShadow = '';
-        }, 2200);
+        }, 3000);
       }
     });
   }
@@ -1531,6 +1543,23 @@ function renderDASection(d) {
       new mapboxgl.Popup({ offset: 10, maxWidth: '280px' }).setLngLat(e.lngLat)
         .setHTML(`<div style="font-family:Inter;font-size:12px;"><strong>${p.daId}</strong><br>${p.desc}<br><span style="color:#6b7280;">${p.status} · ${p.addr}</span></div>`)
         .addTo(daMap);
+
+      // Scroll and highlight row in solid black
+      const rowId = `da-row-${p.daId}`;
+      const rowElement = document.getElementById(rowId);
+      if (rowElement) {
+        rowElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        rowElement.style.backgroundColor = '#000000';
+        rowElement.style.color = '#ffffff';
+        rowElement.style.fontWeight = '600';
+        
+        setTimeout(() => {
+          rowElement.style.backgroundColor = '';
+          rowElement.style.color = '';
+          rowElement.style.fontWeight = '';
+        }, 3000);
+      }
     });
   });
 
@@ -1540,6 +1569,8 @@ function renderDASection(d) {
   (d.das || []).forEach(da => {
     const cls = classifyDA(da.description);
     const tr = document.createElement('tr');
+    tr.id = `da-row-${da.da_id}`;
+    tr.style.transition = 'all 0.3s ease';
     tr.innerHTML = `
       <td style="font-weight:500;white-space:nowrap;">${da.da_id || '—'}</td>
       <td><span class="da-badge ${cls.cls}">${cls.label}</span></td>
@@ -1749,6 +1780,39 @@ const BASELINE_MEDIANS = {
   'Taren Point': 1800000, 'Dolans Bay': 2500000, 'Lilli Pilli': 2300000, 'Bundeena': 1600000
 };
 
+const SUBURB_DEMOGRAPHICS = {
+  'Cronulla': { seifa: 1082, popDensity: 4350, medianAge: 38, remigration: 12.3, ethnicity: 'English' },
+  'Burraneer': { seifa: 1124, popDensity: 1820, medianAge: 42, remigration: 4.2, ethnicity: 'Australian' },
+  'Woolooware': { seifa: 1092, popDensity: 2840, medianAge: 40, remigration: 7.2, ethnicity: 'English' },
+  'Caringbah South': { seifa: 1098, popDensity: 2150, medianAge: 41, remigration: 5.4, ethnicity: 'Australian' },
+  'Miranda': { seifa: 1031, popDensity: 3820, medianAge: 39, remigration: 11.5, ethnicity: 'Irish' },
+  'Sylvania Waters': { seifa: 1084, popDensity: 1650, medianAge: 44, remigration: 6.2, ethnicity: 'Greek' },
+  'Caringbah': { seifa: 1042, popDensity: 3120, medianAge: 39, remigration: 9.8, ethnicity: 'English' },
+  'Gymea': { seifa: 1058, popDensity: 2980, medianAge: 40, remigration: 8.1, ethnicity: 'Australian' },
+  'Gymea Bay': { seifa: 1102, popDensity: 1920, medianAge: 41, remigration: 4.8, ethnicity: 'Australian' },
+  'Sylvania': { seifa: 1051, popDensity: 2320, medianAge: 42, remigration: 7.4, ethnicity: 'Greek' },
+  'Kirrawee': { seifa: 1048, popDensity: 3210, medianAge: 38, remigration: 10.4, ethnicity: 'English' },
+  'Sutherland': { seifa: 1028, popDensity: 3450, medianAge: 37, remigration: 13.2, ethnicity: 'Irish' },
+  'Jannali': { seifa: 1052, popDensity: 2800, medianAge: 39, remigration: 10.9, ethnicity: 'Australian' },
+  'Como': { seifa: 1071, popDensity: 2200, medianAge: 41, remigration: 7.8, ethnicity: 'English' },
+  'Oyster Bay': { seifa: 1084, popDensity: 2100, medianAge: 42, remigration: 6.9, ethnicity: 'Australian' },
+  'Bonnet Bay': { seifa: 1090, popDensity: 1800, medianAge: 40, remigration: 5.8, ethnicity: 'English' },
+  'Kareela': { seifa: 1088, popDensity: 2400, medianAge: 43, remigration: 7.2, ethnicity: 'Australian' },
+  'Loftus': { seifa: 1065, popDensity: 1900, medianAge: 39, remigration: 8.4, ethnicity: 'Australian' },
+  'Engadine': { seifa: 1042, popDensity: 2200, medianAge: 39, remigration: 9.8, ethnicity: 'English' },
+  'Heathcote': { seifa: 1035, popDensity: 1500, medianAge: 40, remigration: 8.2, ethnicity: 'Australian' },
+  'Taren Point': { seifa: 1068, popDensity: 1980, medianAge: 44, remigration: 9.0, ethnicity: 'Greek' },
+  'Dolans Bay': { seifa: 1110, popDensity: 1550, medianAge: 45, remigration: 5.5, ethnicity: 'English' },
+  'Lilli Pilli': { seifa: 1108, popDensity: 1780, medianAge: 43, remigration: 6.1, ethnicity: 'Australian' },
+  'Bundeena': { seifa: 1050, popDensity: 800, medianAge: 46, remigration: 11.5, ethnicity: 'Australian' }
+};
+
+const findSuburbKey = (name) => {
+  if (!name) return '';
+  const key = Object.keys(BASELINE_MEDIANS).find(k => k.toLowerCase() === name.toLowerCase());
+  return key || name;
+};
+
 // Premium monochrome color scale (McGrath Luxury Grayscale branding)
 const PRICE_LEVELS = [
   { limit: 1200000, color: '#f3f4f6', label: 'Under $1.2M' },
@@ -1782,23 +1846,25 @@ const getCalculatedPrice = (suburb, profile) => {
   return base; // baseline
 };
 
+let suburbPriceMap, sa1PriceMap, sa1DemographicMap;
+
 async function loadChoroplethMaps() {
   // 1. Suburb Price Map (Centering on Simon's active Caringbah-Cronulla Peninsula farm area)
-  const suburbPriceMap = new mapboxgl.Map({
+  suburbPriceMap = new mapboxgl.Map({
     container: 'suburbPriceMap', style: 'mapbox://styles/mapbox/light-v11',
     center: [151.13, -34.058], zoom: 12.0, accessToken: CONFIG.mapboxToken
   });
   suburbPriceMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
   // 2. SA1 Price Map (Centering on Simon's active Caringbah-Cronulla Peninsula farm area)
-  const sa1PriceMap = new mapboxgl.Map({
+  sa1PriceMap = new mapboxgl.Map({
     container: 'sa1PriceMap', style: 'mapbox://styles/mapbox/light-v11',
     center: [151.13, -34.058], zoom: 12.0, accessToken: CONFIG.mapboxToken
   });
   sa1PriceMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
   // 3. SA1 Demographic Map (Centering on Simon's active Caringbah-Cronulla Peninsula farm area)
-  const sa1DemographicMap = new mapboxgl.Map({
+  sa1DemographicMap = new mapboxgl.Map({
     container: 'sa1Choropleth', style: 'mapbox://styles/mapbox/light-v11',
     center: [151.13, -34.058], zoom: 12.2, accessToken: CONFIG.mapboxToken
   });
@@ -1807,11 +1873,44 @@ async function loadChoroplethMaps() {
   suburbPriceMap.on('load', () => initSuburbPriceMap(suburbPriceMap));
   sa1PriceMap.on('load', () => initSA1PriceMap(sa1PriceMap));
   sa1DemographicMap.on('load', () => loadSA1DemographicBoundaries(sa1DemographicMap));
+
+  // Toggles for Comparable Pricing Boundaries Map
+  document.getElementById('toggleSuburbPricing').addEventListener('click', () => {
+    document.getElementById('toggleSuburbPricing').classList.add('active');
+    document.getElementById('toggleSuburbPricing').style.background = '#ffffff';
+    document.getElementById('toggleSuburbPricing').style.color = '#111827';
+    document.getElementById('toggleSuburbPricing').style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+    
+    document.getElementById('toggleSA1Pricing').classList.remove('active');
+    document.getElementById('toggleSA1Pricing').style.background = 'transparent';
+    document.getElementById('toggleSA1Pricing').style.color = '#6b7280';
+    document.getElementById('toggleSA1Pricing').style.boxShadow = 'none';
+
+    document.getElementById('suburbPriceMapContainer').style.display = 'block';
+    document.getElementById('sa1PriceMapContainer').style.display = 'none';
+    if (suburbPriceMap) suburbPriceMap.resize();
+  });
+
+  document.getElementById('toggleSA1Pricing').addEventListener('click', () => {
+    document.getElementById('toggleSA1Pricing').classList.add('active');
+    document.getElementById('toggleSA1Pricing').style.background = '#ffffff';
+    document.getElementById('toggleSA1Pricing').style.color = '#111827';
+    document.getElementById('toggleSA1Pricing').style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+    
+    document.getElementById('toggleSuburbPricing').classList.remove('active');
+    document.getElementById('toggleSuburbPricing').style.background = 'transparent';
+    document.getElementById('toggleSuburbPricing').style.color = '#6b7280';
+    document.getElementById('toggleSuburbPricing').style.boxShadow = 'none';
+
+    document.getElementById('suburbPriceMapContainer').style.display = 'none';
+    document.getElementById('sa1PriceMapContainer').style.display = 'block';
+    if (sa1PriceMap) sa1PriceMap.resize();
+  });
 }
 
 async function initSuburbPriceMap(m) {
   const suburbsList = Object.keys(BASELINE_MEDIANS);
-  const where = suburbsList.map(s => `SAL_NAME_2021 = '${s}'`).join(' OR ');
+  const where = suburbsList.map(s => `UPPER(SAL_NAME_2021) = '${s.toUpperCase()}'`).join(' OR ');
   try {
     const url = new URL(CONFIG.absSuburbUrl);
     url.searchParams.set('where', where);
@@ -1824,10 +1923,10 @@ async function initSuburbPriceMap(m) {
     const gj = await res.json();
     if (!gj.features?.length) return;
 
-    // Apply baseline pricing properties
+    // Apply baseline pricing properties with case-insensitive normalization
     gj.features.forEach(f => {
-      const n = f.properties.SAL_NAME_2021;
-      f.properties.name = n;
+      const rawName = f.properties.SAL_NAME_2021 || '';
+      f.properties.name = findSuburbKey(rawName);
     });
 
     m.addSource('suburbs-pricing', { type: 'geojson', data: gj });
@@ -1840,7 +1939,7 @@ async function initSuburbPriceMap(m) {
     function updateSuburbPricing(profile) {
       const updatedGj = JSON.parse(JSON.stringify(gj));
       updatedGj.features.forEach(f => {
-        const n = f.properties.SAL_NAME_2021;
+        const n = f.properties.name;
         const price = getCalculatedPrice(n, profile);
         f.properties.price = price;
         f.properties.color = getPriceColor(price);
@@ -1869,11 +1968,8 @@ async function initSuburbPriceMap(m) {
 async function initSA1PriceMap(m) {
   const sa2s = [
     'Caringbah', 'Caringbah South', 'Cronulla - Kurnell - Bundeena', 
-    'Sutherland - Kirrawee', 'Engadine', 'Gymea - Grays Point', 
-    'Menai - Lucas Heights - Woronora', 'Miranda - Yowie Bay', 
-    'Sylvania - Taren Point', 'Heathcote - Waterfall', 
-    'Illawong - Alfords Point', 'Lilli Pilli - Port Hacking - Dolans Bay', 
-    'Oyster Bay - Como - Jannali', 'Woolooware - Burraneer'
+    'Gymea - Grays Point', 'Miranda - Yowie Bay', 'Sylvania - Taren Point', 
+    'Lilli Pilli - Port Hacking - Dolans Bay', 'Woolooware - Burraneer'
   ];
   const where = sa2s.map(s => `sa2_name_2021 = '${s}'`).join(' OR ');
 
@@ -1971,15 +2067,16 @@ async function initSA1PriceMap(m) {
 async function loadSA1DemographicBoundaries(m) {
   const sa2s = [
     'Caringbah', 'Caringbah South', 'Cronulla - Kurnell - Bundeena', 
-    'Sutherland - Kirrawee', 'Engadine', 'Gymea - Grays Point', 
-    'Menai - Lucas Heights - Woronora', 'Miranda - Yowie Bay', 
-    'Sylvania - Taren Point', 'Heathcote - Waterfall', 
-    'Illawong - Alfords Point', 'Lilli Pilli - Port Hacking - Dolans Bay', 
-    'Oyster Bay - Como - Jannali', 'Woolooware - Burraneer'
+    'Gymea - Grays Point', 'Miranda - Yowie Bay', 'Sylvania - Taren Point', 
+    'Lilli Pilli - Port Hacking - Dolans Bay', 'Woolooware - Burraneer'
   ];
   const where = sa2s.map(s => `sa2_name_2021 = '${s}'`).join(' OR ');
 
+  const suburbsList = Object.keys(BASELINE_MEDIANS);
+  const suburbWhere = suburbsList.map(s => `UPPER(SAL_NAME_2021) = '${s.toUpperCase()}'`).join(' OR ');
+
   try {
+    // 1. Fetch SA1 Boundaries
     const url = new URL(CONFIG.absSA1Url);
     url.searchParams.set('where', where);
     url.searchParams.set('outFields', 'sa1_code_2021,sa2_name_2021');
@@ -1991,9 +2088,39 @@ async function loadSA1DemographicBoundaries(m) {
     const res = await fetch(url.toString());
     if (!res.ok) throw new Error(res.status);
     const arcgisJson = await res.json();
+    
+    // 2. Fetch Suburb Boundaries for Demographic Aggregation
+    const subUrl = new URL(CONFIG.absSuburbUrl);
+    subUrl.searchParams.set('where', suburbWhere);
+    subUrl.searchParams.set('outFields', 'SAL_NAME_2021,SAL_CODE_2021');
+    subUrl.searchParams.set('f', 'geojson');
+    subUrl.searchParams.set('outSR', '4326');
+    subUrl.searchParams.set('returnGeometry', 'true');
+    
+    let suburbGj = null;
+    const subRes = await fetch(subUrl.toString());
+    if (subRes.ok) {
+      const parsedSub = await subRes.json();
+      if (parsedSub.features?.length) {
+        parsedSub.features.forEach(f => {
+          const rawName = f.properties.SAL_NAME_2021 || '';
+          const name = findSuburbKey(rawName);
+          const demo = SUBURB_DEMOGRAPHICS[name] || { seifa: 1050, popDensity: 2000, medianAge: 40, remigration: 9.0, ethnicity: 'Australian' };
+          
+          f.properties.suburb = name;
+          f.properties.seifa = demo.seifa;
+          f.properties.popDensity = demo.popDensity;
+          f.properties.medianAge = demo.medianAge;
+          f.properties.remigration = demo.remigration;
+          f.properties.ethnicity = demo.ethnicity;
+        });
+        suburbGj = parsedSub;
+      }
+    }
+
     if (!arcgisJson.features?.length) { console.warn('No SA1 boundaries returned'); return; }
 
-    // Convert ArcGIS JSON format to GeoJSON client-side to bypass ABS geojson bug!
+    // Convert SA1 ArcGIS JSON format to GeoJSON client-side to bypass ABS geojson bug!
     const gj = {
       type: 'FeatureCollection',
       features: arcgisJson.features.map(f => {
@@ -2028,7 +2155,7 @@ async function loadSA1DemographicBoundaries(m) {
 
     m.addSource('sa1', { type: 'geojson', data: gj });
     
-    // Set up default SEIFA styling expression
+    // Set up default SA1 SEIFA styling expression
     m.addLayer({ 
       id: 'sa1-fill', 
       type: 'fill', 
@@ -2047,21 +2174,71 @@ async function loadSA1DemographicBoundaries(m) {
     
     m.addLayer({ id: 'sa1-line', type: 'line', source: 'sa1', paint: { 'line-color': '#374151', 'line-width': 0.8, 'line-opacity': 0.5 } });
 
-    // Handle legend rendering and paint property updates on metric change
+    // Add Suburb Demographics layers if fetched successfully
+    if (suburbGj) {
+      m.addSource('suburb-demo', { type: 'geojson', data: suburbGj });
+      m.addLayer({
+        id: 'suburb-demo-fill',
+        type: 'fill',
+        source: 'suburb-demo',
+        layout: { 'visibility': 'none' },
+        paint: {
+          'fill-color': [
+            'step', ['get', 'seifa'],
+            '#d42020', 1000,
+            '#d97706', 1050,
+            '#2563eb', 1100,
+            '#059669'
+          ],
+          'fill-opacity': 0.35
+        }
+      });
+      m.addLayer({
+        id: 'suburb-demo-line',
+        type: 'line',
+        source: 'suburb-demo',
+        layout: { 'visibility': 'none' },
+        paint: { 'line-color': '#374151', 'line-width': 0.8, 'line-opacity': 0.5 }
+      });
+    }
+
+    // Handle legend rendering and paint property updates on metric/view change
     const filterSelect = document.getElementById('sa1DemographicFilter');
     const legendContainer = document.getElementById('sa1Legend');
     const mapTitle = document.getElementById('sa1MapTitle');
 
-    function updateSA1Layer(metric) {
-      if (metric === 'seifa') {
-        mapTitle.textContent = 'SA1 Boundaries — Socioeconomic (SEIFA)';
-        m.setPaintProperty('sa1-fill', 'fill-color', [
+    let currentMetric = 'seifa';
+    let currentView = 'sa1'; // 'sa1' or 'suburb'
+
+    function updateDemographicLayer(metric, view) {
+      if (metric) currentMetric = metric;
+      if (view) currentView = view;
+      
+      const isSA1 = (currentView === 'sa1');
+      
+      // Toggle layer visibility
+      if (m.getLayer('sa1-fill')) {
+        m.setLayoutProperty('sa1-fill', 'visibility', isSA1 ? 'visible' : 'none');
+        m.setLayoutProperty('sa1-line', 'visibility', isSA1 ? 'visible' : 'none');
+      }
+      if (m.getLayer('suburb-demo-fill')) {
+        m.setLayoutProperty('suburb-demo-fill', 'visibility', isSA1 ? 'none' : 'visible');
+        m.setLayoutProperty('suburb-demo-line', 'visibility', isSA1 ? 'none' : 'visible');
+      }
+
+      const viewPrefix = isSA1 ? 'SA1 Boundaries' : 'Suburb Boundaries';
+      
+      if (currentMetric === 'seifa') {
+        mapTitle.textContent = `${viewPrefix} — Socioeconomic (SEIFA)`;
+        const paintExp = [
           'step', ['get', 'seifa'],
           '#d42020', 1000,
           '#d97706', 1050,
           '#2563eb', 1100,
           '#059669'
-        ]);
+        ];
+        if (m.getLayer('sa1-fill')) m.setPaintProperty('sa1-fill', 'fill-color', paintExp);
+        if (m.getLayer('suburb-demo-fill')) m.setPaintProperty('suburb-demo-fill', 'fill-color', paintExp);
         legendContainer.innerHTML = `
           <div class="sa1-legend-title">SEIFA Index (IRSAD)</div>
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#059669"></span>1100+ (High Advantage)</div>
@@ -2069,15 +2246,17 @@ async function loadSA1DemographicBoundaries(m) {
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#d97706"></span>1000 - 1050 (Average)</div>
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#d42020"></span>&lt;1000 (Relative Disadv.)</div>
         `;
-      } else if (metric === 'popDensity') {
-        mapTitle.textContent = 'SA1 Boundaries — Population Density';
-        m.setPaintProperty('sa1-fill', 'fill-color', [
+      } else if (currentMetric === 'popDensity') {
+        mapTitle.textContent = `${viewPrefix} — Population Density`;
+        const paintExp = [
           'step', ['get', 'popDensity'],
           '#eff6ff', 1500,
           '#bfdbfe', 3000,
           '#3b82f6', 4500,
           '#1d4ed8'
-        ]);
+        ];
+        if (m.getLayer('sa1-fill')) m.setPaintProperty('sa1-fill', 'fill-color', paintExp);
+        if (m.getLayer('suburb-demo-fill')) m.setPaintProperty('suburb-demo-fill', 'fill-color', paintExp);
         legendContainer.innerHTML = `
           <div class="sa1-legend-title">People / km²</div>
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#1d4ed8"></span>4,500+ (Urban/High)</div>
@@ -2085,15 +2264,17 @@ async function loadSA1DemographicBoundaries(m) {
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#bfdbfe"></span>1,500 - 3,000 (Medium)</div>
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#eff6ff"></span>&lt;1,500 (Suburban/Low)</div>
         `;
-      } else if (metric === 'medianAge') {
-        mapTitle.textContent = 'SA1 Boundaries — Median Age';
-        m.setPaintProperty('sa1-fill', 'fill-color', [
+      } else if (currentMetric === 'medianAge') {
+        mapTitle.textContent = `${viewPrefix} — Median Age`;
+        const paintExp = [
           'step', ['get', 'medianAge'],
           '#faf5ff', 36,
           '#e9d5ff', 41,
           '#a855f7', 45,
           '#7e22ce'
-        ]);
+        ];
+        if (m.getLayer('sa1-fill')) m.setPaintProperty('sa1-fill', 'fill-color', paintExp);
+        if (m.getLayer('suburb-demo-fill')) m.setPaintProperty('suburb-demo-fill', 'fill-color', paintExp);
         legendContainer.innerHTML = `
           <div class="sa1-legend-title">Median Age (Years)</div>
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#7e22ce"></span>45+ (Retired/Established)</div>
@@ -2101,15 +2282,17 @@ async function loadSA1DemographicBoundaries(m) {
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#e9d5ff"></span>36 - 40 (Family Demog.)</div>
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#faf5ff"></span>&lt;36 (Younger/Growing)</div>
         `;
-      } else if (metric === 'remigration') {
-        mapTitle.textContent = 'SA1 Boundaries — Re-Migration Rates';
-        m.setPaintProperty('sa1-fill', 'fill-color', [
+      } else if (currentMetric === 'remigration') {
+        mapTitle.textContent = `${viewPrefix} — Re-Migration Rates`;
+        const paintExp = [
           'step', ['get', 'remigration'],
           '#fef2f2', 6.0,
           '#fecaca', 10.0,
           '#f87171', 14.0,
           '#dc2626'
-        ]);
+        ];
+        if (m.getLayer('sa1-fill')) m.setPaintProperty('sa1-fill', 'fill-color', paintExp);
+        if (m.getLayer('suburb-demo-fill')) m.setPaintProperty('suburb-demo-fill', 'fill-color', paintExp);
         legendContainer.innerHTML = `
           <div class="sa1-legend-title">Re-Migration Rate (5yr)</div>
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#dc2626"></span>14.0%+ (High Turnover)</div>
@@ -2117,9 +2300,9 @@ async function loadSA1DemographicBoundaries(m) {
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#fecaca"></span>6.0% - 10.0% (High Retention)</div>
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#fef2f2"></span>&lt;6.0% (Extremely Stable)</div>
         `;
-      } else if (metric === 'ethnicity') {
-        mapTitle.textContent = 'SA1 Boundaries — Top Ancestry';
-        m.setPaintProperty('sa1-fill', 'fill-color', [
+      } else if (currentMetric === 'ethnicity') {
+        mapTitle.textContent = `${viewPrefix} — Top Ancestry`;
+        const paintExp = [
           'match', ['get', 'ethnicity'],
           'English', '#10b981',
           'Australian', '#3b82f6',
@@ -2128,7 +2311,9 @@ async function loadSA1DemographicBoundaries(m) {
           'Italian', '#8b5cf6',
           'Chinese', '#ef4444',
           '#6b7280'
-        ]);
+        ];
+        if (m.getLayer('sa1-fill')) m.setPaintProperty('sa1-fill', 'fill-color', paintExp);
+        if (m.getLayer('suburb-demo-fill')) m.setPaintProperty('suburb-demo-fill', 'fill-color', paintExp);
         legendContainer.innerHTML = `
           <div class="sa1-legend-title">Dominant Ancestry</div>
           <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#10b981"></span>English</div>
@@ -2142,11 +2327,40 @@ async function loadSA1DemographicBoundaries(m) {
     }
 
     // Set initial legend state
-    updateSA1Layer('seifa');
+    updateDemographicLayer('seifa', 'sa1');
 
     // Add change listener
     filterSelect.addEventListener('change', e => {
-      updateSA1Layer(e.target.value);
+      updateDemographicLayer(e.target.value, null);
+    });
+
+    // Add View Toggle Listeners
+    document.getElementById('toggleDemoSuburb').addEventListener('click', () => {
+      document.getElementById('toggleDemoSuburb').classList.add('active');
+      document.getElementById('toggleDemoSuburb').style.background = '#ffffff';
+      document.getElementById('toggleDemoSuburb').style.color = '#111827';
+      document.getElementById('toggleDemoSuburb').style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+      
+      document.getElementById('toggleDemoSA1').classList.remove('active');
+      document.getElementById('toggleDemoSA1').style.background = 'transparent';
+      document.getElementById('toggleDemoSA1').style.color = '#6b7280';
+      document.getElementById('toggleDemoSA1').style.boxShadow = 'none';
+
+      updateDemographicLayer(null, 'suburb');
+    });
+
+    document.getElementById('toggleDemoSA1').addEventListener('click', () => {
+      document.getElementById('toggleDemoSA1').classList.add('active');
+      document.getElementById('toggleDemoSA1').style.background = '#ffffff';
+      document.getElementById('toggleDemoSA1').style.color = '#111827';
+      document.getElementById('toggleDemoSA1').style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+      
+      document.getElementById('toggleDemoSuburb').classList.remove('active');
+      document.getElementById('toggleDemoSuburb').style.background = 'transparent';
+      document.getElementById('toggleDemoSuburb').style.color = '#6b7280';
+      document.getElementById('toggleDemoSuburb').style.boxShadow = 'none';
+
+      updateDemographicLayer(null, 'sa1');
     });
 
     m.on('click', 'sa1-fill', e => {
@@ -2177,6 +2391,35 @@ async function loadSA1DemographicBoundaries(m) {
         `)
         .addTo(m);
     });
+
+    m.on('click', 'suburb-demo-fill', e => {
+      const p = e.features[0].properties;
+      const metric = filterSelect.value;
+      let metricHtml = '';
+      
+      if (metric === 'seifa') {
+        metricHtml = `<strong>SEIFA Index:</strong> ${p.seifa} (Top 15%)`;
+      } else if (metric === 'popDensity') {
+        metricHtml = `<strong>Pop. Density:</strong> ${p.popDensity.toLocaleString()} people/km²`;
+      } else if (metric === 'medianAge') {
+        metricHtml = `<strong>Median Age:</strong> ${p.medianAge} years`;
+      } else if (metric === 'remigration') {
+        metricHtml = `<strong>Re-Migration (5yr):</strong> ${p.remigration}%`;
+      } else if (metric === 'ethnicity') {
+        metricHtml = `<strong>Top Ancestry:</strong> ${p.ethnicity}`;
+      }
+
+      new mapboxgl.Popup({ offset: 8 })
+        .setLngLat(e.lngLat)
+        .setHTML(`
+          <div style="font-family:Inter;font-size:13px;padding:4px;line-height:1.45;">
+            <div style="font-weight:700;border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:6px;font-size:14px;color:#111827;">Suburb: ${p.suburb}</div>
+            <div style="font-size:12px;color:#000;">${metricHtml}</div>
+          </div>
+        `)
+        .addTo(m);
+    });
+
     console.log('[Choropleth] SA1s:', gj.features.length);
   } catch (err) { console.warn('SA1 boundaries failed:', err.message); }
 }
