@@ -737,51 +737,6 @@ body {
     </div>
   </div>
 
-  <!-- ── AI APPRAISAL INSIGHTS ────────────────────────── -->
-  <div class="section" id="aiInsightsSection" style="display:none; margin-bottom: 28px;">
-    <div class="section-title">
-      AI Appraisal Prep Insights
-      <span class="label">Google Commute Profile &amp; Gemini AI Talking Points</span>
-    </div>
-    <div style="display:grid; grid-template-columns: 1fr 2fr; gap:20px;">
-      <!-- Commute Card -->
-      <div class="card" style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:var(--shadow-sm);">
-        <div class="card-header" style="border-bottom:1px solid var(--border); padding:16px 20px;">
-          <h3 style="margin:0; font-size:14px; font-weight:700; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Sydney CBD Commute Profile</h3>
-        </div>
-        <div class="card-body" style="padding:20px; display:flex; flex-direction:column; gap:20px;">
-          <div style="display:flex; align-items:center; gap:16px;">
-            <div style="font-size:28px; background:var(--bg-alt); padding:8px; border-radius:8px;">🚗</div>
-            <div>
-              <div style="font-weight:600; font-size:13px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;">Driving Time</div>
-              <div id="aiDriveTime" style="font-size:18px; font-weight:800; color:#E2231A; margin-top:2px;">—</div>
-              <div id="aiDriveDist" style="font-size:11px; color:var(--text-tertiary); margin-top:1px;">—</div>
-            </div>
-          </div>
-          <div style="display:flex; align-items:center; gap:16px;">
-            <div style="font-size:28px; background:var(--bg-alt); padding:8px; border-radius:8px;">🚆</div>
-            <div>
-              <div style="font-weight:600; font-size:13px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;">Public Transit</div>
-              <div id="aiTransitTime" style="font-size:18px; font-weight:800; color:#E2231A; margin-top:2px;">—</div>
-              <div id="aiTransitDist" style="font-size:11px; color:var(--text-tertiary); margin-top:1px;">—</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Talking Points Card -->
-      <div class="card" style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:var(--shadow-sm);">
-        <div class="card-header" style="border-bottom:1px solid var(--border); padding:16px 20px;">
-          <h3 style="margin:0; font-size:14px; font-weight:700; color:var(--text-primary); text-transform:uppercase; letter-spacing:1px;">Gemini AI Appraisal Summary &amp; Talking Points</h3>
-        </div>
-        <div class="card-body" style="padding:20px;">
-          <div id="aiTalkingPoints" style="display:flex; flex-direction:column; gap:12px;">
-            <p style="color:var(--text-tertiary); font-style:italic; margin:0;">No AI summary available for this deal. Move deal to 'Pre-Appointment Prep' to trigger generation.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ── MARKET POSITIONING (Map + Sidebar) ───────────── -->
   <div class="section">
     <div class="section-title">
@@ -1293,7 +1248,7 @@ function renderAll() {
   renderAccessSection(d);
   renderCharts(d);
   loadChoroplethMaps();
-  renderAIInsights(d);
+  renderAIAgentNotes(d);
 }
 
 // ── VENDOR HEADER ───────────────────────────────────────────
@@ -2232,98 +2187,44 @@ document.querySelector('.map-layer-toggles').addEventListener('click', e => {
   if (STATE.data && mainMap?.isStyleLoaded()) refreshMainMapLayers(STATE.data);
 });
 
-function renderAIInsights(d) {
-  const section = document.getElementById('aiInsightsSection');
-  if (!d || (!d.commute && !d.gemini && (!d.subject || !d.subject.agent_notes))) {
+function renderAIAgentNotes(d) {
+  const section = document.getElementById('aiAgentNotesSection');
+  const container = document.getElementById('aiAgentNotesContent');
+  
+  if (!d || !d.subject || !d.subject.agent_notes) {
     section.style.display = 'none';
     return;
   }
   
   section.style.display = 'block';
-  
-  // 1. Commute
-  const commute = d.commute || {};
-  const driving = commute.driving || {};
-  const transit = commute.transit || {};
-  
-  document.getElementById('aiDriveTime').textContent = driving.duration || '—';
-  document.getElementById('aiDriveDist').textContent = driving.distance ? `Distance: ${driving.distance}` : '—';
-  document.getElementById('aiTransitTime').textContent = transit.duration || '—';
-  document.getElementById('aiTransitDist').textContent = transit.distance ? `Distance: ${transit.distance}` : '—';
-  
-  // 2. Gemini Talking Points
-  const container = document.getElementById('aiTalkingPoints');
   container.innerHTML = '';
   
-  const g = d.gemini || {};
+  const notesText = d.subject.agent_notes;
   
-  // Try to parse commute info into readable tags if available
-  if (g.talking_points && g.talking_points.length) {
-    const list = document.createElement('div');
-    list.style.display = 'flex';
-    list.style.flexDirection = 'column';
-    list.style.gap = '12px';
+  // Parse lines/bullet points from the agent notes string (either markdown bullets * or - or newlines)
+  const lines = notesText.split('\n')
+    .map(line => line.replace(/^[\*\-\s•\s]+/, '').trim())
+    .filter(line => line.length > 0);
     
-    // Add Suburb Summary first
-    if (g.suburb_summary) {
-      const summaryDiv = document.createElement('div');
-      summaryDiv.style.marginBottom = '12px';
-      summaryDiv.innerHTML = `<h4 style="margin:0 0 6px 0; color:var(--text-secondary); font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:700;">Market Overview Summary</h4><p style="margin:0; font-size:13px; line-height:1.5; color:var(--text-primary); font-weight:500;">${g.suburb_summary}</p>`;
-      list.appendChild(summaryDiv);
-    }
+  if (lines.length > 0) {
+    const ul = document.createElement('ul');
+    ul.style.margin = '0';
+    ul.style.paddingLeft = '20px';
+    ul.style.display = 'flex';
+    ul.style.flexDirection = 'column';
+    ul.style.gap = '10px';
     
-    // Add Talking Points header
-    const tpHeader = document.createElement('h4');
-    tpHeader.style.margin = '10px 0 6px 0';
-    tpHeader.style.color = 'var(--text-secondary)';
-    tpHeader.style.fontSize = '11px';
-    tpHeader.style.textTransform = 'uppercase';
-    tpHeader.style.letterSpacing = '1px';
-    tpHeader.style.fontWeight = '700';
-    tpHeader.textContent = "Simon's Key Appraisal Talking Points";
-    list.appendChild(tpHeader);
-    
-    g.talking_points.forEach((point, idx) => {
-      const item = document.createElement('div');
-      item.style.padding = '12px 16px';
-      item.style.background = 'var(--bg-alt)';
-      item.style.borderRadius = '8px';
-      item.style.borderLeft = '4px solid #E2231A';
-      item.style.fontSize = '13px';
-      item.style.lineHeight = '1.5';
-      item.style.color = 'var(--text-primary)';
-      item.innerHTML = `<strong>Point ${idx + 1}:</strong> ${point}`;
-      list.appendChild(item);
+    lines.forEach(line => {
+      const li = document.createElement('li');
+      li.style.fontSize = '14px';
+      li.style.lineHeight = '1.5';
+      li.innerHTML = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      ul.appendChild(li);
     });
-    
-    container.appendChild(list);
-  } else if (d.subject && d.subject.agent_notes) {
-    // If we only have raw Agent Notes HTML, we can offer a link to open the brief!
-    container.innerHTML = `
-      <p style="color:var(--text-secondary); font-size:13px; line-height:1.5; margin:0 0 12px 0;">The AI appraisal brief is fully generated and ready. It includes hazards, local DAs, school rankings, and comprehensive price tier segmentations.</p>
-      <button onclick="openBriefModal()" class="filter-btn active" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; font-weight:600; border-radius:6px; cursor:pointer;">
-        📄 View Complete AI Brief Document
-      </button>
-    `;
+    container.appendChild(ul);
   } else {
-    container.innerHTML = '<p style="color:var(--text-tertiary); font-style:italic; margin:0;">No AI summary available for this deal. Move deal to 'Pre-Appointment Prep' to trigger generation.</p>';
+    container.innerHTML = `<p style="margin:0; font-style:italic; color:rgba(255,255,255,0.7);">No summary bullets parsed from agent notes.</p>`;
   }
-}
-
-function openBriefModal() {
-  const d = STATE.data;
-  if (!d || !d.subject || !d.subject.agent_notes) return;
-  const iframe = document.getElementById('briefIframe');
-  const modal = document.getElementById('aiBriefModal');
-  
-  // Set iframe srcdoc with the Agent Notes HTML
-  iframe.srcdoc = d.subject.agent_notes;
-  modal.style.display = 'flex';
-}
-
-function closeBriefModal() {
-  const modal = document.getElementById('aiBriefModal');
-  modal.style.display = 'none';
 }
 
 // Accessibility tabs
@@ -2339,18 +2240,5 @@ document.getElementById('accessTabs').addEventListener('click', e => {
 // ── BOOT ────────────────────────────────────────────────────
 loadData();
 </script>
-<!-- AI Brief Modal -->
-<div id="aiBriefModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:99999; justify-content:center; align-items:center; padding:20px; backdrop-filter:blur(4px);">
-  <div style="background:#fff; width:100%; max-width:1050px; height:90%; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 24px 64px rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.15);">
-    <div style="background:#000; color:#fff; padding:20px 28px; display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid #E2231A;">
-      <h3 style="margin:0; font-family:Inter; font-size:15px; letter-spacing:3px; font-weight:800; color:#fff; text-transform:uppercase;">AI APPRAISAL BRIEF DOCUMENT</h3>
-      <button onclick="closeBriefModal()" style="background:none; border:none; color:#bbb; font-size:28px; cursor:pointer; line-height:1; transition:color 0.15s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#bbb'">&times;</button>
-    </div>
-    <div style="flex:1; overflow:auto; background:#f3f4f6; padding:0; position:relative;">
-      <iframe id="briefIframe" style="width:100%; height:100%; border:none; background:#fff;"></iframe>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
