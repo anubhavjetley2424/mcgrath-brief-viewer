@@ -892,7 +892,7 @@ const CONFIG = {
 };
 
 // Warn if token is missing
-if (CONFIG.mapboxToken === '__MAPBOX_TOKEN__' || !CONFIG.mapboxToken) {
+if (!CONFIG.mapboxToken || !CONFIG.mapboxToken.startsWith('pk.')) {
   console.error('[Dashboard] Mapbox token not configured. Pass ?token=pk.xxx in the URL or set up GitHub Actions deployment.');
   document.querySelector('.app').insertAdjacentHTML('afterbegin',
     '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-top:16px;font-size:13px;color:#991b1b;">⚠️ Mapbox token not configured. Add <code>?token=YOUR_TOKEN</code> to the URL or deploy via GitHub Actions.</div>'
