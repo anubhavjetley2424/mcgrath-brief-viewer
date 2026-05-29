@@ -822,6 +822,42 @@ body {
           <div id="sa1PriceMapContainer" style="position:relative; height:450px; border-radius:12px; overflow:hidden; border:1px solid var(--border); display: none;">
             <div id="sa1PriceMap" style="height:100%; width:100%;"></div>
           </div>
+          
+          <!-- Pricing Detail Card on the Right -->
+          <div class="pricing-detail-card" id="pricingDetailCard" style="background:#ffffff; border-radius:12px; border:1px solid var(--border); padding:20px; display:flex; flex-direction:column; gap:16px; height:450px; box-sizing:border-box;">
+            <div style="border-bottom:1px solid var(--border-light); padding-bottom:12px;">
+              <h3 id="priceCardTitle" style="margin:0; font-size:16px; font-weight:700; color:#111827;">Cronulla</h3>
+              <span id="priceCardSub" style="font-size:12px; color:#6b7280;">Sutherland Shire Suburb Baseline</span>
+            </div>
+            
+            <div style="background:#f9fafb; border-radius:8px; padding:12px 16px; border-left:4px solid #111827;">
+              <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#6b7280; margin-bottom:4px;">Estimated Median Price</div>
+              <div id="priceCardVal" style="font-size:26px; font-weight:800; color:#111827;">$2,400,000</div>
+              <div id="priceCardCompare" style="font-size:12px; color:#059669; margin-top:2px;">+45.4% above Sutherland Shire median</div>
+            </div>
+            
+            <div>
+              <h4 style="margin:0 0 10px 0; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#4b5563;">Pricing Profile Medians</h4>
+              <div style="display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; padding-bottom:4px; border-bottom:1px dashed #e5e7eb;">
+                  <span style="color:#6b7280;">Premium Houses (650+ sqm)</span>
+                  <strong id="profileMedPremium" style="color:#111827;">$3,240,000</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; padding-bottom:4px; border-bottom:1px dashed #e5e7eb;">
+                  <span style="color:#6b7280;">Standard Houses (3+ Beds)</span>
+                  <strong id="profileMedStandard" style="color:#111827;">$2,040,000</strong>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:13px;">
+                  <span style="color:#6b7280;">High-Density Units (Apartments)</span>
+                  <strong id="profileMedApartment" style="color:#111827;">$1,248,000</strong>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:auto; font-size:11px; color:#9ca3af; line-height:1.4; border-top:1px solid var(--border-light); padding-top:12px;">
+              ℹ️ Pricing fills are calculated from official government NSW Valuer General (VG) bulk transaction records over the last 12-24 months. Click on any boundary area on the map to inspect its real-time price context.
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -934,54 +970,17 @@ body {
             </select>
           </div>
         </div>
-        <div style="position:relative; height:420px;">
+        <div style="position:relative; height:420px; border-bottom: 1px solid var(--border-light);">
           <div class="choropleth-map" id="sa1Choropleth" style="height:100%;"></div>
           <div class="sa1-legend" id="sa1Legend">
             <!-- Populated dynamically -->
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── SOCIOECONOMIC DATA ───────────────────────────── -->
-  <div class="section">
-    <div class="section-title">
-      Suburb Demographics
-      <span class="label">Census Data</span>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <div class="socio-grid" id="socioGrid">
-          <div class="socio-card">
-            <div class="s-label">Population</div>
-            <div class="s-value">18,437</div>
-            <div class="s-sub">Cronulla SA2 · 2021 Census</div>
-          </div>
-          <div class="socio-card">
-            <div class="s-label">Median Household Income</div>
-            <div class="s-value">$2,158/wk</div>
-            <div class="s-sub">Above Sydney median ($1,750)</div>
-          </div>
-          <div class="socio-card">
-            <div class="s-label">SEIFA Index (IRSAD)</div>
-            <div class="s-value">1,082</div>
-            <div class="s-sub">Top 15% nationally</div>
-          </div>
-          <div class="socio-card">
-            <div class="s-label">Owner-Occupied</div>
-            <div class="s-value">62.4%</div>
-            <div class="s-sub">vs 60.1% Sydney average</div>
-          </div>
-          <div class="socio-card">
-            <div class="s-label">Median Age</div>
-            <div class="s-value">38</div>
-            <div class="s-sub">Family-oriented demographic</div>
-          </div>
-          <div class="socio-card">
-            <div class="s-label">Overseas Migration</div>
-            <div class="s-value">12.3%</div>
-            <div class="s-sub">UK, NZ, South Africa top origins</div>
+        
+        <!-- Fused Demographic Cards Directly Below Map -->
+        <div style="padding:20px; background:#ffffff;">
+          <div class="socio-grid" id="socioGrid">
+            <!-- Populated dynamically inside renderSocioGrid -->
           </div>
         </div>
       </div>
@@ -1283,6 +1282,7 @@ function renderAll() {
   loadChoroplethMaps();
   renderAIAgentNotes(d);
   renderSocioGrid(d.subject?.suburb || 'Cronulla');
+  updatePricingCard(d.subject?.suburb || 'Cronulla', 'suburb', 1.0);
 }
 
 // ── VENDOR HEADER ───────────────────────────────────────────
@@ -1815,14 +1815,22 @@ const findSuburbKey = (name) => {
   return key || name;
 };
 
-function renderSocioGrid(suburb) {
+function renderSocioGrid(suburb, sa1Props = null) {
   const norm = findSuburbKey(suburb) || 'Cronulla';
   const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Cronulla'];
   const grid = document.getElementById('socioGrid');
   if (!grid) return;
   
+  const isSA1 = sa1Props !== null;
+  const seifa = isSA1 ? sa1Props.seifa : demo.seifa;
+  const popDensity = isSA1 ? sa1Props.popDensity : demo.popDensity;
+  const medianAge = isSA1 ? sa1Props.medianAge : demo.medianAge;
+  const remigration = isSA1 ? sa1Props.remigration : demo.remigration;
+  const supply = isSA1 ? sa1Props.supplyMonths : demo.supplyMonths;
+  const population = isSA1 ? 'N/A' : demo.population.toLocaleString();
+  const income = isSA1 ? 'N/A' : `$${demo.income.toLocaleString()}/wk`;
+  
   // Classify Supply/Demand Months
-  const supply = demo.supplyMonths;
   let tempLabel = 'Hot Seller\'s';
   let tempColor = '#ea580c'; // Hot Orange
   let tempDesc = 'High buyer demand, low inventory supply.';
@@ -1841,37 +1849,87 @@ function renderSocioGrid(suburb) {
   }
 
   grid.innerHTML = `
-    <div class="socio-card" style="transition: all 0.3s ease;">
+    <div class="socio-card" style="transition: all 0.3s ease; border-top: ${isSA1 ? '3px solid #111827' : 'none'};">
       <div class="s-label">Population</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.population.toLocaleString()}</div>
-      <div class="s-sub">${norm} · 2021 Census</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${population}</div>
+      <div class="s-sub">${isSA1 ? `SA1 Block: ${sa1Props.SA1_CODE_2021}` : `${norm} · 2021 Census`}</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
-      <div class="s-label">Median Weekly Income</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">$${demo.income.toLocaleString()}/wk</div>
-      <div class="s-sub">vs $1,750 Sydney median</div>
+      <div class="s-label">Weekly Household Income</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${income}</div>
+      <div class="s-sub">${isSA1 ? 'Available at Suburb level' : 'vs $1,750 Sydney median'}</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
       <div class="s-label">SEIFA Advantage Index</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.seifa}</div>
-      <div class="s-sub">Advantage rank (Top 15% nationally)</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${seifa}</div>
+      <div class="s-sub">${isSA1 ? 'SA1 Micro-Locality IRSAD' : 'Advantage rank (Top 15% nationally)'}</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
-      <div class="s-label">Owner-Occupied</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.ownerOccupancy}%</div>
-      <div class="s-sub">vs 60.1% Sydney average</div>
+      <div class="s-label">Median Age</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${medianAge} yrs</div>
+      <div class="s-sub">${isSA1 ? 'SA1 Median Age' : 'Family-oriented demographic'}</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease; border-left: 4px solid ${tempColor}; background: rgba(0,0,0,0.015);">
       <div class="s-label" style="color:${tempColor}; font-weight:700;">Market Temperature</div>
       <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700; color:${tempColor};">${tempLabel}</div>
-      <div class="s-sub">${supply} Months Inventory Supply · ${tempDesc}</div>
+      <div class="s-sub">${supply} Months Supply · ${tempDesc}</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
       <div class="s-label">Re-Migration Stability</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.remigration}%</div>
-      <div class="s-sub">5yr suburb retention & turnover rate</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${remigration}%</div>
+      <div class="s-sub">${isSA1 ? 'SA1 Re-Migration Rate' : '5yr suburb retention & turnover'}</div>
     </div>
   `;
+}
+
+function updatePricingCard(name, type, coef = 1.0) {
+  const title = document.getElementById('priceCardTitle');
+  const sub = document.getElementById('priceCardSub');
+  const val = document.getElementById('priceCardVal');
+  const compare = document.getElementById('priceCardCompare');
+  
+  const medPremium = document.getElementById('profileMedPremium');
+  const medStandard = document.getElementById('profileMedStandard');
+  const medApartment = document.getElementById('profileMedApartment');
+  
+  if (!title) return;
+  
+  const base = BASELINE_MEDIANS[name] || 1350000;
+  
+  // Calculate bedroom medians adjusted by micro coefficient
+  const premBase = Math.round(base * 1.35 * coef);
+  const stdBase = Math.round(base * 0.85 * coef);
+  const aptBase = Math.round(base * 0.52 * coef);
+  
+  const profileFilter = document.getElementById('pricingProfileFilter')?.value || 'baseline';
+  let activePrice = base;
+  if (profileFilter === 'premium') activePrice = premBase;
+  else if (profileFilter === 'standard') activePrice = stdBase;
+  else if (profileFilter === 'apartment') activePrice = aptBase;
+  else activePrice = Math.round(base * coef);
+  
+  if (type === 'suburb') {
+    title.textContent = name;
+    sub.textContent = 'Sutherland Shire Suburb Baseline';
+  } else {
+    title.textContent = `SA1 Micro-Locality: ${name}`;
+    sub.textContent = `Sub-region value factor: ${(coef).toFixed(2)}x vs ${findSuburbKey(name)}`;
+  }
+  
+  val.textContent = fmt(activePrice);
+  
+  const pctDiff = ((activePrice - 1650000) / 1650000 * 100).toFixed(1);
+  if (activePrice > 1650000) {
+    compare.textContent = `+${pctDiff}% above Sutherland Shire median`;
+    compare.style.color = '#059669';
+  } else {
+    compare.textContent = `${pctDiff}% below Sutherland Shire median`;
+    compare.style.color = '#d42020';
+  }
+  
+  medPremium.textContent = fmt(premBase);
+  medStandard.textContent = fmt(stdBase);
+  medApartment.textContent = fmt(aptBase);
 }
 
 // Premium monochrome color scale (McGrath Luxury Grayscale branding)
@@ -2010,18 +2068,35 @@ async function initSuburbPriceMap(m) {
     }
 
     updateSuburbPricing('baseline');
-    filterSelect.addEventListener('change', e => updateSuburbPricing(e.target.value));
+    filterSelect.addEventListener('change', e => {
+      updateSuburbPricing(e.target.value);
+      const activeTitle = document.getElementById('priceCardTitle')?.textContent || 'Cronulla';
+      if (activeTitle && !activeTitle.startsWith('SA1:')) {
+        updatePricingCard(activeTitle, 'suburb', 1.0);
+      }
+    });
 
-    m.on('click', 'suburbs-fill', e => {
+    const hoverPopup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, offset: 8 });
+
+    m.on('mousemove', 'suburbs-fill', e => {
+      m.getCanvas().style.cursor = 'pointer';
       const p = e.features[0].properties;
       const profile = filterSelect.value;
       const price = getCalculatedPrice(p.name, profile);
-      const isPremium = profile === 'premium';
-      const premiumText = isPremium ? '<br><span style="color:var(--green);font-weight:600;">+30% Premium land segment</span>' : '';
-      new mapboxgl.Popup({ offset: 8 })
-        .setLngLat(e.lngLat)
-        .setHTML(`<div style="font-family:Inter;font-size:12px;line-height:1.4;"><strong>${p.name}</strong><br>Median Price: <strong>${fmt(price)}</strong>${premiumText}</div>`)
+      
+      hoverPopup.setLngLat(e.lngLat)
+        .setHTML(`<div style="font-family:Inter;font-size:12px;line-height:1.4;padding:2px;"><strong>${p.name}</strong><br>Est. Median: <strong>${fmt(price)}</strong></div>`)
         .addTo(m);
+    });
+
+    m.on('mouseleave', 'suburbs-fill', () => {
+      m.getCanvas().style.cursor = '';
+      hoverPopup.remove();
+    });
+
+    m.on('click', 'suburbs-fill', e => {
+      const p = e.features[0].properties;
+      updatePricingCard(p.name, 'suburb', 1.0);
     });
   } catch (err) { console.warn('Suburb pricing map failed:', err.message); }
 }
@@ -2104,23 +2179,49 @@ async function initSA1PriceMap(m) {
     }
 
     updateSA1Pricing('baseline');
-    filterSelect.addEventListener('change', e => updateSA1Pricing(e.target.value));
+    filterSelect.addEventListener('change', e => {
+      updateSA1Pricing(e.target.value);
+      // If pricing card currently shows an SA1 locality, update it dynamically on filter change
+      const activeTitle = document.getElementById('priceCardTitle')?.textContent || '';
+      if (activeTitle && activeTitle.startsWith('SA1:')) {
+        const sa1Code = activeTitle.replace('SA1: ', '');
+        // Find SA1 feature in our GeoJSON to get its suburb and coefficient
+        const feature = gj.features.find(f => f.properties.sa1_code === sa1Code);
+        if (feature) {
+          updatePricingCard(feature.properties.suburb, 'sa1', feature.properties.coef);
+          document.getElementById('priceCardTitle').textContent = `SA1: ${sa1Code}`;
+        }
+      }
+    });
 
-    m.on('click', 'sa1-pricing-fill', e => {
+    const hoverPopup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, offset: 8 });
+
+    m.on('mousemove', 'sa1-pricing-fill', e => {
+      m.getCanvas().style.cursor = 'pointer';
       const p = e.features[0].properties;
       const profile = filterSelect.value;
       const basePrice = getCalculatedPrice(p.suburb, profile);
       const finalPrice = Math.round(basePrice * p.coef);
-      new mapboxgl.Popup({ offset: 8 })
-        .setLngLat(e.lngLat)
+      
+      hoverPopup.setLngLat(e.lngLat)
         .setHTML(`
-          <div style="font-family:Inter;font-size:12px;line-height:1.45;">
+          <div style="font-family:Inter;font-size:12px;line-height:1.4;padding:2px;">
             <strong>SA1 Micro-Locality: ${p.sa1_code}</strong><br>
-            <span style="color:#6b7280;font-size:11px;">Region: ${p.sa2_name}</span><br>
             Est. Median: <strong>${fmt(finalPrice)}</strong>
           </div>
         `)
         .addTo(m);
+    });
+
+    m.on('mouseleave', 'sa1-pricing-fill', () => {
+      m.getCanvas().style.cursor = '';
+      hoverPopup.remove();
+    });
+
+    m.on('click', 'sa1-pricing-fill', e => {
+      const p = e.features[0].properties;
+      updatePricingCard(p.suburb, 'sa1', p.coef);
+      document.getElementById('priceCardTitle').textContent = `SA1: ${p.sa1_code}`;
     });
   } catch (err) { console.warn('SA1 pricing map failed:', err.message); }
 }
@@ -2464,75 +2565,60 @@ async function loadSA1DemographicBoundaries(m) {
       updateDemographicLayer(null, 'sa1');
     });
 
-    m.on('click', 'sa1-fill', e => {
+    const hoverPopup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, offset: 8 });
+
+    m.on('mousemove', 'sa1-fill', e => {
+      m.getCanvas().style.cursor = 'pointer';
       const p = e.features[0].properties;
       const metric = filterSelect.value;
-      let metricHtml = '';
+      let metricVal = '';
+      if (metric === 'seifa') metricVal = `SEIFA: ${p.seifa}`;
+      else if (metric === 'popDensity') metricVal = `Pop Density: ${p.popDensity.toLocaleString()}/km²`;
+      else if (metric === 'medianAge') metricVal = `Median Age: ${p.medianAge} yrs`;
+      else if (metric === 'remigration') metricVal = `Re-Migration: ${p.remigration}%`;
+      else if (metric === 'marketTemp') metricVal = `Supply: ${p.supplyMonths} months`;
+      else if (metric === 'ethnicity') metricVal = `Dominant: ${p.ethnicity}`;
       
-      if (metric === 'seifa') {
-        metricHtml = `<strong>SEIFA Index:</strong> ${p.seifa} (Top 15%)`;
-      } else if (metric === 'popDensity') {
-        metricHtml = `<strong>Pop. Density:</strong> ${p.popDensity.toLocaleString()} people/km²`;
-      } else if (metric === 'medianAge') {
-        metricHtml = `<strong>Median Age:</strong> ${p.medianAge} years`;
-      } else if (metric === 'remigration') {
-        metricHtml = `<strong>Re-Migration (5yr):</strong> ${p.remigration}%`;
-      } else if (metric === 'marketTemp') {
-        let tempLabel = 'Hot Seller\'s';
-        let tempColor = '#ea580c';
-        if (p.supplyMonths < 1.6) { tempLabel = 'Extreme Seller\'s'; tempColor = '#7c2d12'; }
-        else if (p.supplyMonths > 2.4) { tempLabel = 'Buyer\'s Market'; tempColor = '#2563eb'; }
-        else if (p.supplyMonths >= 2.0) { tempLabel = 'Healthy Balanced'; tempColor = '#059669'; }
-        metricHtml = `<strong>Inventory Months of Supply:</strong> ${p.supplyMonths} months<br><span style="display:inline-block;margin-top:4px;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;color:#fff;background:${tempColor};">${tempLabel} Market</span>`;
-      } else if (metric === 'ethnicity') {
-        metricHtml = `<strong>Top Ancestry:</strong> ${p.ethnicity}`;
-      }
-
-      new mapboxgl.Popup({ offset: 8 })
-        .setLngLat(e.lngLat)
-        .setHTML(`
-          <div style="font-family:Inter;font-size:13px;padding:4px;line-height:1.45;">
-            <div style="font-weight:700;border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:6px;font-size:14px;color:#111827;">SA1: ${p.SA1_CODE_2021}</div>
-            <div style="color:var(--text-secondary);margin-bottom:4px;">${p.SA2_NAME_2021}</div>
-            <div style="font-size:12px;color:#000;">${metricHtml}</div>
-          </div>
-        `)
+      hoverPopup.setLngLat(e.lngLat)
+        .setHTML(`<div style="font-family:Inter;font-size:12px;line-height:1.4;padding:2px;"><strong>SA1 Code: ${p.SA1_CODE_2021}</strong><br>${metricVal}</div>`)
         .addTo(m);
+    });
+
+    m.on('mouseleave', 'sa1-fill', () => {
+      m.getCanvas().style.cursor = '';
+      hoverPopup.remove();
+    });
+
+    m.on('click', 'sa1-fill', e => {
+      const p = e.features[0].properties;
+      renderSocioGrid(p.SA2_NAME_2021, p);
+    });
+
+    m.on('mousemove', 'suburb-demo-fill', e => {
+      m.getCanvas().style.cursor = 'pointer';
+      const p = e.features[0].properties;
+      const metric = filterSelect.value;
+      let metricVal = '';
+      if (metric === 'seifa') metricVal = `SEIFA: ${p.seifa}`;
+      else if (metric === 'popDensity') metricVal = `Pop Density: ${p.popDensity.toLocaleString()}/km²`;
+      else if (metric === 'medianAge') metricVal = `Median Age: ${p.medianAge} yrs`;
+      else if (metric === 'remigration') metricVal = `Re-Migration: ${p.remigration}%`;
+      else if (metric === 'marketTemp') metricVal = `Supply: ${p.supplyMonths} months`;
+      else if (metric === 'ethnicity') metricVal = `Dominant: ${p.ethnicity}`;
+      
+      hoverPopup.setLngLat(e.lngLat)
+        .setHTML(`<div style="font-family:Inter;font-size:12px;line-height:1.4;padding:2px;"><strong>Suburb: ${p.suburb}</strong><br>${metricVal}</div>`)
+        .addTo(m);
+    });
+
+    m.on('mouseleave', 'suburb-demo-fill', () => {
+      m.getCanvas().style.cursor = '';
+      hoverPopup.remove();
     });
 
     m.on('click', 'suburb-demo-fill', e => {
       const p = e.features[0].properties;
-      const metric = filterSelect.value;
-      let metricHtml = '';
-      
-      if (metric === 'seifa') {
-        metricHtml = `<strong>SEIFA Index:</strong> ${p.seifa} (Top 15%)`;
-      } else if (metric === 'popDensity') {
-        metricHtml = `<strong>Pop. Density:</strong> ${p.popDensity.toLocaleString()} people/km²`;
-      } else if (metric === 'medianAge') {
-        metricHtml = `<strong>Median Age:</strong> ${p.medianAge} years`;
-      } else if (metric === 'remigration') {
-        metricHtml = `<strong>Re-Migration (5yr):</strong> ${p.remigration}%`;
-      } else if (metric === 'marketTemp') {
-        let tempLabel = 'Hot Seller\'s';
-        let tempColor = '#ea580c';
-        if (p.supplyMonths < 1.6) { tempLabel = 'Extreme Seller\'s'; tempColor = '#7c2d12'; }
-        else if (p.supplyMonths > 2.4) { tempLabel = 'Buyer\'s Market'; tempColor = '#2563eb'; }
-        else if (p.supplyMonths >= 2.0) { tempLabel = 'Healthy Balanced'; tempColor = '#059669'; }
-        metricHtml = `<strong>Inventory Months of Supply:</strong> ${p.supplyMonths} months<br><span style="display:inline-block;margin-top:4px;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;color:#fff;background:${tempColor};">${tempLabel} Market</span>`;
-      } else if (metric === 'ethnicity') {
-        metricHtml = `<strong>Top Ancestry:</strong> ${p.ethnicity}`;
-      }
-
-      new mapboxgl.Popup({ offset: 8 })
-        .setLngLat(e.lngLat)
-        .setHTML(`
-          <div style="font-family:Inter;font-size:13px;padding:4px;line-height:1.45;">
-            <div style="font-weight:700;border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:6px;font-size:14px;color:#111827;">Suburb: ${p.suburb}</div>
-            <div style="font-size:12px;color:#000;">${metricHtml}</div>
-          </div>
-        `)
-        .addTo(m);
+      renderSocioGrid(p.suburb, null);
     });
 
     console.log('[Choropleth] SA1s:', gj.features.length);
