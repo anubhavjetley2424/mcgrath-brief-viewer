@@ -2182,40 +2182,51 @@ function renderAIAgentNotes(d) {
   const section = document.getElementById('aiAgentNotesSection');
   const container = document.getElementById('aiAgentNotesContent');
   
-  if (!d || !d.subject || !d.subject.agent_notes) {
-    section.style.display = 'none';
-    return;
-  }
-  
+  // Always display the section so Simon can see the premium Royal Blue container and instructions
   section.style.display = 'block';
   container.innerHTML = '';
   
-  const notesText = d.subject.agent_notes;
+  const notesText = (d && d.subject && d.subject.agent_notes) ? d.subject.agent_notes : '';
   
-  // Parse lines/bullet points from the agent notes string (either markdown bullets * or - or newlines)
-  const lines = notesText.split('\n')
-    .map(line => line.replace(/^[\*\-\s•\s]+/, '').trim())
-    .filter(line => line.length > 0);
-    
-  if (lines.length > 0) {
-    const ul = document.createElement('ul');
-    ul.style.margin = '0';
-    ul.style.paddingLeft = '20px';
-    ul.style.display = 'flex';
-    ul.style.flexDirection = 'column';
-    ul.style.gap = '10px';
-    
-    lines.forEach(line => {
-      const li = document.createElement('li');
-      li.style.fontSize = '14px';
-      li.style.lineHeight = '1.5';
-      li.innerHTML = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      ul.appendChild(li);
-    });
-    container.appendChild(ul);
-  } else {
-    container.innerHTML = `<p style="margin:0; font-style:italic; color:rgba(255,255,255,0.7);">No summary bullets parsed from agent notes.</p>`;
+  if (notesText) {
+    // Parse lines/bullet points from the agent notes string (either markdown bullets * or - or newlines)
+    const lines = notesText.split('\n')
+      .map(line => line.replace(/^[\*\-\s•\s]+/, '').trim())
+      .filter(line => line.length > 0);
+      
+    if (lines.length > 0) {
+      const ul = document.createElement('ul');
+      ul.style.margin = '0';
+      ul.style.paddingLeft = '20px';
+      ul.style.display = 'flex';
+      ul.style.flexDirection = 'column';
+      ul.style.gap = '10px';
+      
+      lines.forEach(line => {
+        const li = document.createElement('li');
+        li.style.fontSize = '14px';
+        li.style.lineHeight = '1.5';
+        li.innerHTML = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        ul.appendChild(li);
+      });
+      container.appendChild(ul);
+      return;
+    }
   }
+  
+  // If no notes are present (e.g. mock mode or deal has no notes yet), render a helpful royal-blue instruction card
+  container.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <p style="margin:0; font-size:14px; line-height:1.5; color:rgba(255, 255, 255, 0.95); font-weight: 500;">
+        No AI Agent Notes Summary has been generated for this deal yet. 
+      </p>
+      <div style="background:rgba(255,255,255,0.12); padding:16px 20px; border-radius:10px; border-left:4px solid #ffffff; font-size:13px; line-height:1.55; color:#ffffff; font-weight: normal;">
+        <strong>How to generate:</strong> Drag this deal to the <strong>"Pre-Appointment Prep"</strong> stage on your McGrath Dashboard. 
+        The AI Agent workflow will automatically trigger, scrape comparable active and sold listings, calculate Google commute travel times, 
+        rank the top schools, and write your 6–8 concise Talking Points back here!
+      </div>
+    </div>
+  `;
 }
 
 // Accessibility tabs
