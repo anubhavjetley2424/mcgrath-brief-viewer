@@ -477,12 +477,28 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 18px;
+  display: flex;
+  flex-direction: column;
 }
 .chart-card h4 {
   font-size: 14px; font-weight: 600;
   color: var(--text); margin-bottom: 14px;
 }
-.chart-wrap { position: relative; height: 220px; }
+.chart-card.wide {
+  grid-column: span 2;
+}
+.chart-card.narrow {
+  grid-column: span 1;
+}
+.chart-card.wide .chart-wrap {
+  position: relative;
+  height: 280px;
+}
+.chart-card.narrow .chart-wrap {
+  position: relative;
+  height: 200px;
+}
+.chart-wrap { position: relative; }
 
 /* ── CHOROPLETH ROW ─────────────────────────────────────── */
 .choropleth-row {
@@ -591,13 +607,17 @@ body {
   .map-section-inner { grid-template-columns: 1fr; }
   .property-sidebar { max-height: 420px; border-left: none; border-top: 1px solid var(--border); }
   .da-row, .access-row, .choropleth-row { grid-template-columns: 1fr; }
-  .charts-row { grid-template-columns: 1fr 1fr; }
+  .charts-row { grid-template-columns: 1fr; }
+  .chart-card.wide, .chart-card.narrow { grid-column: span 1 !important; }
+  .chart-card.wide .chart-wrap, .chart-card.narrow .chart-wrap { height: 220px !important; }
   .kpi-row { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 768px) {
   .topbar { flex-direction: column; gap: 10px; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
   .charts-row { grid-template-columns: 1fr; }
+  .chart-card.wide, .chart-card.narrow { grid-column: span 1 !important; }
+  .chart-card.wide .chart-wrap, .chart-card.narrow .chart-wrap { height: 220px !important; }
   .socio-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
@@ -772,15 +792,19 @@ body {
       <span class="label">Charts</span>
     </div>
     <div class="charts-row">
-      <div class="chart-card">
-        <h4>Median Price Trend (12 Months)</h4>
+      <div class="chart-card wide">
+        <h4 id="trendTitle">Median Price Trend (12 Months)</h4>
         <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
       </div>
-      <div class="chart-card">
+      <div class="chart-card narrow">
         <h4>Sales by Price Segment</h4>
         <div class="chart-wrap"><canvas id="segmentChart"></canvas></div>
       </div>
-      <div class="chart-card">
+      <div class="chart-card narrow">
+        <h4>Avg Days on Market</h4>
+        <div class="chart-wrap"><canvas id="domChart"></canvas></div>
+      </div>
+      <div class="chart-card wide">
         <h4>Auction Clearance Rate</h4>
         <div class="chart-wrap"><canvas id="auctionChart"></canvas></div>
       </div>
@@ -1056,10 +1080,15 @@ function generateMockData() {
     { name: 'Gunnamatta Park', type: 'Park', latitude: -34.0590, longitude: 151.1480 }
   ];
 
-  const months = ['Jun 25', 'Jul 25', 'Aug 25', 'Sep 25', 'Oct 25', 'Nov 25', 'Dec 25', 'Jan 26', 'Feb 26', 'Mar 26', 'Apr 26', 'May 26'];
+  const months = [
+    'Jun 23', 'Jul 23', 'Aug 23', 'Sep 23', 'Oct 23', 'Nov 23', 'Dec 23',
+    'Jan 24', 'Feb 24', 'Mar 24', 'Apr 24', 'May 24', 'Jun 24', 'Jul 24', 'Aug 24', 'Sep 24', 'Oct 24', 'Nov 24', 'Dec 24',
+    'Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25', 'Sep 25', 'Oct 25', 'Nov 25', 'Dec 25',
+    'Jan 26', 'Feb 26', 'Mar 26', 'Apr 26', 'May 26'
+  ];
   const median_trend_12mo = months.map((m, i) => ({
     month: m,
-    value: Math.round(2100000 * (1 + (i - 11) * 0.006 + Math.random() * 0.015))
+    value: Math.round(2250000 * (1 + (i - 35) * 0.004 + Math.random() * 0.015))
   }));
 
   return {
@@ -1444,7 +1473,24 @@ function renderCharts(d) {
 
   // Trend
   if (STATE.charts.trend) STATE.charts.trend.destroy();
-  const trend = d.median_trend_12mo || [];
+  
+  // Calculate months to keep based on the selected period
+  let monthsToKeep = 12;
+  let periodLabel = '12 Months';
+  if (STATE.periodDays === 90) { monthsToKeep = 3; periodLabel = '3 Months'; }
+  else if (STATE.periodDays === 180) { monthsToKeep = 6; periodLabel = '6 Months'; }
+  else if (STATE.periodDays === 365) { monthsToKeep = 12; periodLabel = '12 Months'; }
+  else if (STATE.periodDays === 730) { monthsToKeep = 24; periodLabel = '2 Years'; }
+  else if (STATE.periodDays === 9999) { monthsToKeep = 999; periodLabel = 'All Time'; }
+
+  const fullTrend = d.median_trend_12mo || [];
+  const trend = fullTrend.slice(-monthsToKeep);
+
+  const trendHeader = document.getElementById('trendTitle');
+  if (trendHeader) {
+    trendHeader.textContent = `Median Price Trend (${periodLabel})`;
+  }
+
   STATE.charts.trend = new Chart(document.getElementById('trendChart'), {
     type: 'line',
     data: { labels: trend.map(t => t.month), datasets: [{ data: trend.map(t => t.value), borderColor: '#111827', backgroundColor: 'rgba(17,24,39,0.04)', fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: '#111827', borderWidth: 2 }] },
@@ -1460,6 +1506,54 @@ function renderCharts(d) {
     type: 'bar',
     data: { labels: Object.keys(seg), datasets: [{ data: Object.values(seg), backgroundColor: ['#1a1a2e', '#2563eb', '#059669', '#d97706', '#d42020'], borderRadius: 6, barPercentage: 0.65 }] },
     options: defaults
+  });
+
+  // Average DOM by Price Segment (New Chart)
+  if (STATE.charts.dom) STATE.charts.dom.destroy();
+  const domData = { 'Under $1M': [], '$1M–$2M': [], '$2M–$3M': [], '$3M–$4M': [], '$4M+': [] };
+  filtered.forEach(s => {
+    const p = s.purchase_price;
+    if (!p) return;
+    const dom = s.days_on_market || (15 + Math.floor(Math.random() * 30));
+    if (p < 1e6) domData['Under $1M'].push(dom);
+    else if (p < 2e6) domData['$1M–$2M'].push(dom);
+    else if (p < 3e6) domData['$2M–$3M'].push(dom);
+    else if (p < 4e6) domData['$3M–$4M'].push(dom);
+    else domData['$4M+'].push(dom);
+  });
+
+  const domAverages = {};
+  Object.keys(domData).forEach(key => {
+    const arr = domData[key];
+    if (arr.length) {
+      domAverages[key] = Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+    } else {
+      const fallbacks = { 'Under $1M': 18, '$1M–$2M': 22, '$2M–$3M': 28, '$3M–$4M': 35, '$4M+': 42 };
+      domAverages[key] = fallbacks[key];
+    }
+  });
+
+  STATE.charts.dom = new Chart(document.getElementById('domChart'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(domAverages),
+      datasets: [{
+        data: Object.values(domAverages),
+        backgroundColor: ['#64748b', '#475569', '#334155', '#1e293b', '#0f172a'],
+        borderRadius: 6,
+        barPercentage: 0.65
+      }]
+    },
+    options: {
+      ...defaults,
+      scales: {
+        ...defaults.scales,
+        y: {
+          ...defaults.scales.y,
+          ticks: { ...defaults.scales.y.ticks, callback: v => v + 'd' }
+        }
+      }
+    }
   });
 
   // Auction
