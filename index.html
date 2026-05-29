@@ -468,7 +468,7 @@ body {
 /* ── CHARTS ROW ─────────────────────────────────────────── */
 .charts-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 18px;
 }
 .chart-card {
@@ -479,26 +479,17 @@ body {
   padding: 18px;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 }
 .chart-card h4 {
   font-size: 14px; font-weight: 600;
   color: var(--text); margin-bottom: 14px;
 }
-.chart-card.wide {
-  grid-column: span 2;
-}
-.chart-card.narrow {
-  grid-column: span 1;
-}
-.chart-card.wide .chart-wrap {
+.chart-wrap {
   position: relative;
-  height: 280px;
+  height: 220px;
 }
-.chart-card.narrow .chart-wrap {
-  position: relative;
-  height: 200px;
-}
-.chart-wrap { position: relative; }
 
 /* ── CHOROPLETH ROW ─────────────────────────────────────── */
 .choropleth-row {
@@ -863,6 +854,32 @@ body {
     </div>
   </div>
 
+  <!-- ── ANALYTICS CHARTS ─────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      Market Analytics
+      <span class="label">Charts</span>
+    </div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <h4 id="trendTitle">Median Price Trend (12 Months)</h4>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h4>Sales by Price Segment</h4>
+        <div class="chart-wrap"><canvas id="segmentChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h4>Avg Days on Market</h4>
+        <div class="chart-wrap"><canvas id="domChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h4>Auction Clearance Rate</h4>
+        <div class="chart-wrap"><canvas id="auctionChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── DEVELOPMENT APPLICATIONS ─────────────────────── -->
   <div class="section">
     <div class="section-title">
@@ -915,32 +932,6 @@ body {
         <div class="access-scroll" id="accessList">
           <!-- Populated dynamically -->
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── ANALYTICS CHARTS ─────────────────────────────── -->
-  <div class="section">
-    <div class="section-title">
-      Market Analytics
-      <span class="label">Charts</span>
-    </div>
-    <div class="charts-row">
-      <div class="chart-card wide">
-        <h4 id="trendTitle">Median Price Trend (12 Months)</h4>
-        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
-      </div>
-      <div class="chart-card narrow">
-        <h4>Sales by Price Segment</h4>
-        <div class="chart-wrap"><canvas id="segmentChart"></canvas></div>
-      </div>
-      <div class="chart-card narrow">
-        <h4>Avg Days on Market</h4>
-        <div class="chart-wrap"><canvas id="domChart"></canvas></div>
-      </div>
-      <div class="chart-card wide">
-        <h4>Auction Clearance Rate</h4>
-        <div class="chart-wrap"><canvas id="auctionChart"></canvas></div>
       </div>
     </div>
   </div>
