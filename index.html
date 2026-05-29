@@ -1281,6 +1281,7 @@ function renderAll() {
   renderCharts(d);
   loadChoroplethMaps();
   renderAIAgentNotes(d);
+  renderSocioGrid(d.subject?.suburb || 'Cronulla');
 }
 
 // ── VENDOR HEADER ───────────────────────────────────────────
@@ -1781,30 +1782,30 @@ const BASELINE_MEDIANS = {
 };
 
 const SUBURB_DEMOGRAPHICS = {
-  'Cronulla': { seifa: 1082, popDensity: 4350, medianAge: 38, remigration: 12.3, ethnicity: 'English' },
-  'Burraneer': { seifa: 1124, popDensity: 1820, medianAge: 42, remigration: 4.2, ethnicity: 'Australian' },
-  'Woolooware': { seifa: 1092, popDensity: 2840, medianAge: 40, remigration: 7.2, ethnicity: 'English' },
-  'Caringbah South': { seifa: 1098, popDensity: 2150, medianAge: 41, remigration: 5.4, ethnicity: 'Australian' },
-  'Miranda': { seifa: 1031, popDensity: 3820, medianAge: 39, remigration: 11.5, ethnicity: 'Irish' },
-  'Sylvania Waters': { seifa: 1084, popDensity: 1650, medianAge: 44, remigration: 6.2, ethnicity: 'Greek' },
-  'Caringbah': { seifa: 1042, popDensity: 3120, medianAge: 39, remigration: 9.8, ethnicity: 'English' },
-  'Gymea': { seifa: 1058, popDensity: 2980, medianAge: 40, remigration: 8.1, ethnicity: 'Australian' },
-  'Gymea Bay': { seifa: 1102, popDensity: 1920, medianAge: 41, remigration: 4.8, ethnicity: 'Australian' },
-  'Sylvania': { seifa: 1051, popDensity: 2320, medianAge: 42, remigration: 7.4, ethnicity: 'Greek' },
-  'Kirrawee': { seifa: 1048, popDensity: 3210, medianAge: 38, remigration: 10.4, ethnicity: 'English' },
-  'Sutherland': { seifa: 1028, popDensity: 3450, medianAge: 37, remigration: 13.2, ethnicity: 'Irish' },
-  'Jannali': { seifa: 1052, popDensity: 2800, medianAge: 39, remigration: 10.9, ethnicity: 'Australian' },
-  'Como': { seifa: 1071, popDensity: 2200, medianAge: 41, remigration: 7.8, ethnicity: 'English' },
-  'Oyster Bay': { seifa: 1084, popDensity: 2100, medianAge: 42, remigration: 6.9, ethnicity: 'Australian' },
-  'Bonnet Bay': { seifa: 1090, popDensity: 1800, medianAge: 40, remigration: 5.8, ethnicity: 'English' },
-  'Kareela': { seifa: 1088, popDensity: 2400, medianAge: 43, remigration: 7.2, ethnicity: 'Australian' },
-  'Loftus': { seifa: 1065, popDensity: 1900, medianAge: 39, remigration: 8.4, ethnicity: 'Australian' },
-  'Engadine': { seifa: 1042, popDensity: 2200, medianAge: 39, remigration: 9.8, ethnicity: 'English' },
-  'Heathcote': { seifa: 1035, popDensity: 1500, medianAge: 40, remigration: 8.2, ethnicity: 'Australian' },
-  'Taren Point': { seifa: 1068, popDensity: 1980, medianAge: 44, remigration: 9.0, ethnicity: 'Greek' },
-  'Dolans Bay': { seifa: 1110, popDensity: 1550, medianAge: 45, remigration: 5.5, ethnicity: 'English' },
-  'Lilli Pilli': { seifa: 1108, popDensity: 1780, medianAge: 43, remigration: 6.1, ethnicity: 'Australian' },
-  'Bundeena': { seifa: 1050, popDensity: 800, medianAge: 46, remigration: 11.5, ethnicity: 'Australian' }
+  'Cronulla': { seifa: 1082, popDensity: 4350, medianAge: 38, remigration: 12.3, ethnicity: 'English', population: 18437, income: 2158, ownerOccupancy: 62.4 },
+  'Burraneer': { seifa: 1124, popDensity: 1820, medianAge: 42, remigration: 4.2, ethnicity: 'Australian', population: 3612, income: 2854, ownerOccupancy: 84.1 },
+  'Woolooware': { seifa: 1092, popDensity: 2840, medianAge: 40, remigration: 7.2, ethnicity: 'English', population: 6920, income: 2480, ownerOccupancy: 74.2 },
+  'Caringbah South': { seifa: 1098, popDensity: 2150, medianAge: 41, remigration: 5.4, ethnicity: 'Australian', population: 12242, income: 2620, ownerOccupancy: 79.8 },
+  'Miranda': { seifa: 1031, popDensity: 3820, medianAge: 39, remigration: 11.5, ethnicity: 'Irish', population: 17543, income: 1812, ownerOccupancy: 61.2 },
+  'Sylvania Waters': { seifa: 1084, popDensity: 1650, medianAge: 44, remigration: 6.2, ethnicity: 'Greek', population: 3215, income: 2510, ownerOccupancy: 78.4 },
+  'Caringbah': { seifa: 1042, popDensity: 3120, medianAge: 39, remigration: 9.8, ethnicity: 'English', population: 11658, income: 1945, ownerOccupancy: 58.7 },
+  'Gymea': { seifa: 1058, popDensity: 2980, medianAge: 40, remigration: 8.1, ethnicity: 'Australian', population: 10243, income: 2012, ownerOccupancy: 68.4 },
+  'Gymea Bay': { seifa: 1102, popDensity: 1920, medianAge: 41, remigration: 4.8, ethnicity: 'Australian', population: 7120, income: 2712, ownerOccupancy: 85.5 },
+  'Sylvania': { seifa: 1051, popDensity: 2320, medianAge: 42, remigration: 7.4, ethnicity: 'Greek', population: 10425, income: 2045, ownerOccupancy: 76.2 },
+  'Kirrawee': { seifa: 1048, popDensity: 3210, medianAge: 38, remigration: 10.4, ethnicity: 'English', population: 9812, income: 1980, ownerOccupancy: 65.4 },
+  'Sutherland': { seifa: 1028, popDensity: 3450, medianAge: 37, remigration: 13.2, ethnicity: 'Irish', population: 10814, income: 1824, ownerOccupancy: 52.8 },
+  'Jannali': { seifa: 1052, popDensity: 2800, medianAge: 39, remigration: 10.9, ethnicity: 'Australian', population: 8912, income: 1910, ownerOccupancy: 70.5 },
+  'Como': { seifa: 1071, popDensity: 2200, medianAge: 41, remigration: 7.8, ethnicity: 'English', population: 3942, income: 2240, ownerOccupancy: 78.0 },
+  'Oyster Bay': { seifa: 1084, popDensity: 2100, medianAge: 42, remigration: 6.9, ethnicity: 'Australian', population: 5120, income: 2350, ownerOccupancy: 81.2 },
+  'Bonnet Bay': { seifa: 1090, popDensity: 1800, medianAge: 40, remigration: 5.8, ethnicity: 'English', population: 2150, income: 2420, ownerOccupancy: 83.5 },
+  'Kareela': { seifa: 1088, popDensity: 2400, medianAge: 43, remigration: 7.2, ethnicity: 'Australian', population: 3420, income: 2210, ownerOccupancy: 82.0 },
+  'Loftus': { seifa: 1065, popDensity: 1900, medianAge: 39, remigration: 8.4, ethnicity: 'Australian', population: 4120, income: 1980, ownerOccupancy: 75.8 },
+  'Engadine': { seifa: 1042, popDensity: 2200, medianAge: 39, remigration: 9.8, ethnicity: 'English', population: 17420, income: 1820, ownerOccupancy: 71.2 },
+  'Heathcote': { seifa: 1035, popDensity: 1500, medianAge: 40, remigration: 8.2, ethnicity: 'Australian', population: 6150, income: 1780, ownerOccupancy: 73.0 },
+  'Taren Point': { seifa: 1068, popDensity: 1980, medianAge: 44, remigration: 9.0, ethnicity: 'Greek', population: 1720, income: 2150, ownerOccupancy: 72.8 },
+  'Dolans Bay': { seifa: 1110, popDensity: 1550, medianAge: 45, remigration: 5.5, ethnicity: 'English', population: 620, income: 2950, ownerOccupancy: 85.0 },
+  'Lilli Pilli': { seifa: 1108, popDensity: 1780, medianAge: 43, remigration: 6.1, ethnicity: 'Australian', population: 3182, income: 2780, ownerOccupancy: 82.5 },
+  'Bundeena': { seifa: 1050, popDensity: 800, medianAge: 46, remigration: 11.5, ethnicity: 'Australian', population: 1910, income: 1650, ownerOccupancy: 68.2 }
 };
 
 const findSuburbKey = (name) => {
@@ -1812,6 +1813,46 @@ const findSuburbKey = (name) => {
   const key = Object.keys(BASELINE_MEDIANS).find(k => k.toLowerCase() === name.toLowerCase());
   return key || name;
 };
+
+function renderSocioGrid(suburb) {
+  const norm = findSuburbKey(suburb) || 'Cronulla';
+  const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Cronulla'];
+  const grid = document.getElementById('socioGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = `
+    <div class="socio-card" style="transition: all 0.3s ease;">
+      <div class="s-label">Population</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.population.toLocaleString()}</div>
+      <div class="s-sub">${norm} · 2021 Census</div>
+    </div>
+    <div class="socio-card" style="transition: all 0.3s ease;">
+      <div class="s-label">Median Household Income</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">$${demo.income.toLocaleString()}/wk</div>
+      <div class="s-sub">vs $1,750 Sydney median</div>
+    </div>
+    <div class="socio-card" style="transition: all 0.3s ease;">
+      <div class="s-label">SEIFA Index (IRSAD)</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.seifa}</div>
+      <div class="s-sub">Socioeconomic advantage rank</div>
+    </div>
+    <div class="socio-card" style="transition: all 0.3s ease;">
+      <div class="s-label">Owner-Occupied</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.ownerOccupancy}%</div>
+      <div class="s-sub">vs 60.1% Sydney average</div>
+    </div>
+    <div class="socio-card" style="transition: all 0.3s ease;">
+      <div class="s-label">Median Age</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.medianAge}</div>
+      <div class="s-sub">Years (Census Profile)</div>
+    </div>
+    <div class="socio-card" style="transition: all 0.3s ease;">
+      <div class="s-label">Dominant Ancestry</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.ethnicity}</div>
+      <div class="s-sub">Top ancestral heritage origin</div>
+    </div>
+  `;
+}
 
 // Premium monochrome color scale (McGrath Luxury Grayscale branding)
 const PRICE_LEVELS = [
