@@ -1811,8 +1811,9 @@ const SUBURB_DEMOGRAPHICS = {
 
 const findSuburbKey = (name) => {
   if (!name) return '';
-  const key = Object.keys(BASELINE_MEDIANS).find(k => k.toLowerCase() === name.toLowerCase());
-  return key || name;
+  const cleanName = name.replace(/\s*\(.*\)/g, '').trim();
+  const key = Object.keys(BASELINE_MEDIANS).find(k => k.toLowerCase() === cleanName.toLowerCase());
+  return key || cleanName;
 };
 
 function renderSocioGrid(suburb, sa1Props = null) {
@@ -2029,7 +2030,13 @@ async function loadChoroplethMaps() {
 
 async function initSuburbPriceMap(m) {
   const suburbsList = Object.keys(BASELINE_MEDIANS);
-  const where = suburbsList.map(s => `UPPER(SAL_NAME_2021) = '${s.toUpperCase()}'`).join(' OR ');
+  const where = suburbsList.map(s => {
+    const upper = s.toUpperCase();
+    if (s === 'Lilli Pilli') {
+      return `UPPER(SAL_NAME_2021) = 'LILLI PILLI' OR UPPER(SAL_NAME_2021) = 'LILLI PILLI (SUTHERLAND SHIRE - NSW)'`;
+    }
+    return `UPPER(SAL_NAME_2021) = '${upper}' OR UPPER(SAL_NAME_2021) = '${upper} (NSW)'`;
+  }).join(' OR ');
   try {
     const url = new URL(CONFIG.absSuburbUrl);
     url.searchParams.set('where', where);
@@ -2235,7 +2242,13 @@ async function loadSA1DemographicBoundaries(m) {
   const where = sa2s.map(s => `sa2_name_2021 = '${s}'`).join(' OR ');
 
   const suburbsList = Object.keys(BASELINE_MEDIANS);
-  const suburbWhere = suburbsList.map(s => `UPPER(SAL_NAME_2021) = '${s.toUpperCase()}'`).join(' OR ');
+  const suburbWhere = suburbsList.map(s => {
+    const upper = s.toUpperCase();
+    if (s === 'Lilli Pilli') {
+      return `UPPER(SAL_NAME_2021) = 'LILLI PILLI' OR UPPER(SAL_NAME_2021) = 'LILLI PILLI (SUTHERLAND SHIRE - NSW)'`;
+    }
+    return `UPPER(SAL_NAME_2021) = '${upper}' OR UPPER(SAL_NAME_2021) = '${upper} (NSW)'`;
+  }).join(' OR ');
 
   try {
     // 1. Fetch SA1 Boundaries
