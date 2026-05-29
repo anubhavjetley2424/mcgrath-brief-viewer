@@ -2044,7 +2044,7 @@ async function initSuburbPriceMap(m) {
 
     // Apply baseline pricing properties with case-insensitive normalization
     gj.features.forEach(f => {
-      const rawName = f.properties.SAL_NAME_2021 || '';
+      const rawName = f.properties.SAL_NAME_2021 || f.properties.sal_name_2021 || '';
       f.properties.name = findSuburbKey(rawName);
     });
 
@@ -2265,7 +2265,7 @@ async function loadSA1DemographicBoundaries(m) {
       const parsedSub = await subRes.json();
       if (parsedSub.features?.length) {
         parsedSub.features.forEach(f => {
-          const rawName = f.properties.SAL_NAME_2021 || '';
+          const rawName = f.properties.SAL_NAME_2021 || f.properties.sal_name_2021 || '';
           const name = findSuburbKey(rawName);
           const demo = SUBURB_DEMOGRAPHICS[name] || { seifa: 1050, popDensity: 2000, medianAge: 40, remigration: 9.0, ethnicity: 'Australian', supplyMonths: 1.8 };
           
