@@ -2030,13 +2030,17 @@ async function loadChoroplethMaps() {
 
 async function initSuburbPriceMap(m) {
   const suburbsList = Object.keys(BASELINE_MEDIANS);
-  const where = suburbsList.map(s => {
+  const names = [];
+  suburbsList.forEach(s => {
     const upper = s.toUpperCase();
+    names.push(`'${upper}'`);
     if (s === 'Lilli Pilli') {
-      return `UPPER(SAL_NAME_2021) = 'LILLI PILLI' OR UPPER(SAL_NAME_2021) = 'LILLI PILLI (SUTHERLAND SHIRE - NSW)'`;
+      names.push(`'LILLI PILLI (SUTHERLAND SHIRE - NSW)'`);
+    } else {
+      names.push(`'${upper} (NSW)'`);
     }
-    return `UPPER(SAL_NAME_2021) = '${upper}' OR UPPER(SAL_NAME_2021) = '${upper} (NSW)'`;
-  }).join(' OR ');
+  });
+  const where = `UPPER(SAL_NAME_2021) IN (${names.join(',')})`;
   try {
     const url = new URL(CONFIG.absSuburbUrl);
     url.searchParams.set('where', where);
@@ -2242,13 +2246,17 @@ async function loadSA1DemographicBoundaries(m) {
   const where = sa2s.map(s => `sa2_name_2021 = '${s}'`).join(' OR ');
 
   const suburbsList = Object.keys(BASELINE_MEDIANS);
-  const suburbWhere = suburbsList.map(s => {
+  const names = [];
+  suburbsList.forEach(s => {
     const upper = s.toUpperCase();
+    names.push(`'${upper}'`);
     if (s === 'Lilli Pilli') {
-      return `UPPER(SAL_NAME_2021) = 'LILLI PILLI' OR UPPER(SAL_NAME_2021) = 'LILLI PILLI (SUTHERLAND SHIRE - NSW)'`;
+      names.push(`'LILLI PILLI (SUTHERLAND SHIRE - NSW)'`);
+    } else {
+      names.push(`'${upper} (NSW)'`);
     }
-    return `UPPER(SAL_NAME_2021) = '${upper}' OR UPPER(SAL_NAME_2021) = '${upper} (NSW)'`;
-  }).join(' OR ');
+  });
+  const suburbWhere = `UPPER(SAL_NAME_2021) IN (${names.join(',')})`;
 
   try {
     // 1. Fetch SA1 Boundaries
