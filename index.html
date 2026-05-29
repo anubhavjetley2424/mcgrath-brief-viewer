@@ -1626,24 +1626,50 @@ async function loadSuburbBoundaries(m) {
 }
 
 async function loadSA1Boundaries(m) {
+  const sa2s = [
+    'Caringbah', 'Caringbah South', 'Cronulla - Kurnell - Bundeena', 
+    'Sutherland - Kirrawee', 'Engadine', 'Gymea - Grays Point', 
+    'Menai - Lucas Heights - Woronora', 'Miranda - Yowie Bay', 
+    'Sylvania - Taren Point', 'Heathcote - Waterfall', 
+    'Illawong - Alfords Point', 'Lilli Pilli - Port Hacking - Dolans Bay', 
+    'Oyster Bay - Como - Jannali', 'Woolooware - Burraneer'
+  ];
+  const where = sa2s.map(s => `sa2_name_2021 = '${s}'`).join(' OR ');
+
   try {
     const url = new URL(CONFIG.absSA1Url);
-    url.searchParams.set('where', "LGA_NAME_2021 = 'Sutherland Shire (A)'");
-    url.searchParams.set('outFields', 'SA1_CODE_2021,SA2_NAME_2021,LGA_NAME_2021');
-    url.searchParams.set('f', 'geojson');
+    url.searchParams.set('where', where);
+    url.searchParams.set('outFields', 'sa1_code_2021,sa2_name_2021');
+    url.searchParams.set('f', 'json');
     url.searchParams.set('outSR', '4326');
     url.searchParams.set('returnGeometry', 'true');
-    url.searchParams.set('resultRecordCount', '500');
+    url.searchParams.set('resultRecordCount', '1000');
+    
     const res = await fetch(url.toString());
     if (!res.ok) throw new Error(res.status);
-    const gj = await res.json();
-    if (!gj.features?.length) { console.warn('No SA1 boundaries'); return; }
+    const arcgisJson = await res.json();
+    if (!arcgisJson.features?.length) { console.warn('No SA1 boundaries returned'); return; }
 
-    gj.features.forEach(f => {
-      const seifa = 900 + Math.floor(Math.random() * 250);
-      f.properties.seifa = seifa;
-      f.properties.color = seifa >= 1100 ? '#059669' : seifa >= 1050 ? '#2563eb' : seifa >= 1000 ? '#d97706' : '#d42020';
-    });
+    // Convert ArcGIS JSON format to GeoJSON client-side to bypass ABS geojson bug!
+    const gj = {
+      type: 'FeatureCollection',
+      features: arcgisJson.features.map(f => {
+        const seifa = 900 + Math.floor(Math.random() * 250);
+        return {
+          type: 'Feature',
+          geometry: {
+            type: 'Polygon',
+            coordinates: f.geometry.rings
+          },
+          properties: {
+            SA1_CODE_2021: f.attributes.sa1_code_2021,
+            SA2_NAME_2021: f.attributes.sa2_name_2021,
+            seifa: seifa,
+            color: seifa >= 1100 ? '#059669' : seifa >= 1050 ? '#2563eb' : seifa >= 1000 ? '#d97706' : '#d42020'
+          }
+        };
+      })
+    };
 
     m.addSource('sa1', { type: 'geojson', data: gj });
     m.addLayer({ id: 'sa1-fill', type: 'fill', source: 'sa1', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.3 } });
