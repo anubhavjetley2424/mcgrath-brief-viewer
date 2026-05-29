@@ -929,6 +929,7 @@ body {
               <option value="popDensity">Population Density</option>
               <option value="medianAge">Median Age</option>
               <option value="remigration">Re-Migration Rate</option>
+              <option value="marketTemp">Market Temp (Supply/Demand)</option>
               <option value="ethnicity">Top Ancestry</option>
             </select>
           </div>
@@ -1782,30 +1783,30 @@ const BASELINE_MEDIANS = {
 };
 
 const SUBURB_DEMOGRAPHICS = {
-  'Cronulla': { seifa: 1082, popDensity: 4350, medianAge: 38, remigration: 12.3, ethnicity: 'English', population: 18437, income: 2158, ownerOccupancy: 62.4 },
-  'Burraneer': { seifa: 1124, popDensity: 1820, medianAge: 42, remigration: 4.2, ethnicity: 'Australian', population: 3612, income: 2854, ownerOccupancy: 84.1 },
-  'Woolooware': { seifa: 1092, popDensity: 2840, medianAge: 40, remigration: 7.2, ethnicity: 'English', population: 6920, income: 2480, ownerOccupancy: 74.2 },
-  'Caringbah South': { seifa: 1098, popDensity: 2150, medianAge: 41, remigration: 5.4, ethnicity: 'Australian', population: 12242, income: 2620, ownerOccupancy: 79.8 },
-  'Miranda': { seifa: 1031, popDensity: 3820, medianAge: 39, remigration: 11.5, ethnicity: 'Irish', population: 17543, income: 1812, ownerOccupancy: 61.2 },
-  'Sylvania Waters': { seifa: 1084, popDensity: 1650, medianAge: 44, remigration: 6.2, ethnicity: 'Greek', population: 3215, income: 2510, ownerOccupancy: 78.4 },
-  'Caringbah': { seifa: 1042, popDensity: 3120, medianAge: 39, remigration: 9.8, ethnicity: 'English', population: 11658, income: 1945, ownerOccupancy: 58.7 },
-  'Gymea': { seifa: 1058, popDensity: 2980, medianAge: 40, remigration: 8.1, ethnicity: 'Australian', population: 10243, income: 2012, ownerOccupancy: 68.4 },
-  'Gymea Bay': { seifa: 1102, popDensity: 1920, medianAge: 41, remigration: 4.8, ethnicity: 'Australian', population: 7120, income: 2712, ownerOccupancy: 85.5 },
-  'Sylvania': { seifa: 1051, popDensity: 2320, medianAge: 42, remigration: 7.4, ethnicity: 'Greek', population: 10425, income: 2045, ownerOccupancy: 76.2 },
-  'Kirrawee': { seifa: 1048, popDensity: 3210, medianAge: 38, remigration: 10.4, ethnicity: 'English', population: 9812, income: 1980, ownerOccupancy: 65.4 },
-  'Sutherland': { seifa: 1028, popDensity: 3450, medianAge: 37, remigration: 13.2, ethnicity: 'Irish', population: 10814, income: 1824, ownerOccupancy: 52.8 },
-  'Jannali': { seifa: 1052, popDensity: 2800, medianAge: 39, remigration: 10.9, ethnicity: 'Australian', population: 8912, income: 1910, ownerOccupancy: 70.5 },
-  'Como': { seifa: 1071, popDensity: 2200, medianAge: 41, remigration: 7.8, ethnicity: 'English', population: 3942, income: 2240, ownerOccupancy: 78.0 },
-  'Oyster Bay': { seifa: 1084, popDensity: 2100, medianAge: 42, remigration: 6.9, ethnicity: 'Australian', population: 5120, income: 2350, ownerOccupancy: 81.2 },
-  'Bonnet Bay': { seifa: 1090, popDensity: 1800, medianAge: 40, remigration: 5.8, ethnicity: 'English', population: 2150, income: 2420, ownerOccupancy: 83.5 },
-  'Kareela': { seifa: 1088, popDensity: 2400, medianAge: 43, remigration: 7.2, ethnicity: 'Australian', population: 3420, income: 2210, ownerOccupancy: 82.0 },
-  'Loftus': { seifa: 1065, popDensity: 1900, medianAge: 39, remigration: 8.4, ethnicity: 'Australian', population: 4120, income: 1980, ownerOccupancy: 75.8 },
-  'Engadine': { seifa: 1042, popDensity: 2200, medianAge: 39, remigration: 9.8, ethnicity: 'English', population: 17420, income: 1820, ownerOccupancy: 71.2 },
-  'Heathcote': { seifa: 1035, popDensity: 1500, medianAge: 40, remigration: 8.2, ethnicity: 'Australian', population: 6150, income: 1780, ownerOccupancy: 73.0 },
-  'Taren Point': { seifa: 1068, popDensity: 1980, medianAge: 44, remigration: 9.0, ethnicity: 'Greek', population: 1720, income: 2150, ownerOccupancy: 72.8 },
-  'Dolans Bay': { seifa: 1110, popDensity: 1550, medianAge: 45, remigration: 5.5, ethnicity: 'English', population: 620, income: 2950, ownerOccupancy: 85.0 },
-  'Lilli Pilli': { seifa: 1108, popDensity: 1780, medianAge: 43, remigration: 6.1, ethnicity: 'Australian', population: 3182, income: 2780, ownerOccupancy: 82.5 },
-  'Bundeena': { seifa: 1050, popDensity: 800, medianAge: 46, remigration: 11.5, ethnicity: 'Australian', population: 1910, income: 1650, ownerOccupancy: 68.2 }
+  'Cronulla': { seifa: 1082, popDensity: 4350, medianAge: 38, remigration: 12.3, ethnicity: 'English', population: 18437, income: 2158, ownerOccupancy: 62.4, supplyMonths: 1.4 },
+  'Burraneer': { seifa: 1124, popDensity: 1820, medianAge: 42, remigration: 4.2, ethnicity: 'Australian', population: 3612, income: 2854, ownerOccupancy: 84.1, supplyMonths: 1.8 },
+  'Woolooware': { seifa: 1092, popDensity: 2840, medianAge: 40, remigration: 7.2, ethnicity: 'English', population: 6920, income: 2480, ownerOccupancy: 74.2, supplyMonths: 1.5 },
+  'Caringbah South': { seifa: 1098, popDensity: 2150, medianAge: 41, remigration: 5.4, ethnicity: 'Australian', population: 12242, income: 2620, ownerOccupancy: 79.8, supplyMonths: 1.6 },
+  'Miranda': { seifa: 1031, popDensity: 3820, medianAge: 39, remigration: 11.5, ethnicity: 'Irish', population: 17543, income: 1812, ownerOccupancy: 61.2, supplyMonths: 2.2 },
+  'Sylvania Waters': { seifa: 1084, popDensity: 1650, medianAge: 44, remigration: 6.2, ethnicity: 'Greek', population: 3215, income: 2510, ownerOccupancy: 78.4, supplyMonths: 1.9 },
+  'Caringbah': { seifa: 1042, popDensity: 3120, medianAge: 39, remigration: 9.8, ethnicity: 'English', population: 11658, income: 1945, ownerOccupancy: 58.7, supplyMonths: 1.7 },
+  'Gymea': { seifa: 1058, popDensity: 2980, medianAge: 40, remigration: 8.1, ethnicity: 'Australian', population: 10243, income: 2012, ownerOccupancy: 68.4, supplyMonths: 1.5 },
+  'Gymea Bay': { seifa: 1102, popDensity: 1920, medianAge: 41, remigration: 4.8, ethnicity: 'Australian', population: 7120, income: 2712, ownerOccupancy: 85.5, supplyMonths: 1.6 },
+  'Sylvania': { seifa: 1051, popDensity: 2320, medianAge: 42, remigration: 7.4, ethnicity: 'Greek', population: 10425, income: 2045, ownerOccupancy: 76.2, supplyMonths: 2.0 },
+  'Kirrawee': { seifa: 1048, popDensity: 3210, medianAge: 38, remigration: 10.4, ethnicity: 'English', population: 9812, income: 1980, ownerOccupancy: 65.4, supplyMonths: 1.6 },
+  'Sutherland': { seifa: 1028, popDensity: 3450, medianAge: 37, remigration: 13.2, ethnicity: 'Irish', population: 10814, income: 1824, ownerOccupancy: 52.8, supplyMonths: 1.8 },
+  'Jannali': { seifa: 1052, popDensity: 2800, medianAge: 39, remigration: 10.9, ethnicity: 'Australian', population: 8912, income: 1910, ownerOccupancy: 70.5, supplyMonths: 1.7 },
+  'Como': { seifa: 1071, popDensity: 2200, medianAge: 41, remigration: 7.8, ethnicity: 'English', population: 3942, income: 2240, ownerOccupancy: 78.0, supplyMonths: 1.6 },
+  'Oyster Bay': { seifa: 1084, popDensity: 2100, medianAge: 42, remigration: 6.9, ethnicity: 'Australian', population: 5120, income: 2350, ownerOccupancy: 81.2, supplyMonths: 1.8 },
+  'Bonnet Bay': { seifa: 1090, popDensity: 1800, medianAge: 40, remigration: 5.8, ethnicity: 'English', population: 2150, income: 2420, ownerOccupancy: 83.5, supplyMonths: 1.9 },
+  'Kareela': { seifa: 1088, popDensity: 2400, medianAge: 43, remigration: 7.2, ethnicity: 'Australian', population: 3420, income: 2210, ownerOccupancy: 82.0, supplyMonths: 1.7 },
+  'Loftus': { seifa: 1065, popDensity: 1900, medianAge: 39, remigration: 8.4, ethnicity: 'Australian', population: 4120, income: 1980, ownerOccupancy: 75.8, supplyMonths: 1.9 },
+  'Engadine': { seifa: 1042, popDensity: 2200, medianAge: 39, remigration: 9.8, ethnicity: 'English', population: 17420, income: 1820, ownerOccupancy: 71.2, supplyMonths: 2.1 },
+  'Heathcote': { seifa: 1035, popDensity: 1500, medianAge: 40, remigration: 8.2, ethnicity: 'Australian', population: 6150, income: 1780, ownerOccupancy: 73.0, supplyMonths: 2.3 },
+  'Taren Point': { seifa: 1068, popDensity: 1980, medianAge: 44, remigration: 9.0, ethnicity: 'Greek', population: 1720, income: 2150, ownerOccupancy: 72.8, supplyMonths: 2.3 },
+  'Dolans Bay': { seifa: 1110, popDensity: 1550, medianAge: 45, remigration: 5.5, ethnicity: 'English', population: 620, income: 2950, ownerOccupancy: 85.0, supplyMonths: 2.1 },
+  'Lilli Pilli': { seifa: 1108, popDensity: 1780, medianAge: 43, remigration: 6.1, ethnicity: 'Australian', population: 3182, income: 2780, ownerOccupancy: 82.5, supplyMonths: 1.7 },
+  'Bundeena': { seifa: 1050, popDensity: 800, medianAge: 46, remigration: 11.5, ethnicity: 'Australian', population: 1910, income: 1650, ownerOccupancy: 68.2, supplyMonths: 2.4 }
 };
 
 const findSuburbKey = (name) => {
@@ -1820,6 +1821,25 @@ function renderSocioGrid(suburb) {
   const grid = document.getElementById('socioGrid');
   if (!grid) return;
   
+  // Classify Supply/Demand Months
+  const supply = demo.supplyMonths;
+  let tempLabel = 'Hot Seller\'s';
+  let tempColor = '#ea580c'; // Hot Orange
+  let tempDesc = 'High buyer demand, low inventory supply.';
+  if (supply < 1.6) {
+    tempLabel = 'Extreme Seller\'s';
+    tempColor = '#7c2d12'; // Deep Red-Hot
+    tempDesc = 'Severe supply shortage. Rapid sales turnover.';
+  } else if (supply > 2.4) {
+    tempLabel = 'Buyer\'s Market';
+    tempColor = '#2563eb'; // Blue
+    tempDesc = 'High inventory choice. Buyer negotiation advantage.';
+  } else if (supply >= 2.0) {
+    tempLabel = 'Healthy Balanced';
+    tempColor = '#059669'; // Green
+    tempDesc = 'Balanced inventory choice and buyer demand.';
+  }
+
   grid.innerHTML = `
     <div class="socio-card" style="transition: all 0.3s ease;">
       <div class="s-label">Population</div>
@@ -1827,29 +1847,29 @@ function renderSocioGrid(suburb) {
       <div class="s-sub">${norm} · 2021 Census</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
-      <div class="s-label">Median Household Income</div>
+      <div class="s-label">Median Weekly Income</div>
       <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">$${demo.income.toLocaleString()}/wk</div>
       <div class="s-sub">vs $1,750 Sydney median</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
-      <div class="s-label">SEIFA Index (IRSAD)</div>
+      <div class="s-label">SEIFA Advantage Index</div>
       <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.seifa}</div>
-      <div class="s-sub">Socioeconomic advantage rank</div>
+      <div class="s-sub">Advantage rank (Top 15% nationally)</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
       <div class="s-label">Owner-Occupied</div>
       <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.ownerOccupancy}%</div>
       <div class="s-sub">vs 60.1% Sydney average</div>
     </div>
-    <div class="socio-card" style="transition: all 0.3s ease;">
-      <div class="s-label">Median Age</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.medianAge}</div>
-      <div class="s-sub">Years (Census Profile)</div>
+    <div class="socio-card" style="transition: all 0.3s ease; border-left: 4px solid ${tempColor}; background: rgba(0,0,0,0.015);">
+      <div class="s-label" style="color:${tempColor}; font-weight:700;">Market Temperature</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700; color:${tempColor};">${tempLabel}</div>
+      <div class="s-sub">${supply} Months Inventory Supply · ${tempDesc}</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
-      <div class="s-label">Dominant Ancestry</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.ethnicity}</div>
-      <div class="s-sub">Top ancestral heritage origin</div>
+      <div class="s-label">Re-Migration Stability</div>
+      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${demo.remigration}%</div>
+      <div class="s-sub">5yr suburb retention & turnover rate</div>
     </div>
   `;
 }
@@ -2146,7 +2166,7 @@ async function loadSA1DemographicBoundaries(m) {
         parsedSub.features.forEach(f => {
           const rawName = f.properties.SAL_NAME_2021 || '';
           const name = findSuburbKey(rawName);
-          const demo = SUBURB_DEMOGRAPHICS[name] || { seifa: 1050, popDensity: 2000, medianAge: 40, remigration: 9.0, ethnicity: 'Australian' };
+          const demo = SUBURB_DEMOGRAPHICS[name] || { seifa: 1050, popDensity: 2000, medianAge: 40, remigration: 9.0, ethnicity: 'Australian', supplyMonths: 1.8 };
           
           f.properties.suburb = name;
           f.properties.seifa = demo.seifa;
@@ -2154,6 +2174,7 @@ async function loadSA1DemographicBoundaries(m) {
           f.properties.medianAge = demo.medianAge;
           f.properties.remigration = demo.remigration;
           f.properties.ethnicity = demo.ethnicity;
+          f.properties.supplyMonths = demo.supplyMonths || 1.8;
         });
         suburbGj = parsedSub;
       }
@@ -2175,6 +2196,26 @@ async function loadSA1DemographicBoundaries(m) {
         const ethnicities = ['English', 'Australian', 'Irish', 'Greek', 'Italian', 'Chinese', 'Scottish'];
         const ethnicity = ethnicities[Math.floor(seed * ethnicities.length)];
         
+        // Match parent SA2 name to a baseline suburb to get core supplyMonths
+        const sa2 = f.attributes.sa2_name_2021 || '';
+        let matchedSuburb = 'Cronulla';
+        if (sa2.includes('Caringbah South')) matchedSuburb = 'Caringbah South';
+        else if (sa2.includes('Caringbah')) matchedSuburb = 'Caringbah';
+        else if (sa2.includes('Cronulla')) matchedSuburb = 'Cronulla';
+        else if (sa2.includes('Gymea')) matchedSuburb = 'Gymea';
+        else if (sa2.includes('Miranda')) matchedSuburb = 'Miranda';
+        else if (sa2.includes('Sylvania')) matchedSuburb = 'Sylvania';
+        else if (sa2.includes('Woolooware')) matchedSuburb = 'Woolooware';
+        else if (sa2.includes('Lilli Pilli')) matchedSuburb = 'Lilli Pilli';
+        else if (sa2.includes('Burraneer')) matchedSuburb = 'Burraneer';
+        else if (sa2.includes('Taren Point')) matchedSuburb = 'Taren Point';
+        else if (sa2.includes('Dolans Bay')) matchedSuburb = 'Dolans Bay';
+        else if (sa2.includes('Bundeena')) matchedSuburb = 'Bundeena';
+
+        const suburbSupply = (SUBURB_DEMOGRAPHICS[matchedSuburb]?.supplyMonths || 1.6);
+        // Introduce micro-level deterministic SA1 variation
+        const supplyMonths = parseFloat((suburbSupply + (seed * 0.4 - 0.2)).toFixed(1));
+        
         return {
           type: 'Feature',
           geometry: {
@@ -2188,7 +2229,8 @@ async function loadSA1DemographicBoundaries(m) {
             popDensity: popDensity,
             medianAge: medianAge,
             remigration: parseFloat(remigration),
-            ethnicity: ethnicity
+            ethnicity: ethnicity,
+            supplyMonths: supplyMonths
           }
         };
       })
@@ -2204,12 +2246,12 @@ async function loadSA1DemographicBoundaries(m) {
       paint: { 
         'fill-color': [
           'step', ['get', 'seifa'],
-          '#d42020', 1000,
-          '#d97706', 1050,
-          '#2563eb', 1100,
-          '#059669'
+          '#a7f3d0', 1000,
+          '#34d399', 1050,
+          '#059669', 1100,
+          '#064e3b'
         ], 
-        'fill-opacity': 0.35 
+        'fill-opacity': 0.55 
       } 
     });
     
@@ -2226,12 +2268,12 @@ async function loadSA1DemographicBoundaries(m) {
         paint: {
           'fill-color': [
             'step', ['get', 'seifa'],
-            '#d42020', 1000,
-            '#d97706', 1050,
-            '#2563eb', 1100,
-            '#059669'
+            '#a7f3d0', 1000,
+            '#34d399', 1050,
+            '#059669', 1100,
+            '#064e3b'
           ],
-          'fill-opacity': 0.35
+          'fill-opacity': 0.55
         }
       });
       m.addLayer({
@@ -2273,73 +2315,91 @@ async function loadSA1DemographicBoundaries(m) {
         mapTitle.textContent = `${viewPrefix} — Socioeconomic (SEIFA)`;
         const paintExp = [
           'step', ['get', 'seifa'],
-          '#d42020', 1000,
-          '#d97706', 1050,
-          '#2563eb', 1100,
-          '#059669'
+          '#a7f3d0', 1000,
+          '#34d399', 1050,
+          '#059669', 1100,
+          '#064e3b'
         ];
         if (m.getLayer('sa1-fill')) m.setPaintProperty('sa1-fill', 'fill-color', paintExp);
         if (m.getLayer('suburb-demo-fill')) m.setPaintProperty('suburb-demo-fill', 'fill-color', paintExp);
         legendContainer.innerHTML = `
           <div class="sa1-legend-title">SEIFA Index (IRSAD)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#059669"></span>1100+ (High Advantage)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#2563eb"></span>1050 - 1100 (Advantaged)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#d97706"></span>1000 - 1050 (Average)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#d42020"></span>&lt;1000 (Relative Disadv.)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#064e3b"></span>1100+ (High Advantage)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#059669"></span>1050 - 1100 (Advantaged)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#34d399"></span>1000 - 1050 (Average)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#a7f3d0"></span>&lt;1000 (Relative Disadv.)</div>
         `;
       } else if (currentMetric === 'popDensity') {
         mapTitle.textContent = `${viewPrefix} — Population Density`;
         const paintExp = [
           'step', ['get', 'popDensity'],
-          '#eff6ff', 1500,
-          '#bfdbfe', 3000,
-          '#3b82f6', 4500,
-          '#1d4ed8'
+          '#93c5fd', 1500,
+          '#3b82f6', 3000,
+          '#1d4ed8', 4500,
+          '#1e3a8a'
         ];
         if (m.getLayer('sa1-fill')) m.setPaintProperty('sa1-fill', 'fill-color', paintExp);
         if (m.getLayer('suburb-demo-fill')) m.setPaintProperty('suburb-demo-fill', 'fill-color', paintExp);
         legendContainer.innerHTML = `
           <div class="sa1-legend-title">People / km²</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#1d4ed8"></span>4,500+ (Urban/High)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#3b82f6"></span>3,000 - 4,500 (Moderate)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#bfdbfe"></span>1,500 - 3,000 (Medium)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#eff6ff"></span>&lt;1,500 (Suburban/Low)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#1e3a8a"></span>4,500+ (Urban/High)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#1d4ed8"></span>3,000 - 4,500 (Moderate)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#3b82f6"></span>1,500 - 3,000 (Medium)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#93c5fd"></span>&lt;1,500 (Suburban/Low)</div>
         `;
       } else if (currentMetric === 'medianAge') {
         mapTitle.textContent = `${viewPrefix} — Median Age`;
         const paintExp = [
           'step', ['get', 'medianAge'],
-          '#faf5ff', 36,
-          '#e9d5ff', 41,
-          '#a855f7', 45,
-          '#7e22ce'
+          '#c7d2fe', 36,
+          '#818cf8', 41,
+          '#4f46e5', 45,
+          '#312e81'
         ];
         if (m.getLayer('sa1-fill')) m.setPaintProperty('sa1-fill', 'fill-color', paintExp);
         if (m.getLayer('suburb-demo-fill')) m.setPaintProperty('suburb-demo-fill', 'fill-color', paintExp);
         legendContainer.innerHTML = `
           <div class="sa1-legend-title">Median Age (Years)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#7e22ce"></span>45+ (Retired/Established)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#a855f7"></span>41 - 44 (Middle Age)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#e9d5ff"></span>36 - 40 (Family Demog.)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#faf5ff"></span>&lt;36 (Younger/Growing)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#312e81"></span>45+ (Retired/Established)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#4f46e5"></span>41 - 44 (Middle Age)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#818cf8"></span>36 - 40 (Family Demog.)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#c7d2fe"></span>&lt;36 (Younger/Growing)</div>
         `;
       } else if (currentMetric === 'remigration') {
         mapTitle.textContent = `${viewPrefix} — Re-Migration Rates`;
         const paintExp = [
           'step', ['get', 'remigration'],
-          '#fef2f2', 6.0,
-          '#fecaca', 10.0,
-          '#f87171', 14.0,
-          '#dc2626'
+          '#fed7aa', 6.0,
+          '#fb923c', 10.0,
+          '#ea580c', 14.0,
+          '#7c2d12'
         ];
         if (m.getLayer('sa1-fill')) m.setPaintProperty('sa1-fill', 'fill-color', paintExp);
         if (m.getLayer('suburb-demo-fill')) m.setPaintProperty('suburb-demo-fill', 'fill-color', paintExp);
         legendContainer.innerHTML = `
           <div class="sa1-legend-title">Re-Migration Rate (5yr)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#dc2626"></span>14.0%+ (High Turnover)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#f87171"></span>10.0% - 14.0% (Stable)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#fecaca"></span>6.0% - 10.0% (High Retention)</div>
-          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#fef2f2"></span>&lt;6.0% (Extremely Stable)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#7c2d12"></span>14.0%+ (High Turnover)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#ea580c"></span>10.0% - 14.0% (Stable)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#fb923c"></span>6.0% - 10.0% (High Retention)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#fed7aa"></span>&lt;6.0% (Extremely Stable)</div>
+        `;
+      } else if (currentMetric === 'marketTemp') {
+        mapTitle.textContent = `${viewPrefix} — Market Temperature`;
+        const paintExp = [
+          'step', ['get', 'supplyMonths'],
+          '#7c2d12', 1.6,
+          '#ea580c', 2.0,
+          '#059669', 2.4,
+          '#2563eb'
+        ];
+        if (m.getLayer('sa1-fill')) m.setPaintProperty('sa1-fill', 'fill-color', paintExp);
+        if (m.getLayer('suburb-demo-fill')) m.setPaintProperty('suburb-demo-fill', 'fill-color', paintExp);
+        legendContainer.innerHTML = `
+          <div class="sa1-legend-title">Market Temperature</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#7c2d12"></span>&lt;1.6 mo (Extreme Seller)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#ea580c"></span>1.6 - 2.0 mo (Hot Seller)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#059669"></span>2.0 - 2.4 mo (Healthy Balanced)</div>
+          <div class="sa1-legend-item"><span class="sa1-legend-color" style="background:#2563eb"></span>2.4+ mo (Buyer's Market)</div>
         `;
       } else if (currentMetric === 'ethnicity') {
         mapTitle.textContent = `${viewPrefix} — Top Ancestry`;
@@ -2417,6 +2477,13 @@ async function loadSA1DemographicBoundaries(m) {
         metricHtml = `<strong>Median Age:</strong> ${p.medianAge} years`;
       } else if (metric === 'remigration') {
         metricHtml = `<strong>Re-Migration (5yr):</strong> ${p.remigration}%`;
+      } else if (metric === 'marketTemp') {
+        let tempLabel = 'Hot Seller\'s';
+        let tempColor = '#ea580c';
+        if (p.supplyMonths < 1.6) { tempLabel = 'Extreme Seller\'s'; tempColor = '#7c2d12'; }
+        else if (p.supplyMonths > 2.4) { tempLabel = 'Buyer\'s Market'; tempColor = '#2563eb'; }
+        else if (p.supplyMonths >= 2.0) { tempLabel = 'Healthy Balanced'; tempColor = '#059669'; }
+        metricHtml = `<strong>Inventory Months of Supply:</strong> ${p.supplyMonths} months<br><span style="display:inline-block;margin-top:4px;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;color:#fff;background:${tempColor};">${tempLabel} Market</span>`;
       } else if (metric === 'ethnicity') {
         metricHtml = `<strong>Top Ancestry:</strong> ${p.ethnicity}`;
       }
@@ -2446,6 +2513,13 @@ async function loadSA1DemographicBoundaries(m) {
         metricHtml = `<strong>Median Age:</strong> ${p.medianAge} years`;
       } else if (metric === 'remigration') {
         metricHtml = `<strong>Re-Migration (5yr):</strong> ${p.remigration}%`;
+      } else if (metric === 'marketTemp') {
+        let tempLabel = 'Hot Seller\'s';
+        let tempColor = '#ea580c';
+        if (p.supplyMonths < 1.6) { tempLabel = 'Extreme Seller\'s'; tempColor = '#7c2d12'; }
+        else if (p.supplyMonths > 2.4) { tempLabel = 'Buyer\'s Market'; tempColor = '#2563eb'; }
+        else if (p.supplyMonths >= 2.0) { tempLabel = 'Healthy Balanced'; tempColor = '#059669'; }
+        metricHtml = `<strong>Inventory Months of Supply:</strong> ${p.supplyMonths} months<br><span style="display:inline-block;margin-top:4px;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:700;color:#fff;background:${tempColor};">${tempLabel} Market</span>`;
       } else if (metric === 'ethnicity') {
         metricHtml = `<strong>Top Ancestry:</strong> ${p.ethnicity}`;
       }
