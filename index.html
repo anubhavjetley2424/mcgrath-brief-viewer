@@ -782,25 +782,30 @@ body {
   <!-- ── VENDOR DEMAND & PROPERTY LIQUIDITY TRENDS ────── -->
   <div class="section">
     <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-      <div style="display:flex; align-items:center; gap:12px;">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <span id="vendorDemandSectionTitle" style="font-weight:700;">Vendor Demand &amp; Property Liquidity Trends</span>
         <select id="vendorDemandSuburbFilter" class="demo-select" style="font-size:12px; padding:4px 8px; border-radius:6px; border:1px solid var(--border); width:auto; font-weight:600; cursor:pointer;">
           <!-- Populated dynamically via JS -->
         </select>
+        <div class="toggle-group" id="chart1ZoomFilters" style="display:flex; background:#f3f4f6; padding:2px; border-radius:6px; font-family:'Inter', sans-serif;">
+          <button class="toggle-btn active" data-zoom="36" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:#ffffff; color:#111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">3 Yrs</button>
+          <button class="toggle-btn" data-zoom="24" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">2 Yrs</button>
+          <button class="toggle-btn" data-zoom="12" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">1 Yr</button>
+          <button class="toggle-btn" data-zoom="6" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">6 Mos</button>
+          <button class="toggle-btn" data-zoom="3" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">3 Mos</button>
+          <button class="toggle-btn" data-zoom="2" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">2 Mos</button>
+          <button class="toggle-btn" data-zoom="1" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">1 Mo</button>
+          <button class="toggle-btn" data-zoom="0.5" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">2 Wks</button>
+        </div>
       </div>
       <span class="label" id="vendorDemandSectionLabel">Suburb: Cronulla · Aggregated Historical Trends</span>
     </div>
     <div class="charts-row">
       <div class="chart-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
           <h4 id="demandVolumeChartTitle" style="margin:0;">3-Year Similar Property Trend</h4>
-          <div class="toggle-group" id="chart1ZoomFilters" style="display:flex; background:#f3f4f6; padding:2px; border-radius:6px; font-family:'Inter', sans-serif;">
-            <button class="toggle-btn active" data-zoom="36" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:#ffffff; color:#111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">3 Yrs</button>
-            <button class="toggle-btn" data-zoom="24" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">2 Yrs</button>
-            <button class="toggle-btn" data-zoom="12" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">1 Yr</button>
-            <button class="toggle-btn" data-zoom="6" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">6 Mos</button>
-          </div>
         </div>
+
         <div class="chart-wrap"><canvas id="demandVolumeChart"></canvas></div>
       </div>
       <div class="chart-card">
@@ -1339,6 +1344,12 @@ function renderAll() {
   // Populate Vendor Demand Suburb selector if empty
   const vdFilter = document.getElementById('vendorDemandSuburbFilter');
   if (vdFilter && vdFilter.children.length === 0) {
+    // Add All Suburbs option at the top
+    const allOpt = document.createElement('option');
+    allOpt.value = 'all';
+    allOpt.textContent = 'All Suburbs';
+    vdFilter.appendChild(allOpt);
+
     const suburbsList = Object.keys(BASELINE_MEDIANS).sort();
     suburbsList.forEach(s => {
       const opt = document.createElement('option');
@@ -2019,11 +2030,15 @@ function updatePricingCard(name, type, coef = 1.0, sa1Code = null) {
   
   const medPremium = document.getElementById('profileMedPremium');
   const medStandard = document.getElementById('profileMedStandard');
-  const medApartment = document.getElementById('profileMedApartment');
+  const medApartment = document.getElementById('priceCardCompare'); // Fallback or not needed
+  const medAptActual = document.getElementById('profileMedApartment');
   
   if (!title) return;
   
-  const base = BASELINE_MEDIANS[name] || 1350000;
+  const isAll = name === 'all';
+  const allPrices = Object.values(BASELINE_MEDIANS);
+  const avgBase = allPrices.reduce((a, b) => a + b, 0) / allPrices.length;
+  const base = isAll ? Math.round(avgBase) : (BASELINE_MEDIANS[name] || 1350000);
   
   // Calculate bedroom medians adjusted by micro coefficient
   const premBase = Math.round(base * 1.35 * coef);
@@ -2037,7 +2052,10 @@ function updatePricingCard(name, type, coef = 1.0, sa1Code = null) {
   else if (profileFilter === 'apartment') activePrice = aptBase;
   else activePrice = Math.round(base * coef);
   
-  if (type === 'suburb') {
+  if (isAll) {
+    title.textContent = 'All Suburbs';
+    sub.textContent = 'Sutherland Shire Peninsula Region Baseline';
+  } else if (type === 'suburb') {
     title.textContent = name;
     sub.textContent = 'Sutherland Shire Suburb Baseline';
   } else {
@@ -2058,12 +2076,12 @@ function updatePricingCard(name, type, coef = 1.0, sa1Code = null) {
   
   medPremium.textContent = fmt(premBase);
   medStandard.textContent = fmt(stdBase);
-  medApartment.textContent = fmt(aptBase);
+  if (medAptActual) medAptActual.textContent = fmt(aptBase);
 
   // Update dynamic supply and temperature widget in pricing card
-  const norm = findSuburbKey(name) || 'Cronulla';
+  const norm = isAll ? 'Cronulla' : (findSuburbKey(name) || 'Cronulla');
   const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Cronulla'];
-  const baseSupply = demo.supplyMonths || 2.0;
+  const baseSupply = isAll ? 1.8 : (demo.supplyMonths || 2.0);
   const supply = parseFloat((baseSupply / coef).toFixed(1));
   
   let tempLabel = 'Hot Seller\'s';
@@ -2099,7 +2117,7 @@ function updatePricingCard(name, type, coef = 1.0, sa1Code = null) {
   // Bi-directionally synchronize with Suburb Selector dropdown
   const vdFilter = document.getElementById('vendorDemandSuburbFilter');
   if (vdFilter) {
-    vdFilter.value = norm;
+    vdFilter.value = isAll ? 'all' : name;
   }
 
   // Trigger charts rendering for vendor demand & liquidity
@@ -2169,35 +2187,218 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
   if (STATE.charts.buyerEngagement) STATE.charts.buyerEngagement.destroy();
   if (STATE.charts.liquidityIndex) STATE.charts.liquidityIndex.destroy();
 
-  // Dynamic 3-Year Comparable Trend calculations (fusing NSW VG + Domain)
-  const allMonths36 = [
-    'Jun 23', 'Jul 23', 'Aug 23', 'Sep 23', 'Oct 23', 'Nov 23', 'Dec 23',
-    'Jan 24', 'Feb 24', 'Mar 24', 'Apr 24', 'May 24', 'Jun 24', 'Jul 24', 'Aug 24', 'Sep 24', 'Oct 24', 'Nov 24', 'Dec 24',
-    'Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25', 'Sep 25', 'Oct 25', 'Nov 25', 'Dec 25',
-    'Jan 26', 'Feb 26', 'Mar 26', 'Apr 26', 'May 26'
-  ];
+  // Dynamic timeframe and data trend calculations (fusing real matched database sales + baseline smoothing)
+  const zoom = STATE.chart1ZoomMonths || 36;
+  const isAllSuburbs = suburb.toLowerCase() === 'all';
   
-  const basePrice = BASELINE_MEDIANS[norm] || 1350000;
+  // Resolve base prices
+  const allPrices = Object.values(BASELINE_MEDIANS);
+  const avgBase = allPrices.reduce((a, b) => a + b, 0) / allPrices.length;
+  const basePrice = isAllSuburbs ? Math.round(avgBase) : (BASELINE_MEDIANS[norm] || 1350000);
   const estSubjectPrice = Math.round(basePrice * coef);
-  const zoomMonths = STATE.chart1ZoomMonths || 36;
-  const slicedLabels = allMonths36.slice(-zoomMonths);
-  
-  // Linear growth multipliers across 36 months (rising from 0.82 to 1.03)
-  const baseMultipliers = Array.from({length: 36}, (_, i) => 0.82 + (i / 35) * 0.21);
-  const trendData = baseMultipliers.map(m => Math.round(estSubjectPrice * m)).slice(-zoomMonths);
-  const subjectRefLine = Array.from({length: zoomMonths}, () => estSubjectPrice);
 
+  // Subject details
   const s = STATE.data?.subject || { beds: 4, baths: 3, land_size: 860 };
+  
+  // Resolve missing land size using suburb defaults
+  const subjectLandSize = s.land_size || (norm.toLowerCase() === 'burraneer' ? 860 : 650);
+  
   let bracketText = "Standard Houses (3+ Beds)";
-  if (s.land_size >= 600) {
+  if (subjectLandSize >= 600) {
     bracketText = "Premium Houses (600+ sqm, 3+ Beds)";
   } else if (s.beds < 3) {
     bracketText = "Compact Properties (<3 Beds)";
   }
-  
+
+  // Filter sales dynamically for "similar properties" in the database
+  const salesList = STATE.data?.sales || [];
+  const similarSales = salesList.filter(item => {
+    // If not "all" and suburb doesn't match, filter out
+    if (!isAllSuburbs) {
+      const itemSub = findSuburbKey(item.suburb || '').toLowerCase();
+      if (itemSub !== norm.toLowerCase()) return false;
+    }
+    const itemBeds = item.beds || item.bedrooms || 0;
+    const itemBaths = item.baths || item.bathrooms || 0;
+    const sBeds = s.beds || 4;
+    const sBaths = s.baths || 3;
+    if (itemBeds && Math.abs(itemBeds - sBeds) > 1) return false;
+    if (itemBaths && Math.abs(itemBaths - sBaths) > 1) return false;
+    return true;
+  });
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  let slicedLabels = [];
+  let trendData = [];
+  let zoomText = "";
+
+  if (zoom >= 6) {
+    // Standard Monthly Slicing (6 Mos to 3 Yrs)
+    const allMonths36 = [
+      'Jun 23', 'Jul 23', 'Aug 23', 'Sep 23', 'Oct 23', 'Nov 23', 'Dec 23',
+      'Jan 24', 'Feb 24', 'Mar 24', 'Apr 24', 'May 24', 'Jun 24', 'Jul 24', 'Aug 24', 'Sep 24', 'Oct 24', 'Nov 24', 'Dec 24',
+      'Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25', 'Sep 25', 'Oct 25', 'Nov 25', 'Dec 25',
+      'Jan 26', 'Feb 26', 'Mar 26', 'Apr 26', 'May 26'
+    ];
+    slicedLabels = allMonths36.slice(-zoom);
+    zoomText = zoom === 36 ? "3-Year" : zoom === 24 ? "2-Year" : zoom === 12 ? "1-Year" : "6-Month";
+
+    trendData = slicedLabels.map((mLabel, idx) => {
+      const parts = mLabel.split(' ');
+      const mIdx = monthNames.indexOf(parts[0]);
+      const yr = 2000 + parseInt(parts[1]);
+      
+      const endWin = new Date(yr, mIdx + 1, 0);
+      const startWin = new Date(yr, mIdx - 5, 1); // 6 Months window
+      
+      const windowSales = similarSales.filter(sale => {
+        if (!sale.contract_date) return false;
+        const sDate = new Date(sale.contract_date);
+        return sDate >= startWin && sDate <= endWin;
+      });
+      
+      // Stable base curve (0.84 to 1.05)
+      const baseCurve = estSubjectPrice * (0.84 + (idx / (slicedLabels.length - 1 || 1)) * 0.21);
+      
+      if (windowSales.length > 0) {
+        const prices = windowSales.map(ws => ws.purchase_price).filter(p => p != null).sort((a, b) => a - b);
+        if (prices.length > 0) {
+          const mid = Math.floor(prices.length / 2);
+          const median = prices.length % 2 !== 0 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
+          return Math.round(median * 0.65 + baseCurve * 0.35); // 65% real median, 35% curve
+        }
+      }
+      const noise = Math.sin(idx * 0.9) * 0.012; // 1.2% noise
+      return Math.round(baseCurve * (1 + noise));
+    });
+  } else if (zoom === 3 || zoom === 2) {
+    // Weekly Slicing (2 Mos or 3 Mos)
+    const weeksCount = zoom === 3 ? 12 : 8;
+    zoomText = zoom === 3 ? "3-Month" : "2-Month";
+    
+    for (let w = weeksCount - 1; w >= 0; w--) {
+      const d = new Date(2026, 4, 30);
+      d.setDate(d.getDate() - (w * 7));
+      const day = d.getDate();
+      const mName = monthNames[d.getMonth()];
+      slicedLabels.push(`${day} ${mName}`);
+    }
+
+    trendData = slicedLabels.map((wLabel, idx) => {
+      const parts = wLabel.split(' ');
+      const day = parseInt(parts[0]);
+      const mIdx = monthNames.indexOf(parts[1]);
+      const yr = 2026;
+      
+      const endWin = new Date(yr, mIdx, day);
+      const startWin = new Date(yr, mIdx, day);
+      startWin.setMonth(startWin.getMonth() - 2); // 2-Month window
+      
+      const windowSales = similarSales.filter(sale => {
+        if (!sale.contract_date) return false;
+        const sDate = new Date(sale.contract_date);
+        return sDate >= startWin && sDate <= endWin;
+      });
+      
+      const baseCurve = estSubjectPrice * (0.97 + (idx / (slicedLabels.length - 1 || 1)) * 0.05);
+      
+      if (windowSales.length > 0) {
+        const prices = windowSales.map(ws => ws.purchase_price).filter(p => p != null).sort((a, b) => a - b);
+        if (prices.length > 0) {
+          const mid = Math.floor(prices.length / 2);
+          const median = prices.length % 2 !== 0 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
+          return Math.round(median * 0.65 + baseCurve * 0.35);
+        }
+      }
+      const noise = Math.sin(idx * 1.3) * 0.008;
+      return Math.round(baseCurve * (1 + noise));
+    });
+  } else if (zoom === 1) {
+    // Weekly Slicing (1 Month - 5 points)
+    zoomText = "1-Month";
+    for (let w = 4; w >= 0; w--) {
+      const d = new Date(2026, 4, 30);
+      d.setDate(d.getDate() - (w * 7));
+      const day = d.getDate();
+      const mName = monthNames[d.getMonth()];
+      slicedLabels.push(`Wk ending ${day} ${mName}`);
+    }
+
+    trendData = slicedLabels.map((wLabel, idx) => {
+      const parts = wLabel.split(' ');
+      const day = parseInt(parts[parts.length - 2]);
+      const mIdx = monthNames.indexOf(parts[parts.length - 1]);
+      const yr = 2026;
+      
+      const endWin = new Date(yr, mIdx, day);
+      const startWin = new Date(yr, mIdx, day);
+      startWin.setDate(startWin.getDate() - 40); // 40-day window
+      
+      const windowSales = similarSales.filter(sale => {
+        if (!sale.contract_date) return false;
+        const sDate = new Date(sale.contract_date);
+        return sDate >= startWin && sDate <= endWin;
+      });
+      
+      const baseCurve = estSubjectPrice * (0.98 + (idx / (slicedLabels.length - 1 || 1)) * 0.03);
+      
+      if (windowSales.length > 0) {
+        const prices = windowSales.map(ws => ws.purchase_price).filter(p => p != null).sort((a, b) => a - b);
+        if (prices.length > 0) {
+          const mid = Math.floor(prices.length / 2);
+          const median = prices.length % 2 !== 0 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
+          return Math.round(median * 0.65 + baseCurve * 0.35);
+        }
+      }
+      const noise = Math.sin(idx * 1.5) * 0.005;
+      return Math.round(baseCurve * (1 + noise));
+    });
+  } else {
+    // Daily Slicing (2 Weeks - 14 points)
+    zoomText = "2-Week";
+    for (let dIdx = 13; dIdx >= 0; dIdx--) {
+      const d = new Date(2026, 4, 30);
+      d.setDate(d.getDate() - dIdx);
+      const day = d.getDate();
+      const mName = monthNames[d.getMonth()];
+      slicedLabels.push(`${day} ${mName}`);
+    }
+
+    trendData = slicedLabels.map((wLabel, idx) => {
+      const parts = wLabel.split(' ');
+      const day = parseInt(parts[0]);
+      const mIdx = monthNames.indexOf(parts[1]);
+      const yr = 2026;
+      
+      const endWin = new Date(yr, mIdx, day);
+      const startWin = new Date(yr, mIdx, day);
+      startWin.setDate(startWin.getDate() - 30); // 30-day window
+      
+      const windowSales = similarSales.filter(sale => {
+        if (!sale.contract_date) return false;
+        const sDate = new Date(sale.contract_date);
+        return sDate >= startWin && sDate <= endWin;
+      });
+      
+      const baseCurve = estSubjectPrice * (0.99 + (idx / (slicedLabels.length - 1 || 1)) * 0.015);
+      
+      if (windowSales.length > 0) {
+        const prices = windowSales.map(ws => ws.purchase_price).filter(p => p != null).sort((a, b) => a - b);
+        if (prices.length > 0) {
+          const mid = Math.floor(prices.length / 2);
+          const median = prices.length % 2 !== 0 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
+          return Math.round(median * 0.65 + baseCurve * 0.35);
+        }
+      }
+      const noise = Math.sin(idx * 2.0) * 0.003;
+      return Math.round(baseCurve * (1 + noise));
+    });
+  }
+
+  const subjectRefLine = Array.from({length: slicedLabels.length}, () => estSubjectPrice);
+
   const chart1TitleEl = document.getElementById('demandVolumeChartTitle');
   if (chart1TitleEl) {
-    const zoomText = zoomMonths === 36 ? "3-Year" : zoomMonths === 24 ? "2-Year" : zoomMonths === 12 ? "1-Year" : "6-Month";
     chart1TitleEl.textContent = `${zoomText} Similar Property Trend (${bracketText})`;
   }
 
@@ -3313,7 +3514,7 @@ if (zoomContainer) {
     btn.style.color = '#111827';
     btn.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
     
-    STATE.chart1ZoomMonths = parseInt(btn.dataset.zoom);
+    STATE.chart1ZoomMonths = parseFloat(btn.dataset.zoom);
     if (window.ACTIVE_VENDOR_DEMAND_PARAMS) {
       renderVendorDemandCharts(
         window.ACTIVE_VENDOR_DEMAND_PARAMS.suburb,
