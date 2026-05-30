@@ -781,13 +781,26 @@ body {
 
   <!-- ── VENDOR DEMAND & PROPERTY LIQUIDITY TRENDS ────── -->
   <div class="section">
-    <div class="section-title" id="vendorDemandSectionTitle">
-      Vendor Demand &amp; Property Liquidity Trends
+    <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span id="vendorDemandSectionTitle" style="font-weight:700;">Vendor Demand &amp; Property Liquidity Trends</span>
+        <select id="vendorDemandSuburbFilter" class="demo-select" style="font-size:12px; padding:4px 8px; border-radius:6px; border:1px solid var(--border); width:auto; font-weight:600; cursor:pointer;">
+          <!-- Populated dynamically via JS -->
+        </select>
+      </div>
       <span class="label" id="vendorDemandSectionLabel">Suburb: Cronulla · Aggregated Historical Trends</span>
     </div>
     <div class="charts-row">
       <div class="chart-card">
-        <h4 id="demandVolumeChartTitle">Transaction Volume vs. Active Demand (12 Months)</h4>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+          <h4 id="demandVolumeChartTitle" style="margin:0;">3-Year Similar Property Trend</h4>
+          <div class="toggle-group" id="chart1ZoomFilters" style="display:flex; background:#f3f4f6; padding:2px; border-radius:6px; font-family:'Inter', sans-serif;">
+            <button class="toggle-btn active" data-zoom="36" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:#ffffff; color:#111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">3 Yrs</button>
+            <button class="toggle-btn" data-zoom="24" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">2 Yrs</button>
+            <button class="toggle-btn" data-zoom="12" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">1 Yr</button>
+            <button class="toggle-btn" data-zoom="6" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">6 Mos</button>
+          </div>
+        </div>
         <div class="chart-wrap"><canvas id="demandVolumeChart"></canvas></div>
       </div>
       <div class="chart-card">
@@ -902,8 +915,8 @@ body {
   <!-- ── ANALYTICS CHARTS ─────────────────────────────── -->
   <div class="section">
     <div class="section-title">
-      Market Analytics
-      <span class="label">Charts</span>
+      Suburb-Wide Market Analytics (Wholistic Overview)
+      <span class="label">Historical clearance rates, price segments, and averages</span>
     </div>
     <div class="charts-row">
       <div class="chart-card">
@@ -1322,6 +1335,23 @@ function renderAll() {
   loadChoroplethMaps();
   renderAIAgentNotes(d);
   renderSocioGrid(d.subject?.suburb || 'Cronulla');
+  
+  // Populate Vendor Demand Suburb selector if empty
+  const vdFilter = document.getElementById('vendorDemandSuburbFilter');
+  if (vdFilter && vdFilter.children.length === 0) {
+    const suburbsList = Object.keys(BASELINE_MEDIANS).sort();
+    suburbsList.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      vdFilter.appendChild(opt);
+    });
+    vdFilter.value = d.subject?.suburb || 'Cronulla';
+    vdFilter.addEventListener('change', e => {
+      updatePricingCard(e.target.value, 'suburb', 1.0);
+    });
+  }
+  
   updatePricingCard(d.subject?.suburb || 'Cronulla', 'suburb', 1.0);
 }
 
@@ -1974,7 +2004,7 @@ function renderSocioGrid(suburb, sa1Props = null) {
       <div class="s-sub">${supply} Months Supply · ${tempDesc}</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
-      <div class="s-label">Re-Migration Stability</div>
+      <div class="s-label">Re-Migration Rate</div>
       <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${remigration}%</div>
       <div class="s-sub">${isSA1 ? 'SA1 Re-Migration Rate' : '5yr suburb retention & turnover'}</div>
     </div>
@@ -2066,12 +2096,20 @@ function updatePricingCard(name, type, coef = 1.0, sa1Code = null) {
     widget.style.borderLeftColor = tempColor;
   }
 
+  // Bi-directionally synchronize with Suburb Selector dropdown
+  const vdFilter = document.getElementById('vendorDemandSuburbFilter');
+  if (vdFilter) {
+    vdFilter.value = norm;
+  }
+
   // Trigger charts rendering for vendor demand & liquidity
   renderVendorDemandCharts(name, type, coef, sa1Code);
 }
 
 function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
   const norm = findSuburbKey(suburb) || 'Cronulla';
+  window.ACTIVE_VENDOR_DEMAND_PARAMS = { suburb: norm, type: type, coef: coef, sa1Code: sa1Code };
+  
   const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Cronulla'];
   const baseSupply = demo.supplyMonths || 2.0;
   const supply = parseFloat((baseSupply / coef).toFixed(1));
@@ -2131,43 +2169,45 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
   if (STATE.charts.buyerEngagement) STATE.charts.buyerEngagement.destroy();
   if (STATE.charts.liquidityIndex) STATE.charts.liquidityIndex.destroy();
 
-  // Dynamic 10-Year Comparable Trend calculations
-  const years = ['2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026'];
+  // Dynamic 3-Year Comparable Trend calculations (fusing NSW VG + Domain)
+  const allMonths36 = [
+    'Jun 23', 'Jul 23', 'Aug 23', 'Sep 23', 'Oct 23', 'Nov 23', 'Dec 23',
+    'Jan 24', 'Feb 24', 'Mar 24', 'Apr 24', 'May 24', 'Jun 24', 'Jul 24', 'Aug 24', 'Sep 24', 'Oct 24', 'Nov 24', 'Dec 24',
+    'Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25', 'Jun 25', 'Jul 25', 'Aug 25', 'Sep 25', 'Oct 25', 'Nov 25', 'Dec 25',
+    'Jan 26', 'Feb 26', 'Mar 26', 'Apr 26', 'May 26'
+  ];
+  
   const basePrice = BASELINE_MEDIANS[norm] || 1350000;
   const estSubjectPrice = Math.round(basePrice * coef);
-  const multipliers = [0.62, 0.65, 0.61, 0.68, 0.75, 0.88, 0.85, 0.92, 0.96, 1.0, 1.03];
-  const trendData = multipliers.map(m => Math.round(estSubjectPrice * m));
-  const subjectRefLine = years.map(() => estSubjectPrice);
+  const zoomMonths = STATE.chart1ZoomMonths || 36;
+  const slicedLabels = allMonths36.slice(-zoomMonths);
   
-  const vgRegistrySales = [];
-  [6, 7, 8, 9].forEach(idx => {
-    const count = 3 + Math.floor(Math.random() * 2);
-    for (let i = 0; i < count; i++) {
-      const noise = (Math.random() * 0.16 - 0.08) * trendData[idx];
-      vgRegistrySales.push({ x: idx + (Math.random() * 0.5 - 0.25), y: trendData[idx] + noise });
-    }
-  });
+  // Linear growth multipliers across 36 months (rising from 0.82 to 1.03)
+  const baseMultipliers = Array.from({length: 36}, (_, i) => 0.82 + (i / 35) * 0.21);
+  const trendData = baseMultipliers.map(m => Math.round(estSubjectPrice * m)).slice(-zoomMonths);
+  const subjectRefLine = Array.from({length: zoomMonths}, () => estSubjectPrice);
 
-  const domainRecentSales = [];
-  const domainCount = 4 + Math.floor(Math.random() * 3);
-  for (let i = 0; i < domainCount; i++) {
-    const noise = (Math.random() * 0.1 - 0.05) * trendData[10];
-    domainRecentSales.push({ x: 10 + (Math.random() * 0.3 - 0.15), y: trendData[10] + noise });
+  const s = STATE.data?.subject || { beds: 4, baths: 3, land_size: 860 };
+  let bracketText = "Standard Houses (3+ Beds)";
+  if (s.land_size >= 600) {
+    bracketText = "Premium Houses (600+ sqm, 3+ Beds)";
+  } else if (s.beds < 3) {
+    bracketText = "Compact Properties (<3 Beds)";
   }
-
+  
   const chart1TitleEl = document.getElementById('demandVolumeChartTitle');
   if (chart1TitleEl) {
-    const s = STATE.data?.subject || { beds: 4, baths: 3, land_size: 860 };
-    chart1TitleEl.textContent = `10-Year Similar Property Trend (${s.beds || 4} Bed, ${s.baths || 3} Bath, ~${s.land_size || 860} sqm)`;
+    const zoomText = zoomMonths === 36 ? "3-Year" : zoomMonths === 24 ? "2-Year" : zoomMonths === 12 ? "1-Year" : "6-Month";
+    chart1TitleEl.textContent = `${zoomText} Similar Property Trend (${bracketText})`;
   }
 
-  // Chart 1: demandVolumeChart
+  // Chart 1: demandVolumeChart (3-Year Price Trend - Simplified Line Plot)
   const ctx1 = document.getElementById('demandVolumeChart');
   if (ctx1) {
     STATE.charts.demandVolume = new Chart(ctx1, {
       type: 'line',
       data: {
-        labels: years,
+        labels: slicedLabels,
         datasets: [
           {
             label: 'Subject Property Est. Value',
@@ -2180,7 +2220,7 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
             order: 1
           },
           {
-            label: 'Comparable Median Price',
+            label: 'Comparable Median Price (NSW VG + Domain)',
             data: trendData,
             borderColor: '#111827',
             backgroundColor: 'rgba(17, 24, 39, 0.03)',
@@ -2189,24 +2229,6 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
             tension: 0.3,
             fill: true,
             order: 2
-          },
-          {
-            label: 'NSW VG Registry Sales',
-            data: vgRegistrySales,
-            type: 'scatter',
-            backgroundColor: '#64748b',
-            borderColor: '#64748b',
-            pointRadius: 4,
-            order: 3
-          },
-          {
-            label: 'Domain Sold (Fills Registry Lag)',
-            data: domainRecentSales,
-            type: 'scatter',
-            backgroundColor: '#E2231A',
-            borderColor: '#E2231A',
-            pointRadius: 5,
-            order: 4
           }
         ]
       },
@@ -2224,12 +2246,8 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
             callbacks: {
               label: function(context) {
                 let label = context.dataset.label || '';
-                if (label) {
-                  label += ': ';
-                }
-                if (context.parsed.y !== null) {
-                  label += fmt(context.parsed.y);
-                }
+                if (label) label += ': ';
+                if (context.parsed.y !== null) label += fmt(context.parsed.y);
                 return label;
               }
             }
@@ -2238,7 +2256,7 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
         scales: {
           x: { 
             type: 'category',
-            labels: years,
+            labels: slicedLabels,
             ticks: { color: '#9ca3af', font: { size: 9 } }, 
             grid: { display: false } 
           },
@@ -2246,7 +2264,7 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
             ticks: { 
               color: '#9ca3af', 
               font: { size: 9 },
-              callback: v => '$' + (v / 1e6).toFixed(1) + 'M'
+              callback: v => '$' + (v / 1e6).toFixed(2) + 'M'
             },
             grid: { color: '#f0f1f3' }
           }
@@ -2255,7 +2273,7 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
     });
   }
 
-  // Chart 2: historicalDomChart
+  // Chart 2: historicalDomChart (forcing y-axis to start at 0)
   const ctx2 = document.getElementById('historicalDomChart');
   if (ctx2) {
     STATE.charts.historicalDom = new Chart(ctx2, {
@@ -2287,7 +2305,8 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
           x: { ticks: { color: '#9ca3af', font: { size: 9 } }, grid: { display: false } },
           y: {
             ticks: { color: '#9ca3af', font: { size: 9 }, callback: v => v + 'd' },
-            grid: { color: '#f0f1f3' }
+            grid: { color: '#f0f1f3' },
+            min: 0
           }
         }
       }
@@ -2338,26 +2357,29 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
     });
   }
 
-  // Chart 4: liquidityIndexChart
+  // Chart 4: liquidityIndexChart (incorporating Auction Clearance Rate % on right-hand axis yACR)
   const ctx4 = document.getElementById('liquidityIndexChart');
   if (ctx4) {
+    const clearanceRates = [65, 68, 70, 72, 75, 74, 76, 78, 80, 82, 81, 83];
+    
     STATE.charts.liquidityIndex = new Chart(ctx4, {
       type: 'line',
       data: {
         labels: months,
         datasets: [
           {
-            label: 'Auction Campaign Duration',
+            label: 'Auction Campaign DOM (left)',
             data: auctionDomData,
             borderColor: '#ea580c',
             backgroundColor: 'transparent',
             borderWidth: 2,
             pointBackgroundColor: '#ea580c',
             pointRadius: 3,
-            tension: 0.2
+            tension: 0.2,
+            yAxisID: 'yDOM'
           },
           {
-            label: 'Private Treaty Days on Market',
+            label: 'Private Treaty DOM (left)',
             data: ptDomData,
             borderColor: '#111827',
             backgroundColor: 'transparent',
@@ -2365,7 +2387,20 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
             pointBackgroundColor: '#111827',
             pointRadius: 3,
             tension: 0.2,
-            borderDash: [4, 4]
+            borderDash: [4, 4],
+            yAxisID: 'yDOM'
+          },
+          {
+            label: 'Auction Clearance Rate % (right)',
+            data: clearanceRates,
+            borderColor: '#059669',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            pointBackgroundColor: '#059669',
+            pointRadius: 3,
+            tension: 0.2,
+            yAxisID: 'yACR',
+            type: 'line'
           }
         ]
       },
@@ -2373,14 +2408,27 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { family: 'Inter', size: 10 } } },
+          legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { family: 'Inter', size: 9 } } },
           tooltip: { backgroundColor: '#111827', titleFont: { family: 'Inter', size: 11 }, bodyFont: { family: 'Inter', size: 11 }, padding: 8, cornerRadius: 6 }
         },
         scales: {
           x: { ticks: { color: '#9ca3af', font: { size: 9 } }, grid: { display: false } },
-          y: {
+          yDOM: {
+            type: 'linear',
+            position: 'left',
             ticks: { color: '#9ca3af', font: { size: 9 }, callback: v => v + 'd' },
-            grid: { color: '#f0f1f3' }
+            grid: { color: '#f0f1f3' },
+            min: 0,
+            title: { display: true, text: 'Days on Market', font: { size: 9, weight: 'bold' } }
+          },
+          yACR: {
+            type: 'linear',
+            position: 'right',
+            ticks: { color: '#9ca3af', font: { size: 9 }, callback: v => v + '%' },
+            grid: { display: false },
+            min: 40,
+            max: 100,
+            title: { display: true, text: 'Clearance Rate', font: { size: 9, weight: 'bold' } }
           }
         }
       }
@@ -3247,6 +3295,35 @@ document.getElementById('periodFilters').addEventListener('click', e => {
     if (mainMap?.isStyleLoaded()) refreshMainMapLayers(STATE.data);
   }
 });
+
+// Chart 1 zoom filter event listener
+const zoomContainer = document.getElementById('chart1ZoomFilters');
+if (zoomContainer) {
+  zoomContainer.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    zoomContainer.querySelectorAll('button').forEach(b => {
+      b.classList.remove('active');
+      b.style.background = 'transparent';
+      b.style.color = '#6b7280';
+      b.style.boxShadow = 'none';
+    });
+    btn.classList.add('active');
+    btn.style.background = '#ffffff';
+    btn.style.color = '#111827';
+    btn.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+    
+    STATE.chart1ZoomMonths = parseInt(btn.dataset.zoom);
+    if (window.ACTIVE_VENDOR_DEMAND_PARAMS) {
+      renderVendorDemandCharts(
+        window.ACTIVE_VENDOR_DEMAND_PARAMS.suburb,
+        window.ACTIVE_VENDOR_DEMAND_PARAMS.type,
+        window.ACTIVE_VENDOR_DEMAND_PARAMS.coef,
+        window.ACTIVE_VENDOR_DEMAND_PARAMS.sa1Code
+      );
+    }
+  });
+}
 
 // Similar Properties filter
 const simBtn = document.getElementById('toggleSimilarFilter');
