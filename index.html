@@ -2417,6 +2417,7 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
             borderWidth: 2,
             borderDash: [5, 5],
             pointRadius: 0,
+            pointHoverRadius: 4,
             fill: false,
             order: 1
           },
@@ -2426,7 +2427,9 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
             borderColor: '#111827',
             backgroundColor: 'rgba(17, 24, 39, 0.03)',
             borderWidth: 2,
-            pointRadius: 0,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#111827',
             tension: 0.3,
             fill: true,
             order: 2
