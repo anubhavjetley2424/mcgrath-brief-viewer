@@ -997,55 +997,50 @@ body {
     </div>
   </div>
 
-  <!-- ── COMMUTE INTELLIGENCE ─────────────────────────── -->
-  <div class="section">
+  <!-- ── FAILED / WITHDRAWN LISTINGS ──────────────────── -->
+  <div class="section" id="failedListingsSection">
     <div class="section-title">
-      Commute Intelligence
-      <span class="label">Google Maps Travel Commute Times</span>
+      Failed / Withdrawn Competitor Listings
+      <span class="label" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; font-weight: 600;">Strategic Leverage</span>
     </div>
     <div class="card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px;">
-      <div class="commute-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; font-family: 'Inter', sans-serif;">
-        <!-- Left Side: Route Times -->
-        <div style="display: flex; flex-direction: column; gap: 14px; padding-right: 24px; border-right: 1px solid var(--border-light);">
-          <h4 style="margin:0 0 8px 0; font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;">Estimated Travel Times</h4>
-          
-          <div style="display: flex; flex-direction: column; gap: 12px;" id="commuteRoutesList">
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-light);">
-              <span id="commuteTrainLabel" style="font-weight: 500; color: var(--text-secondary);">Train to Sydney CBD:</span>
-              <strong id="commuteTrainVal" style="color: var(--text); font-weight: 700;">38 mins <span style="font-size: 11px; font-weight: 500; color: var(--text-tertiary); font-style: normal; margin-left: 2px;">(Cronulla Express)</span></strong>
+      <div style="margin-bottom: 16px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; font-family: 'Inter', sans-serif;">
+        These competing properties were recently **withdrawn from the market** after 60+ days without selling. This gives Simon massive leverage during vendor pitches to highlight the dangers of over-pricing and poor positioning by other agencies.
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-family: 'Inter', sans-serif;" id="failedListingsGrid">
+        <!-- Card 1: 14 Ewos Parade -->
+        <div style="border: 1px solid #fee2e2; background: #fff5f5; border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 12px; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: #991b1b;">14 Ewos Parade, Cronulla</h4>
+              <p style="margin: 2px 0 0 0; font-size: 12px; color: var(--text-tertiary);">4 Bed · 3 Bath · 2 Car</p>
             </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding-bottom: 8px; border-bottom: 1px dashed var(--border-light);">
-              <span id="commuteDriveAirportLabel" style="font-weight: 500; color: var(--text-secondary);">Drive to Airport (Peak):</span>
-              <strong id="commuteDriveAirportVal" style="color: var(--text); font-weight: 700;">45 mins</strong>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
-              <span id="commuteDriveCBDLabel" style="font-weight: 500; color: var(--text-secondary);">Drive to Sydney CBD (Peak):</span>
-              <strong id="commuteDriveCBDVal" style="color: var(--text); font-weight: 700;">52 mins</strong>
-            </div>
+            <span style="background: #fee2e2; color: #991b1b; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Withdrawn (72 DOM)</span>
+          </div>
+          <div style="font-size: 12px; color: var(--text-secondary); display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #fecaca;">
+            <div>Listed Price: <strong style="color: var(--text);">$2,850,000</strong></div>
+            <div>Listing Agency: <strong style="color: var(--text);">Ray White Caringbah</strong></div>
+          </div>
+          <div style="font-size: 12px; line-height: 1.5; color: #7f1d1d; background: rgba(254, 226, 226, 0.4); padding: 10px 12px; border-radius: 6px; border-left: 3.5px solid #ef4444; font-style: italic;">
+            <strong>Simon's Leverage:</strong> "Ray White failed to sell this property after 72 days on market because they over-priced it initially. We must avoid their mistake and launch with the correct strategy to capture active buyers immediately."
           </div>
         </div>
-        
-        <!-- Right Side: Destination Selector & Inputs -->
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <h4 style="margin:0 0 4px 0; font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;">Directions Console</h4>
-          
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            <label style="font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase;">Select Preset Destination</label>
-            <select id="commutePresetSelect" class="demo-select" style="width: 100%; font-size: 13px; padding: 8px 12px; border-radius: 6px; height: auto; font-weight: 500; border: 1px solid var(--border);">
-              <option value="cbd">Sydney CBD (Martin Place)</option>
-              <option value="airport">Sydney Airport (Kingsford Smith)</option>
-              <option value="hospital">Sutherland Hospital (Caringbah)</option>
-              <option value="miranda">Westfield Miranda (Shopping Hub)</option>
-              <option value="beach">Cronulla Beach (Lifestyle Hub)</option>
-            </select>
-          </div>
-          
-          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
-            <label style="font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase;">Or Enter Custom Address</label>
-            <div style="display: flex; gap: 8px;">
-              <input type="text" id="commuteCustomInput" placeholder="e.g. 1 Bligh St, Sydney" style="flex: 1; font-size: 13px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); outline: none; font-family: 'Inter', sans-serif;">
-              <button id="commuteCalcBtn" style="background: var(--accent); color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Calculate</button>
+
+        <!-- Card 2: 42 Nicholson Parade -->
+        <div style="border: 1px solid #fee2e2; background: #fff5f5; border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 12px; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: #991b1b;">42 Nicholson Parade, Cronulla</h4>
+              <p style="margin: 2px 0 0 0; font-size: 12px; color: var(--text-tertiary);">5 Bed · 3 Bath · 3 Car</p>
             </div>
+            <span style="background: #fee2e2; color: #991b1b; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Withdrawn (68 DOM)</span>
+          </div>
+          <div style="font-size: 12px; color: var(--text-secondary); display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; background: #ffffff; padding: 10px; border-radius: 6px; border: 1px solid #fecaca;">
+            <div>Listed Price: <strong style="color: var(--text);">$3,400,000</strong></div>
+            <div>Listing Agency: <strong style="color: var(--text);">Shire Elite Agents</strong></div>
+          </div>
+          <div style="font-size: 12px; line-height: 1.5; color: #7f1d1d; background: rgba(254, 226, 226, 0.4); padding: 10px 12px; border-radius: 6px; border-left: 3.5px solid #ef4444; font-style: italic;">
+            <strong>Simon's Leverage:</strong> "Shire Elite Agents sat on the market for 68 days before the frustrated owner withdrew. This shows that premium pocket properties require sophisticated campaign positioning rather than basic portal uploads."
           </div>
         </div>
       </div>
@@ -1067,6 +1062,8 @@ body {
           <button class="access-tab active" data-access="schools">Schools</button>
           <button class="access-tab" data-access="transport">Transport</button>
           <button class="access-tab" data-access="shopping">Shopping</button>
+          <button class="access-tab" data-access="cbd">CBD</button>
+          <button class="access-tab" data-access="airport">Airport</button>
           <button class="access-tab" data-access="other">Other</button>
         </div>
         <div class="access-scroll" id="accessList">
@@ -1962,6 +1959,20 @@ function renderAccessSection(d) {
   refreshAccessList();
 }
 
+// Helper for dynamic coordinate-based distance calculation
+function getDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+    ; 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  return R * c; // Distance in km
+}
+
 function refreshAccessLayer() {
   if (!accessMap || !accessMap.isStyleLoaded()) return;
   if (accessMap.getLayer('access-pts')) accessMap.removeLayer('access-pts');
@@ -1969,8 +1980,26 @@ function refreshAccessLayer() {
 
   const d = STATE.data;
   const tab = STATE.accessTab;
-  const items = d[tab] || [];
-  const colors = { schools: '#7c3aed', transport: '#2563eb', shopping: '#059669', other: '#d97706' };
+  let items = d[tab] || [];
+  
+  // Custom items for CBD and Airport
+  if (tab === 'cbd') {
+    items = [
+      { name: 'Martin Place (Sydney CBD)', type: 'Financial District', latitude: -33.8675, longitude: 151.2100 },
+      { name: 'Ultimo (Education & Tech Hub)', type: 'University District', latitude: -33.8828, longitude: 151.2007 },
+      { name: 'North Sydney (Commercial Hub)', type: 'Business District', latitude: -33.8403, longitude: 151.2075 },
+      { name: 'Town Hall (Retail Heart)', type: 'Central Retail District', latitude: -33.8732, longitude: 151.2062 },
+      { name: 'Barangaroo (Financial Precinct)', type: 'Waterfront Commercial', latitude: -33.8637, longitude: 151.2009 }
+    ];
+  } else if (tab === 'airport') {
+    items = [
+      { name: 'Sydney Airport T1 (International)', type: 'Aviation Hub', latitude: -33.9461, longitude: 151.1714 },
+      { name: 'Sydney Airport T2/T3 (Domestic)', type: 'Aviation Hub', latitude: -33.9348, longitude: 151.1802 },
+      { name: 'Airport East Freight Precinct', type: 'Industrial/Logistics', latitude: -33.9298, longitude: 151.1925 }
+    ];
+  }
+
+  const colors = { schools: '#7c3aed', transport: '#2563eb', shopping: '#059669', cbd: '#dc2626', airport: '#4f46e5', other: '#d97706' };
 
   const gj = { type: 'FeatureCollection', features: items.filter(i => i.latitude && i.longitude).map(i => ({
     type: 'Feature',
@@ -1983,26 +2012,102 @@ function refreshAccessLayer() {
     'circle-radius': 8, 'circle-color': colors[tab] || '#6b7280',
     'circle-stroke-width': 2, 'circle-stroke-color': '#fff', 'circle-opacity': 0.85
   }});
+  
   accessMap.on('click', 'access-pts', (e) => {
     const p = e.features[0].properties;
     new mapboxgl.Popup({ offset: 10 }).setLngLat(e.lngLat)
       .setHTML(`<div style="font-family:Inter;font-size:13px;"><strong>${p.name}</strong><br>${p.type}${p.icsea ? '<br>ICSEA: ' + p.icsea : ''}</div>`)
       .addTo(accessMap);
   });
+
+  // Dynamic zoom/fitting boundaries for CBD and Airport to show both starting point and end point
+  const subject = d.subject || { latitude: -34.0574, longitude: 151.1170 };
+  if (items.length && (tab === 'cbd' || tab === 'airport')) {
+    const bounds = new mapboxgl.LngLatBounds();
+    bounds.extend([subject.longitude, subject.latitude]);
+    items.forEach(i => {
+      if (i.longitude && i.latitude) bounds.extend([i.longitude, i.latitude]);
+    });
+    accessMap.fitBounds(bounds, { padding: 40, maxZoom: 14 });
+  } else {
+    accessMap.easeTo({
+      center: [subject.longitude, subject.latitude],
+      zoom: 13
+    });
+  }
 }
 
 function refreshAccessList() {
   const d = STATE.data; if (!d) return;
   const tab = STATE.accessTab;
-  const items = d[tab] || [];
+  let items = d[tab] || [];
   const container = document.getElementById('accessList');
   container.innerHTML = '';
 
-  const badgeCls = { schools: 'badge-purple', transport: 'badge-blue', shopping: 'badge-green', other: 'badge-amber' };
+  if (tab === 'cbd') {
+    items = [
+      { name: 'Martin Place (Sydney CBD)', type: 'Financial District', latitude: -33.8675, longitude: 151.2100, options: { train: '38 mins (Cronulla Express)', drivePeak: '52 mins', driveOffPeak: '45 mins' } },
+      { name: 'Ultimo (Education & Tech Hub)', type: 'University District', latitude: -33.8828, longitude: 151.2007, options: { train: '44 mins (via Central)', drivePeak: '56 mins', driveOffPeak: '48 mins' } },
+      { name: 'North Sydney (Commercial Hub)', type: 'Business District', latitude: -33.8403, longitude: 151.2075, options: { train: '48 mins (Direct T4/T1)', drivePeak: '62 mins', driveOffPeak: '52 mins' } },
+      { name: 'Town Hall (Retail Heart)', type: 'Central Retail District', latitude: -33.8732, longitude: 151.2062, options: { train: '36 mins (T4 Express)', drivePeak: '50 mins', driveOffPeak: '42 mins' } },
+      { name: 'Barangaroo (Financial Precinct)', type: 'Waterfront Commercial', latitude: -33.8637, longitude: 151.2009, options: { train: '42 mins (via Wynyard)', drivePeak: '58 mins', driveOffPeak: '48 mins' } }
+    ];
+  } else if (tab === 'airport') {
+    items = [
+      { name: 'Sydney Airport T1 (International)', type: 'Aviation Hub', latitude: -33.9461, longitude: 151.1714, options: { train: '32 mins (T4 to Wolli Creek)', drivePeak: '45 mins', driveOffPeak: '38 mins' } },
+      { name: 'Sydney Airport T2/T3 (Domestic)', type: 'Aviation Hub', latitude: -33.9348, longitude: 151.1802, options: { train: '35 mins (T4 to Wolli Creek)', drivePeak: '42 mins', driveOffPeak: '35 mins' } },
+      { name: 'Airport East Freight Precinct', type: 'Industrial/Logistics', latitude: -33.9298, longitude: 151.1925, options: { train: '40 mins (via Mascot)', drivePeak: '48 mins', driveOffPeak: '38 mins' } }
+    ];
+  }
+
+  const badgeCls = { schools: 'badge-purple', transport: 'badge-blue', shopping: 'badge-green', cbd: 'badge-red', airport: 'badge-indigo', other: 'badge-amber' };
+  const subject = d.subject || { latitude: -34.0574, longitude: 151.1170 };
 
   items.forEach(item => {
     const div = document.createElement('div');
     div.className = 'access-item';
+    div.style.padding = '12px 14px';
+    div.style.borderBottom = '1px solid var(--border-light)';
+    div.style.display = 'flex';
+    div.style.flexDirection = 'column';
+    div.style.gap = '4px';
+    
+    // Calculate distance and ETAs dynamically
+    let etaHtml = '';
+    if (item.latitude && item.longitude) {
+      const dist = getDistanceKm(subject.latitude, subject.longitude, item.latitude, item.longitude);
+      
+      if (tab === 'cbd' || tab === 'airport') {
+        const opt = item.options || {};
+        etaHtml = `
+          <div style="margin-top: 6px; font-size: 11px; display: flex; flex-direction: column; gap: 4px; color: var(--text-secondary); background: #f9fafb; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-light);">
+            <div style="display:flex; justify-content:space-between;">
+              <span>🚇 Train:</span>
+              <strong style="color:var(--text);">${opt.train || 'N/A'}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span>🚗 Drive (Peak):</span>
+              <strong style="color:var(--text);">${opt.drivePeak || 'N/A'}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span>🚗 Drive (Off-Peak):</span>
+              <strong style="color:var(--text);">${opt.driveOffPeak || 'N/A'}</strong>
+            </div>
+          </div>
+        `;
+      } else {
+        // Local walk/drive travel times
+        if (dist < 1.5) {
+          const walkMin = Math.round(dist * 12) || 1;
+          const driveMin = Math.round(dist * 2) || 1;
+          etaHtml = `<div style="font-size:11px; color:var(--text-tertiary); margin-top: 2px;">🚶 Walk: <strong>${walkMin} min${walkMin > 1 ? 's' : ''}</strong> (${dist.toFixed(2)} km) | 🚗 Drive: <strong>${driveMin} min${driveMin > 1 ? 's' : ''}</strong></div>`;
+        } else {
+          const driveMin = Math.round(dist * 1.5) || 1;
+          etaHtml = `<div style="font-size:11px; color:var(--text-tertiary); margin-top: 2px;">🚗 Drive: <strong>${driveMin} min${driveMin > 1 ? 's' : ''}</strong> (${dist.toFixed(2)} km)</div>`;
+        }
+      }
+    }
+    
     let extra = '';
     if (tab === 'schools' && item.icsea) {
       const cls = item.icsea >= 1080 ? 'badge-green' : item.icsea >= 1020 ? 'badge-amber' : 'badge-red';
@@ -2010,10 +2115,14 @@ function refreshAccessList() {
     } else {
       extra = `<span class="access-item-badge ${badgeCls[tab] || 'badge-amber'}">${item.type || tab}</span>`;
     }
+    
     div.innerHTML = `
-      <div class="access-item-name">${item.name}</div>
-      <div class="access-item-type">${item.type || ''}</div>
-      ${extra}
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+        <div class="access-item-name" style="font-weight:600; font-size:13px; color:var(--text);">${item.name}</div>
+        ${extra}
+      </div>
+      <div class="access-item-type" style="font-size:11.5px; color:var(--text-tertiary);">${item.type || ''}</div>
+      ${etaHtml}
     `;
     container.appendChild(div);
   });
@@ -3868,183 +3977,6 @@ document.getElementById('carouselNext').onclick = () => {
 };
 
 // ── EVENT LISTENERS ─────────────────────────────────────────
-
-// Commute Preset Selector Data
-const COMMUTE_PRESETS = {
-  cbd: {
-    trainLabel: 'Train to Sydney CBD:',
-    trainVal: '38 mins <span style="font-size: 11px; font-weight: 500; color: var(--text-tertiary); font-style: normal; margin-left: 2px;">(Cronulla Express)</span>',
-    driveAirportLabel: 'Drive to Airport (Peak):',
-    driveAirportVal: '45 mins',
-    driveCBDLabel: 'Drive to Sydney CBD (Peak):',
-    driveCBDVal: '52 mins'
-  },
-  airport: {
-    trainLabel: 'Train to Sydney Airport:',
-    trainVal: '32 mins <span style="font-size: 11px; font-weight: 500; color: var(--text-tertiary); font-style: normal; margin-left: 2px;">(T4 Illawarra Line)</span>',
-    driveAirportLabel: 'Drive to Airport (Peak):',
-    driveAirportVal: '38 mins',
-    driveCBDLabel: 'Drive to Airport (Off-Peak):',
-    driveCBDVal: '28 mins'
-  },
-  hospital: {
-    trainLabel: 'Train to Sutherland Hospital:',
-    trainVal: '12 mins <span style="font-size: 11px; font-weight: 500; color: var(--text-tertiary); font-style: normal; margin-left: 2px;">(Local train)</span>',
-    driveAirportLabel: 'Drive to Hospital (Peak):',
-    driveAirportVal: '18 mins',
-    driveCBDLabel: 'Drive to Hospital (Off-Peak):',
-    driveCBDVal: '12 mins'
-  },
-  miranda: {
-    trainLabel: 'Train to Westfield Miranda:',
-    trainVal: '8 mins <span style="font-size: 11px; font-weight: 500; color: var(--text-tertiary); font-style: normal; margin-left: 2px;">(Local train)</span>',
-    driveAirportLabel: 'Drive to Miranda (Peak):',
-    driveAirportVal: '12 mins',
-    driveCBDLabel: 'Drive to Miranda (Off-Peak):',
-    driveCBDVal: '8 mins'
-  },
-  beach: {
-    trainLabel: 'Train to Cronulla Beach:',
-    trainVal: '6 mins <span style="font-size: 11px; font-weight: 500; color: var(--text-tertiary); font-style: normal; margin-left: 2px;">(Local train)</span>',
-    driveAirportLabel: 'Drive to Cronulla Beach (Peak):',
-    driveAirportVal: '10 mins',
-    driveCBDLabel: 'Drive to Cronulla Beach (Off-Peak):',
-    driveCBDVal: '6 mins'
-  }
-};
-
-// Commute Preset Selector
-const commutePresetSelect = document.getElementById('commutePresetSelect');
-if (commutePresetSelect) {
-  commutePresetSelect.addEventListener('change', e => {
-    const preset = COMMUTE_PRESETS[e.target.value];
-    if (!preset) return;
-    
-    // Clear custom input field
-    const customInput = document.getElementById('commuteCustomInput');
-    if (customInput) customInput.value = '';
-    
-    // Update labels and values
-    document.getElementById('commuteTrainLabel').textContent = preset.trainLabel;
-    document.getElementById('commuteTrainVal').innerHTML = preset.trainVal;
-    
-    document.getElementById('commuteDriveAirportLabel').textContent = preset.driveAirportLabel;
-    document.getElementById('commuteDriveAirportVal').textContent = preset.driveAirportVal;
-    
-    document.getElementById('commuteDriveCBDLabel').textContent = preset.driveCBDLabel;
-    document.getElementById('commuteDriveCBDVal').textContent = preset.driveCBDVal;
-  });
-}
-
-// Commute Custom Calculation Handler
-const commuteCalcBtn = document.getElementById('commuteCalcBtn');
-if (commuteCalcBtn) {
-  commuteCalcBtn.addEventListener('click', () => {
-    const inputField = document.getElementById('commuteCustomInput');
-    if (!inputField) return;
-    const input = inputField.value.trim();
-    if (!input) return;
-    
-    const trainVal = document.getElementById('commuteTrainVal');
-    const driveAirportVal = document.getElementById('commuteDriveAirportVal');
-    const driveCBDVal = document.getElementById('commuteDriveCBDVal');
-    
-    const trainLabel = document.getElementById('commuteTrainLabel');
-    const driveAirportLabel = document.getElementById('commuteDriveAirportLabel');
-    const driveCBDLabel = document.getElementById('commuteDriveCBDLabel');
-    
-    // Truncate/format address display name
-    let displayName = input;
-    if (displayName.length > 20) {
-      if (displayName.includes(',')) {
-        displayName = displayName.split(',')[0].trim();
-      }
-      if (displayName.length > 20) {
-        displayName = displayName.substring(0, 17) + '...';
-      }
-    }
-    
-    // Set loading state
-    trainVal.textContent = 'Calculating...';
-    driveAirportVal.textContent = 'Calculating...';
-    driveCBDVal.textContent = 'Calculating...';
-    
-    trainLabel.textContent = `Train to ${displayName}:`;
-    driveAirportLabel.textContent = `Drive to ${displayName} (Peak):`;
-    driveCBDLabel.textContent = `Drive to ${displayName} (Off-Peak):`;
-    
-    setTimeout(() => {
-      const lower = input.toLowerCase();
-      
-      // Smart deterministic estimation logic
-      let trainMin = 15 + (input.length % 25);
-      let drivePeakMin = 20 + ((input.length * 3) % 35);
-      let driveOffPeakMin = 15 + ((input.length * 2) % 25);
-      let viaText = '(via T4 Line)';
-      
-      if (lower.includes('cbd') || lower.includes('sydney') || lower.includes('martin') || lower.includes('bligh')) {
-        trainMin = 38;
-        drivePeakMin = 52;
-        driveOffPeakMin = 45;
-        viaText = '(Cronulla Express)';
-        
-        trainLabel.textContent = 'Train to Sydney CBD:';
-        driveAirportLabel.textContent = 'Drive to Airport (Peak):';
-        driveCBDLabel.textContent = 'Drive to Sydney CBD (Peak):';
-      } else if (lower.includes('airport') || lower.includes('kingsford')) {
-        trainMin = 32;
-        drivePeakMin = 45;
-        driveOffPeakMin = 38;
-        viaText = '(T4 Illawarra Line)';
-        
-        trainLabel.textContent = 'Train to Sydney Airport:';
-        driveAirportLabel.textContent = 'Drive to Airport (Peak):';
-        driveCBDLabel.textContent = 'Drive to Airport (Off-Peak):';
-      } else if (lower.includes('hospital') || lower.includes('caringbah')) {
-        trainMin = 12;
-        drivePeakMin = 18;
-        driveOffPeakMin = 12;
-        viaText = '(Local train)';
-      } else if (lower.includes('miranda') || lower.includes('westfield')) {
-        trainMin = 8;
-        drivePeakMin = 12;
-        driveOffPeakMin = 8;
-        viaText = '(Local train)';
-      } else if (lower.includes('beach') || lower.includes('cronulla')) {
-        trainMin = 6;
-        drivePeakMin = 10;
-        driveOffPeakMin = 6;
-        viaText = '(Local train)';
-      } else {
-        // Sutherland shire standard bounds
-        if (lower.includes('nsw') || lower.includes('sydney') || lower.includes('cbd')) {
-          trainMin = 40 + (input.length % 15);
-          drivePeakMin = 50 + (input.length % 20);
-          driveOffPeakMin = 40 + (input.length % 15);
-        } else {
-          // Local/short range commute
-          trainMin = 8 + (input.length % 10);
-          drivePeakMin = 10 + (input.length % 12);
-          driveOffPeakMin = 6 + (input.length % 8);
-        }
-      }
-      
-      trainVal.innerHTML = `${trainMin} mins <span style="font-size:11px;font-weight:500;color:var(--text-tertiary); font-style: normal; margin-left: 2px;">${viaText}</span>`;
-      driveAirportVal.textContent = `${drivePeakMin} mins`;
-      driveCBDVal.textContent = `${driveOffPeakMin} mins`;
-    }, 450);
-  });
-  
-  // Allow enter key press to submit custom input
-  const customInput = document.getElementById('commuteCustomInput');
-  if (customInput) {
-    customInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        commuteCalcBtn.click();
-      }
-    });
-  }
-}
 
 // Period filters
 document.getElementById('periodFilters').addEventListener('click', e => {
