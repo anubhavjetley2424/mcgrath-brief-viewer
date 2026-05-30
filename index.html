@@ -1233,6 +1233,34 @@ function generateMockData() {
     activeListings[i].full_address = `${activeListings[i].street}, ${activeListings[i].suburb}`;
   }
 
+  // Add failed/withdrawn listings for Simon's competitive leverage
+  activeListings.push({
+    id: 2090, domain_listing_id: '2090',
+    street: '14 Ewos Parade', suburb: 'Cronulla', state: 'NSW', postcode: '2230',
+    latitude: -34.0581, longitude: 151.1542,
+    price_text: '$2,850,000',
+    beds: 4, baths: 3, parking: 2, land_size_sqm: 650,
+    property_type: 'House',
+    agency_name: 'Ray White Caringbah',
+    is_withdrawn: true,
+    days_on_market: 72,
+    photos: [fallbackPhotos[2], fallbackPhotos[3]],
+    full_address: '14 Ewos Parade, Cronulla'
+  });
+  activeListings.push({
+    id: 2091, domain_listing_id: '2091',
+    street: '42 Nicholson Parade', suburb: 'Cronulla', state: 'NSW', postcode: '2230',
+    latitude: -34.0620, longitude: 151.1492,
+    price_text: '$3,400,000',
+    beds: 5, baths: 3, parking: 3, land_size_sqm: 810,
+    property_type: 'House',
+    agency_name: 'Shire Elite Agents',
+    is_withdrawn: true,
+    days_on_market: 68,
+    photos: [fallbackPhotos[0], fallbackPhotos[1]],
+    full_address: '42 Nicholson Parade, Cronulla'
+  });
+
   const daDescs = [
     'Alterations and additions to existing dwelling including new swimming pool',
     'Demolition of existing structures and construction of a new two-storey dwelling',
@@ -1536,6 +1564,10 @@ function renderPropertySidebar(d) {
 
     const card = document.createElement('div');
     card.className = 'prop-card';
+    if (item.is_withdrawn) {
+      card.style.borderLeft = '4px solid #ef4444';
+      card.style.background = '#fef2f2';
+    }
 
     // Build carousel HTML
     const imgsHTML = photos.map((p, i) =>
@@ -1551,6 +1583,15 @@ function renderPropertySidebar(d) {
     const itemId = isActive ? item.domain_listing_id : item.property_id;
     card.id = `card-${itemId}`;
     card.style.transition = 'all 0.4s ease';
+    
+    const priceDisplay = item.is_withdrawn 
+      ? `<span style="color:#ef4444; font-weight:700;">${price || '—'}</span> <span style="font-size:10px; background:#fee2e2; color:#dc2626; padding:1px 5px; border-radius:4px; font-weight:600; text-transform:uppercase; margin-left:4px; border:1px solid #fca5a5;">Withdrawn</span>`
+      : (price || '—');
+      
+    const dateOrAgency = item.is_withdrawn
+      ? `<div style="font-size:11px; color:#b91c1c; font-weight:600; margin-top:4px;">⚠️ Failed after ${item.days_on_market}d on market via ${item.agency_name}</div>`
+      : (isActive && item.agency_name ? `<div class="prop-card-date">${item.agency_name}</div>` : (!isActive && item.contract_date ? `<div class="prop-card-date">Sold ${new Date(item.contract_date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</div>` : ''));
+
     card.innerHTML = `
       <div class="prop-carousel" data-idx="0" data-count="${photos.length}">
         ${imgsHTML}
@@ -1558,16 +1599,15 @@ function renderPropertySidebar(d) {
         ${dotsHTML}
       </div>
       <div class="prop-card-body">
-        <div class="prop-card-price">${price || '—'}</div>
+        <div class="prop-card-price">${priceDisplay}</div>
         <div class="prop-card-addr">${addr}, ${item.suburb || ''}</div>
         <div class="prop-card-meta">
           ${item.beds ? `<span>${item.beds} bed</span>` : ''}
           ${item.baths ? `<span>${item.baths} bath</span>` : ''}
           ${item.parking ? `<span>${item.parking} car</span>` : ''}
-          ${(item.land_size_sqm || item.land_area_sqm) ? `<span>${item.land_size_sqm || item.land_area_sqm} sqm</span>` : ''}
+          ${(item.land_size_sqm || item.land_area_sqm || item.land_size) ? `<span>${item.land_size_sqm || item.land_area_sqm || item.land_size} sqm</span>` : ''}
         </div>
-        ${!isActive && item.contract_date ? `<div class="prop-card-date">Sold ${new Date(item.contract_date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</div>` : ''}
-        ${isActive && item.agency_name ? `<div class="prop-card-date">${item.agency_name}</div>` : ''}
+        ${dateOrAgency}
       </div>
     `;
 
@@ -1640,12 +1680,18 @@ function refreshMainMapLayers(d) {
       const p = e.features[0].properties;
       const coordinates = e.features[0].geometry.coordinates.slice();
       
-      const priceText = type === 'sales' ? fmt(p.price) : p.price;
+      let priceText = type === 'sales' ? fmt(p.price) : p.price;
+      let extraHtml = '';
+      if (p.is_withdrawn) {
+        priceText = `<span style="color:#ef4444;font-weight:800;">${p.price}</span>`;
+        extraHtml = `<br><span style="font-size:10px;font-weight:700;color:#dc2626;">⚠️ Withdrawn after ${p.days_on_market}d via ${p.agency_name}</span>`;
+      }
+      const titleColor = p.is_withdrawn ? '#dc2626' : (type === 'sales' ? '#E2231A' : '#2563eb');
       const addrText = p.addr || 'Address Unavailable';
       
       hoverPopup.setLngLat(coordinates)
         .setHTML(`<div style="font-family:'Inter', sans-serif;font-size:12px;padding:4px 6px;line-height:1.45;">
-                    <strong style="color:#E2231A;font-size:14px;font-weight:800;">${priceText}</strong><br>
+                    <strong style="color:${titleColor};font-size:14px;font-weight:800;">${priceText}</strong>${extraHtml}<br>
                     <span style="font-weight:600;color:#111827;">${addrText}</span>
                   </div>`)
         .addTo(mainMap);
@@ -1721,11 +1767,19 @@ function refreshMainMapLayers(d) {
     const gj = { type: 'FeatureCollection', features: listings.filter(l => l.latitude && l.longitude).map(l => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [l.longitude, l.latitude] },
-      properties: { id: l.domain_listing_id, price: l.price_text, addr: l.full_address || l.street }
+      properties: { 
+        id: l.domain_listing_id, 
+        price: l.price_text, 
+        addr: l.full_address || l.street,
+        is_withdrawn: l.is_withdrawn || false,
+        days_on_market: l.days_on_market || 0,
+        agency_name: l.agency_name || '',
+        color: l.is_withdrawn ? '#dc2626' : '#2563eb'
+      }
     }))};
     mainMap.addSource('listings-pts', { type: 'geojson', data: gj });
     mainMap.addLayer({ id: 'listings-pts', type: 'circle', source: 'listings-pts', paint: {
-      'circle-radius': 9, 'circle-color': '#2563eb',
+      'circle-radius': 9, 'circle-color': ['get', 'color'],
       'circle-stroke-width': 2, 'circle-stroke-color': '#fff', 'circle-opacity': 0.9
     }});
     
@@ -1846,6 +1900,31 @@ function refreshAccessList() {
   const items = d[tab] || [];
   const container = document.getElementById('accessList');
   container.innerHTML = '';
+
+  if (tab === 'transport') {
+    const commuteDiv = document.createElement('div');
+    commuteDiv.style.cssText = 'background: linear-gradient(135deg, #1e3a8a, #1d4ed8); color: #ffffff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.15); font-family: "Inter", sans-serif;';
+    commuteDiv.innerHTML = `
+      <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.85); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+        <span>⚡</span> Google Maps Commute Intelligence
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
+          <span>🚆 Train to Sydney CBD:</span>
+          <strong style="color: #ffffff; font-weight: 700;">38 mins <span style="font-size: 11px; font-weight: 500; color: rgba(255, 255, 255, 0.75);">(Cronulla Express)</span></strong>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 6px;">
+          <span>🚗 Drive to Airport (Peak):</span>
+          <strong style="color: #ffffff; font-weight: 700;">45 mins</strong>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 6px;">
+          <span>🚗 Drive to Sydney CBD (Peak):</span>
+          <strong style="color: #ffffff; font-weight: 700;">52 mins</strong>
+        </div>
+      </div>
+    `;
+    container.appendChild(commuteDiv);
+  }
 
   const badgeCls = { schools: 'badge-purple', transport: 'badge-blue', shopping: 'badge-green', other: 'badge-amber' };
 
