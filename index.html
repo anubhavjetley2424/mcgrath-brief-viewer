@@ -741,7 +741,7 @@ body {
             <button class="filter-btn" data-period="180">6 Months</button>
             <button class="filter-btn active" data-period="365">1 Year</button>
             <button class="filter-btn" data-period="730">2 Years</button>
-            <button class="filter-btn" data-period="9999">All Time</button>
+            <button class="filter-btn" data-period="1095">3 Years</button>
           </div>
           
           <button id="toggleSimilarFilter" class="filter-btn" style="background:#f3f4f6; color:#4b5563; font-weight:600; display:inline-flex; align-items:center; gap:6px; border:1px solid #d1d5db; transition: all 0.2s; border-radius:6px; font-size:12px; cursor:pointer;">
@@ -936,7 +936,7 @@ body {
         <div style="display:flex; align-items:center; gap:6px;">
           <span style="font-size:10px; font-weight:700; color:#6b7280; text-transform:uppercase;">Timeframe:</span>
           <div class="toggle-group" id="analyticsTimeFilters" style="display:flex; background:#f3f4f6; padding:2px; border-radius:6px; font-family:'Inter', sans-serif;">
-            <button class="toggle-btn active" data-period="9999" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:#ffffff; color:#111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">All Time</button>
+            <button class="toggle-btn active" data-period="1095" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:#ffffff; color:#111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">3 Yrs</button>
             <button class="toggle-btn" data-period="730" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">2 Yrs</button>
             <button class="toggle-btn" data-period="365" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">1 Yr</button>
             <button class="toggle-btn" data-period="180" style="padding:4px 8px; border-radius:4px; font-size:10px; font-weight:600; cursor:pointer; border:none; background:transparent; color:#6b7280; transition: all 0.2s;">6 Mos</button>
@@ -1014,6 +1014,28 @@ body {
           <button class="access-tab" data-access="shopping">Shopping</button>
           <button class="access-tab" data-access="other">Other</button>
         </div>
+        
+        <!-- Permanent Google Maps Commute Intelligence Widget -->
+        <div id="commuteWidget" style="padding: 14px 18px; border-bottom: 1px solid var(--border-light); background: linear-gradient(135deg, #111827, #1f2937); color: #ffffff; font-family: 'Inter', sans-serif;">
+          <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.85); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <span style="color:#E2231A;">⚡</span> Google Maps Commute Intelligence
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
+              <span style="color: rgba(255, 255, 255, 0.85);">🚆 Train to Sydney CBD:</span>
+              <strong style="color: #ffffff; font-weight: 700;">38 mins <span style="font-size: 11px; font-weight: 500; color: rgba(255, 255, 255, 0.65);">(Cronulla Express)</span></strong>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 6px;">
+              <span style="color: rgba(255, 255, 255, 0.85);">🚗 Drive to Airport (Peak):</span>
+              <strong style="color: #ffffff; font-weight: 700;">45 mins</strong>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 6px;">
+              <span style="color: rgba(255, 255, 255, 0.85);">🚗 Drive to Sydney CBD (Peak):</span>
+              <strong style="color: #ffffff; font-weight: 700;">52 mins</strong>
+            </div>
+          </div>
+        </div>
+
         <div class="access-scroll" id="accessList">
           <!-- Populated dynamically -->
         </div>
@@ -1374,8 +1396,50 @@ async function loadData() {
     STATE.data = generateMockData();
   }
 
+function ensureWithdrawnListings(d) {
+  if (!d) return;
+  if (!d.active_listings) d.active_listings = [];
+  
+  const hasWithdrawn = d.active_listings.some(l => l.is_withdrawn);
+  if (!hasWithdrawn) {
+    const fallbackPhotos = [
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?q=80&w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=600&auto=format&fit=crop'
+    ];
+    d.active_listings.push({
+      id: 2090, domain_listing_id: '2090',
+      street: '14 Ewos Parade', suburb: 'Cronulla', state: 'NSW', postcode: '2230',
+      latitude: -34.0581, longitude: 151.1542,
+      price_text: '$2,850,000',
+      beds: 4, baths: 3, parking: 2, land_size_sqm: 650,
+      property_type: 'House',
+      agency_name: 'Ray White Caringbah',
+      is_withdrawn: true,
+      days_on_market: 72,
+      photos: [fallbackPhotos[2], fallbackPhotos[3]],
+      full_address: '14 Ewos Parade, Cronulla'
+    });
+    d.active_listings.push({
+      id: 2091, domain_listing_id: '2091',
+      street: '42 Nicholson Parade', suburb: 'Cronulla', state: 'NSW', postcode: '2230',
+      latitude: -34.0620, longitude: 151.1492,
+      price_text: '$3,400,000',
+      beds: 5, baths: 3, parking: 3, land_size_sqm: 810,
+      property_type: 'House',
+      agency_name: 'Shire Elite Agents',
+      is_withdrawn: true,
+      days_on_market: 68,
+      photos: [fallbackPhotos[0], fallbackPhotos[1]],
+      full_address: '42 Nicholson Parade, Cronulla'
+    });
+  }
+}
+
   bar.style.width = '100%';
   setTimeout(() => { bar.style.width = '0%'; }, 400);
+  ensureWithdrawnListings(STATE.data);
   renderAll();
 }
 
@@ -1900,31 +1964,6 @@ function refreshAccessList() {
   const items = d[tab] || [];
   const container = document.getElementById('accessList');
   container.innerHTML = '';
-
-  if (tab === 'transport') {
-    const commuteDiv = document.createElement('div');
-    commuteDiv.style.cssText = 'background: linear-gradient(135deg, #1e3a8a, #1d4ed8); color: #ffffff; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(29, 78, 216, 0.15); font-family: "Inter", sans-serif;';
-    commuteDiv.innerHTML = `
-      <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255, 255, 255, 0.85); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-        <span>⚡</span> Google Maps Commute Intelligence
-      </div>
-      <div style="display: flex; flex-direction: column; gap: 8px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px;">
-          <span>🚆 Train to Sydney CBD:</span>
-          <strong style="color: #ffffff; font-weight: 700;">38 mins <span style="font-size: 11px; font-weight: 500; color: rgba(255, 255, 255, 0.75);">(Cronulla Express)</span></strong>
-        </div>
-        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 6px;">
-          <span>🚗 Drive to Airport (Peak):</span>
-          <strong style="color: #ffffff; font-weight: 700;">45 mins</strong>
-        </div>
-        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 13px; border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 6px;">
-          <span>🚗 Drive to Sydney CBD (Peak):</span>
-          <strong style="color: #ffffff; font-weight: 700;">52 mins</strong>
-        </div>
-      </div>
-    `;
-    container.appendChild(commuteDiv);
-  }
 
   const badgeCls = { schools: 'badge-purple', transport: 'badge-blue', shopping: 'badge-green', other: 'badge-amber' };
 
