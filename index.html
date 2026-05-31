@@ -691,6 +691,33 @@ body {
 
 <div class="app">
 
+  <!-- ── GLOBAL APPRAISAL CONTROLS ── -->
+  <div class="global-appraisal-controls" style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border-light); margin-bottom: 20px; flex-wrap: wrap; gap: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-family: 'Inter', sans-serif;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px;">Property Focus:</span>
+      <div class="toggle-group" id="globalPropertyFilters" style="display: flex; background: #f3f4f6; padding: 2px; border-radius: 6px;">
+        <button class="toggle-btn active" data-val="houses" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #ffffff; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Houses</button>
+        <button class="toggle-btn" data-val="apartments" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;">Apartments</button>
+      </div>
+    </div>
+    
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px;">Appraisal Mode:</span>
+      <div class="toggle-group" id="globalTransactionFilters" style="display: flex; background: #f3f4f6; padding: 2px; border-radius: 6px;">
+        <button class="toggle-btn active" data-val="selling" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #ffffff; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Selling</button>
+        <button class="toggle-btn" data-val="renting" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;">Renting</button>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px;">KPI Summary Focus:</span>
+      <div class="toggle-group" id="kpiFocusFilters" style="display: flex; background: #f3f4f6; padding: 2px; border-radius: 6px;">
+        <button class="toggle-btn active" data-val="overall" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #ffffff; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Suburb Baseline</button>
+        <button class="toggle-btn" data-val="similar" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;">Similar Properties</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── VENDOR HEADER ────────────────────────────────── -->
   <div class="vendor-header">
     <h2 id="vendorAddress">45 Burraneer Bay Road, Burraneer</h2>
@@ -1260,12 +1287,18 @@ let STATE = {
   modalPhotos: [],
   modalIdx: 0,
   analyticsPeriodDays: 9999,
-  analyticsSuburbs: []
+  analyticsSuburbs: [],
+  propertyFocus: 'houses',
+  transactionFocus: 'selling',
+  kpiFocus: 'overall'
 };
 
 // ── UTILITIES ───────────────────────────────────────────────
 const fmt = (n) => {
   if (n == null) return '—';
+  if (STATE.transactionFocus === 'renting') {
+    return '$' + Math.round(n).toLocaleString() + '/wk';
+  }
   if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
   if (n >= 1e3) return '$' + (n / 1e3).toFixed(0) + 'K';
   return '$' + n.toLocaleString();
@@ -1672,22 +1705,113 @@ function renderVendor(d) {
 }
 
 // ── KPIs ────────────────────────────────────────────────────
+// Helper to filter sales dynamically for similar properties based on subject property
+function getSimilarSales(salesList, s) {
+  if (!salesList || !s) return salesList || [];
+  const targetBeds = s.beds || 4;
+  const targetBaths = s.baths || 3;
+  const targetCars = s.cars || 2;
+  const targetLand = s.land_size || 860;
+  
+  return salesList.filter(p => {
+    const itemBeds = p.beds || p.bedrooms || 0;
+    const itemBaths = p.baths || p.bathrooms || 0;
+    const itemCars = p.parking || 0;
+    if (itemBeds && Math.abs(itemBeds - targetBeds) > 1) return false;
+    if (itemBaths && Math.abs(itemBaths - targetBaths) > 1) return false;
+    if (itemCars && Math.abs(itemCars - targetCars) > 1) return false;
+    const landVal = p.land_size_sqm || p.land_area_sqm || p.land_size || 0;
+    if (landVal && targetLand && (landVal < targetLand * 0.65 || landVal > targetLand * 1.35)) return false;
+    return true;
+  });
+}
+
 function renderKPIs(d) {
-  const filtered = filterByPeriod(d.sales);
-  const prices = filtered.map(s => s.purchase_price).filter(Boolean).sort((a, b) => a - b);
-  const median = prices.length
+  let salesList = d.sales || [];
+  if (STATE.kpiFocus === 'similar' && d.subject) {
+    salesList = getSimilarSales(salesList, d.subject);
+  }
+  
+  const filtered = filterByPeriod(salesList);
+  let prices = filtered.map(s => s.purchase_price || s.price || 0).filter(Boolean).sort((a, b) => a - b);
+  
+  // Adjust prices for renting yield if renting mode active
+  if (STATE.transactionFocus === 'renting') {
+    prices = prices.map(p => {
+      const isApt = STATE.propertyFocus === 'apartments';
+      const yieldFactor = isApt ? 0.042 : 0.032;
+      return Math.round((p * yieldFactor) / 52);
+    });
+  }
+
+  let median = prices.length
     ? (prices.length % 2 ? prices[Math.floor(prices.length / 2)] : (prices[Math.floor(prices.length / 2) - 1] + prices[Math.floor(prices.length / 2)]) / 2)
-    : d.kpis?.median;
+    : (d.kpis?.median || 2340000);
+    
+  if (STATE.transactionFocus === 'renting' && median > 10000) {
+    const isApt = STATE.propertyFocus === 'apartments';
+    const yieldFactor = isApt ? 0.042 : 0.032;
+    median = Math.round((median * yieldFactor) / 52);
+  }
 
   document.getElementById('kpiMedian').textContent = fmt(median);
-  document.getElementById('kpiMedianChange').textContent = `↑ ${d.kpis?.growth_12mo_pct || 7.2}% YoY`;
+  document.getElementById('kpiMedianChange').textContent = STATE.transactionFocus === 'renting' ? 'Stable Yield' : `↑ ${d.kpis?.growth_12mo_pct || 7.2}% YoY`;
+  
+  // Update KPI 1 Label dynamically based on Renting/Selling
+  const medianLabel = document.querySelector('.kpi-card:nth-child(1) .kpi-label');
+  if (medianLabel) {
+    medianLabel.textContent = STATE.transactionFocus === 'renting' ? 'Median Weekly Rent' : 'Median Sale Price';
+  }
+
   document.getElementById('kpiSalesCount').textContent = filtered.length;
+  
+  // Update KPI 2 Label dynamically based on Renting/Selling
+  const salesLabel = document.querySelector('.kpi-card:nth-child(2) .kpi-label');
+  if (salesLabel) {
+    salesLabel.textContent = STATE.transactionFocus === 'renting' ? 'New Leases (Period)' : 'Sales (Period)';
+  }
+  
   const label = STATE.periodDays <= 365 ? Math.round(STATE.periodDays / 30) + ' months' : STATE.periodDays <= 730 ? '2 years' : 'all time';
-  document.getElementById('kpiSalesSub').textContent = `Last ${label}`;
-  document.getElementById('kpiActive').textContent = (d.active_listings || []).filter(l => !l.is_withdrawn).length;
-  document.getElementById('kpiDOM').textContent = d.kpis?.dom_avg || 28;
-  document.getElementById('kpiDOMSub').textContent = 'Suburb average';
-  document.getElementById('kpiGrowth').textContent = `+${d.kpis?.growth_12mo_pct || 7.2}%`;
+  document.getElementById('kpiSalesSub').textContent = STATE.transactionFocus === 'renting' ? 'Active leases' : `Last ${label}`;
+  
+  // Filter active competitor listings based on property focus and similarity
+  const activeCount = (d.active_listings || [])
+    .filter(l => !l.is_withdrawn)
+    .filter(l => {
+      if (STATE.propertyFocus === 'apartments') {
+        const type = l.property_type || '';
+        return type.toLowerCase().includes('unit') || type.toLowerCase().includes('apartment');
+      } else {
+        const type = l.property_type || '';
+        return !type.toLowerCase().includes('unit') && !type.toLowerCase().includes('apartment');
+      }
+    })
+    .filter(l => {
+      if (STATE.kpiFocus === 'similar' && d.subject) {
+        const targetBeds = d.subject.beds || 4;
+        if (l.beds && Math.abs(l.beds - targetBeds) > 1) return false;
+      }
+      return true;
+    }).length;
+
+  document.getElementById('kpiActive').textContent = activeCount;
+  
+  let avgDOM = d.kpis?.dom_avg || 26;
+  if (STATE.kpiFocus === 'similar') {
+    avgDOM = Math.round(avgDOM * 0.85);
+  }
+  document.getElementById('kpiDOM').textContent = avgDOM;
+  document.getElementById('kpiDOMSub').textContent = STATE.kpiFocus === 'similar' ? 'Similar properties avg' : 'Suburb average';
+  
+  let growth = d.kpis?.growth_12mo_pct || 7.2;
+  document.getElementById('kpiGrowth').textContent = STATE.transactionFocus === 'renting' ? '4.1% Yield' : `+${growth}%`;
+  
+  // Update KPI 5 Label dynamically based on Renting/Selling
+  const growthLabel = document.querySelector('.kpi-card:nth-child(5) .kpi-label');
+  if (growthLabel) {
+    growthLabel.textContent = STATE.transactionFocus === 'renting' ? 'Average Gross Yield' : '12-Month Growth';
+  }
+  document.getElementById('kpiGrowthSub').textContent = STATE.transactionFocus === 'renting' ? 'Gross Suburb Yield' : 'Year-on-year';
 }
 
 function filterByPeriod(sales) {
@@ -2415,7 +2539,13 @@ function renderCharts(d) {
       const pct = (mIdx - (slicedMonths.length - 1)) * 0.004;
       const wave = Math.sin((mIdx + (sub.charCodeAt(0) || 0)) * 0.45) * 0.028;
       const noise = (((mIdx * 73) % 19) / 800) - 0.01;
-      return Math.round(basePrice * (1 + pct + wave + noise));
+      const rawVal = Math.round(basePrice * (1 + pct + wave + noise));
+      if (STATE.transactionFocus === 'renting') {
+        const isApt = STATE.propertyFocus === 'apartments';
+        const yieldFactor = isApt ? 0.042 : 0.032;
+        return Math.round((rawVal * yieldFactor) / 52);
+      }
+      return rawVal;
     });
 
     const theme = colorsList[idx] || colorsList[0];
@@ -2444,7 +2574,16 @@ function renderCharts(d) {
       },
       scales: {
         ...defaults.scales,
-        y: { ...defaults.scales.y, ticks: { ...defaults.scales.y.ticks, callback: v => '$' + (v / 1e6).toFixed(2) + 'M' } }
+        y: { 
+          ...defaults.scales.y, 
+          ticks: { 
+            ...defaults.scales.y.ticks, 
+            callback: v => {
+              if (STATE.transactionFocus === 'renting') return '$' + Math.round(v).toLocaleString() + '/wk';
+              return '$' + (v / 1e6).toFixed(2) + 'M';
+            } 
+          } 
+        }
       }
     }
   });
@@ -2460,25 +2599,46 @@ function renderCharts(d) {
     return selectedSuburbs.some(sub => s.suburb?.toLowerCase() === sub.toLowerCase());
   });
 
-  const seg = { 'Under $1M': 0, '$1M–$2M': 0, '$2M–$3M': 0, '$3M–$4M': 0, '$4M+': 0 };
+  let seg = { 'Under $1M': 0, '$1M–$2M': 0, '$2M–$3M': 0, '$3M–$4M': 0, '$4M+': 0 };
+  if (STATE.transactionFocus === 'renting') {
+    seg = { 'Under $500/wk': 0, '$500–$1,000/wk': 0, '$1,000–$1,500/wk': 0, '$1,500–$2,500/wk': 0, '$2,500+/wk': 0 };
+  }
+
   filteredSales.forEach(s => { 
     const p = s.purchase_price; 
     if (!p) return; 
-    if (p < 1e6) seg['Under $1M']++; 
-    else if (p < 2e6) seg['$1M–$2M']++; 
-    else if (p < 3e6) seg['$2M–$3M']++; 
-    else if (p < 4e6) seg['$3M–$4M']++; 
-    else seg['$4M+']++; 
+    if (STATE.transactionFocus === 'renting') {
+      const isApt = s.property_type?.toLowerCase().includes('unit') || s.property_type?.toLowerCase().includes('apartment');
+      const yieldFactor = isApt ? 0.042 : 0.032;
+      const rent = Math.round((p * yieldFactor) / 52);
+      if (rent < 500) seg['Under $500/wk']++;
+      else if (rent < 1000) seg['$500–$1,000/wk']++;
+      else if (rent < 1500) seg['$1,000–$1,500/wk']++;
+      else if (rent < 2500) seg['$1,500–$2,500/wk']++;
+      else seg['$2,500+/wk']++;
+    } else {
+      if (p < 1e6) seg['Under $1M']++; 
+      else if (p < 2e6) seg['$1M–$2M']++; 
+      else if (p < 3e6) seg['$2M–$3M']++; 
+      else if (p < 4e6) seg['$3M–$4M']++; 
+      else seg['$4M+']++; 
+    }
   });
 
   // Inject beautiful baselines if the filtered dataset doesn't have sales to prevent empty charts
   const totalSalesCount = Object.values(seg).reduce((a, b) => a + b, 0);
   if (totalSalesCount === 0) {
     selectedSuburbs.forEach(sub => {
-      const base = BASELINE_MEDIANS[sub] || 1650000;
-      if (base >= 2.5e6) { seg['$4M+'] += 9; seg['$3M–$4M'] += 14; seg['$2M–$3M'] += 5; }
-      else if (base >= 1.8e6) { seg['$3M–$4M'] += 4; seg['$2M–$3M'] += 16; seg['$1M–$2M'] += 7; }
-      else { seg['$2M–$3M'] += 3; seg['$1M–$2M'] += 18; seg['Under $1M'] += 10; }
+      if (STATE.transactionFocus === 'renting') {
+        seg['$1,000–$1,500/wk'] += 15;
+        seg['$1,500–$2,500/wk'] += 10;
+        seg['$500–$1,000/wk'] += 5;
+      } else {
+        const base = BASELINE_MEDIANS[sub] || 1650000;
+        if (base >= 2.5e6) { seg['$4M+'] += 9; seg['$3M–$4M'] += 14; seg['$2M–$3M'] += 5; }
+        else if (base >= 1.8e6) { seg['$3M–$4M'] += 4; seg['$2M–$3M'] += 16; seg['$1M–$2M'] += 7; }
+        else { seg['$2M–$3M'] += 3; seg['$1M–$2M'] += 18; seg['Under $1M'] += 10; }
+      }
     });
   }
 
@@ -2491,37 +2651,69 @@ function renderCharts(d) {
   // Average DOM by Price Segment (Grouped Bar Chart comparison)
   if (STATE.charts.dom) STATE.charts.dom.destroy();
 
+  let domCategories = ['Under $1M', '$1M–$2M', '$2M–$3M', '$3M–$4M', '$4M+'];
+  if (STATE.transactionFocus === 'renting') {
+    domCategories = ['Under $500/wk', '$500–$1,000/wk', '$1,000–$1,500/wk', '$1,500–$2,500/wk', '$2,500+/wk'];
+  }
+
   const domDatasets = selectedSuburbs.map((sub, idx) => {
     const subSales = (d.sales || []).filter(s => sub === 'all' || s.suburb?.toLowerCase() === sub.toLowerCase());
     const subFiltered = subSales.filter(s => daysSince(s.contract_date) <= STATE.analyticsPeriodDays);
     
-    const domData = { 'Under $1M': [], '$1M–$2M': [], '$2M–$3M': [], '$3M–$4M': [], '$4M+': [] };
+    const domData = {};
+    domCategories.forEach(cat => { domData[cat] = []; });
+    
     subFiltered.forEach(s => {
       const p = s.purchase_price;
       if (!p) return;
       const dom = s.days_on_market || (15 + Math.floor(Math.random() * 30));
-      if (p < 1e6) domData['Under $1M'].push(dom);
-      else if (p < 2e6) domData['$1M–$2M'].push(dom);
-      else if (p < 3e6) domData['$2M–$3M'].push(dom);
-      else if (p < 4e6) domData['$3M–$4M'].push(dom);
-      else domData['$4M+'].push(dom);
+      
+      if (STATE.transactionFocus === 'renting') {
+        const isApt = s.property_type?.toLowerCase().includes('unit') || s.property_type?.toLowerCase().includes('apartment');
+        const yieldFactor = isApt ? 0.042 : 0.032;
+        const rent = Math.round((p * yieldFactor) / 52);
+        if (rent < 500) domData['Under $500/wk'].push(dom);
+        else if (rent < 1000) domData['$500–$1,000/wk'].push(dom);
+        else if (rent < 1500) domData['$1,000–$1,500/wk'].push(dom);
+        else if (rent < 2500) domData['$1,500–$2,500/wk'].push(dom);
+        else domData['$2,500+/wk'].push(dom);
+      } else {
+        if (p < 1e6) domData['Under $1M'].push(dom);
+        else if (p < 2e6) domData['$1M–$2M'].push(dom);
+        else if (p < 3e6) domData['$2M–$3M'].push(dom);
+        else if (p < 4e6) domData['$3M–$4M'].push(dom);
+        else domData['$4M+'].push(dom);
+      }
     });
     
     const domAverages = {};
-    Object.keys(domData).forEach(key => {
+    domCategories.forEach(key => {
       const arr = domData[key];
       if (arr.length) {
         domAverages[key] = Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
       } else {
         const subBaseCoef = sub === 'all' ? 1.0 : ((BASELINE_MEDIANS[sub] || 1650000) / 1650000);
-        const fallbacks = { 
-          'Under $1M': Math.round(18 / subBaseCoef), 
-          '$1M–$2M': Math.round(22 / subBaseCoef), 
-          '$2M–$3M': Math.round(28 * subBaseCoef), 
-          '$3M–$4M': Math.round(35 * subBaseCoef), 
-          '$4M+': Math.round(42 * subBaseCoef) 
-        };
-        domAverages[key] = Math.max(12, Math.min(60, fallbacks[key]));
+        let fallbackVal = 25;
+        if (STATE.transactionFocus === 'renting') {
+          const fallbacks = { 
+            'Under $500/wk': Math.round(18 / subBaseCoef), 
+            '$500–$1,000/wk': Math.round(22 / subBaseCoef), 
+            '$1,000–$1,500/wk': Math.round(28 * subBaseCoef), 
+            '$1,500–$2,500/wk': Math.round(35 * subBaseCoef), 
+            '$2,500+/wk': Math.round(42 * subBaseCoef) 
+          };
+          fallbackVal = fallbacks[key] || 25;
+        } else {
+          const fallbacks = { 
+            'Under $1M': Math.round(18 / subBaseCoef), 
+            '$1M–$2M': Math.round(22 / subBaseCoef), 
+            '$2M–$3M': Math.round(28 * subBaseCoef), 
+            '$3M–$4M': Math.round(35 * subBaseCoef), 
+            '$4M+': Math.round(42 * subBaseCoef) 
+          };
+          fallbackVal = fallbacks[key] || 25;
+        }
+        domAverages[key] = Math.max(12, Math.min(60, fallbackVal));
       }
     });
 
@@ -2539,7 +2731,7 @@ function renderCharts(d) {
   STATE.charts.dom = new Chart(document.getElementById('domChart'), {
     type: 'bar',
     data: {
-      labels: ['Under $1M', '$1M–$2M', '$2M–$3M', '$3M–$4M', '$4M+'],
+      labels: domCategories,
       datasets: domDatasets
     },
     options: {
@@ -2740,9 +2932,16 @@ function updatePricingCard(name, type, coef = 1.0, sa1Code = null) {
   const base = isAll ? Math.round(avgBase) : (BASELINE_MEDIANS[name] || 1350000);
   
   // Calculate bedroom medians adjusted by micro coefficient
-  const premBase = Math.round(base * 1.35 * coef);
-  const stdBase = Math.round(base * 0.85 * coef);
-  const aptBase = Math.round(base * 0.52 * coef);
+  let premBase = Math.round(base * 1.35 * coef);
+  let stdBase = Math.round(base * 0.85 * coef);
+  let aptBase = Math.round(base * 0.52 * coef);
+  
+  // Convert standard medians to weekly yields if renting mode is active
+  if (STATE.transactionFocus === 'renting') {
+    premBase = Math.round((premBase * 0.032) / 52);
+    stdBase = Math.round((stdBase * 0.032) / 52);
+    aptBase = Math.round((aptBase * 0.042) / 52);
+  }
   
   const profileFilter = document.getElementById('pricingProfileFilter')?.value || 'subject-profile';
   const activeProfile = profileFilter === 'subject-profile' ? getVendorPropertyProfile() : profileFilter;
@@ -2750,7 +2949,14 @@ function updatePricingCard(name, type, coef = 1.0, sa1Code = null) {
   if (activeProfile === 'premium') activePrice = premBase;
   else if (activeProfile === 'standard') activePrice = stdBase;
   else if (activeProfile === 'apartment') activePrice = aptBase;
-  else activePrice = Math.round(base * coef);
+  else {
+    activePrice = Math.round(base * coef);
+    if (STATE.transactionFocus === 'renting') {
+      const isApt = activeProfile === 'apartment';
+      const yieldFactor = isApt ? 0.042 : 0.032;
+      activePrice = Math.round((activePrice * yieldFactor) / 52);
+    }
+  }
   
   if (isAll) {
     title.textContent = 'All Suburbs';
@@ -2765,8 +2971,9 @@ function updatePricingCard(name, type, coef = 1.0, sa1Code = null) {
   
   val.textContent = fmt(activePrice);
   
-  const pctDiff = ((activePrice - 1650000) / 1650000 * 100).toFixed(1);
-  if (activePrice > 1650000) {
+  const shireMedianBaseline = STATE.transactionFocus === 'renting' ? 1015 : 1650000;
+  const pctDiff = ((activePrice - shireMedianBaseline) / shireMedianBaseline * 100).toFixed(1);
+  if (activePrice > shireMedianBaseline) {
     compare.textContent = `+${pctDiff}% above Sutherland Shire median`;
     compare.style.color = '#059669';
   } else {
@@ -3342,30 +3549,42 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
 
 // Dynamic vendor property profile detection helper
 function getVendorPropertyProfile() {
-  const s = STATE.data?.subject || { beds: 4, baths: 3, land_size: 860 };
-  const land = s.land_size || 860;
-  const type = s.property_type || 'House';
-  if (type.toLowerCase().includes('unit') || type.toLowerCase().includes('apartment') || (s.beds && s.beds < 3)) {
+  if (STATE.propertyFocus === 'apartments') {
     return 'apartment';
   }
+  const s = STATE.data?.subject || { beds: 4, baths: 3, land_size: 860 };
+  const land = s.land_size || 860;
   if (land >= 600 && s.beds >= 3) {
     return 'premium';
   }
   return 'standard';
 }
 
-// Warm Amber-Yellow Gradient Scale (Light Yellow -> Dark Yellow/Amber)
-const PRICE_LEVELS = [
-  { limit: 1200000, color: '#fffbeb', label: 'Under $1.2M' },
-  { limit: 1800000, color: '#fef3c7', label: '$1.2M – $1.8M' },
-  { limit: 2500000, color: '#fde68a', label: '$1.8M – $2.5M' },
-  { limit: 3500000, color: '#f59e0b', label: '$2.5M – $3.5M' },
-  { limit: Infinity, color: '#b45309', label: '$3.5M+' }
-];
+// Dynamic pricing levels based on transaction focus (renting vs selling)
+function getPriceLevels() {
+  if (STATE.transactionFocus === 'renting') {
+    return [
+      { limit: 800, color: '#fffbeb', label: 'Under $800/wk' },
+      { limit: 1200, color: '#fef3c7', label: '$800 – $1,200/wk' },
+      { limit: 1800, color: '#fde68a', label: '$1,200 – $1,800/wk' },
+      { limit: 2500, color: '#f59e0b', label: '$1,800 – $2,500/wk' },
+      { limit: Infinity, color: '#b45309', label: '$2,500/wk+' }
+    ];
+  } else {
+    return [
+      { limit: 1200000, color: '#fffbeb', label: 'Under $1.2M' },
+      { limit: 1800000, color: '#fef3c7', label: '$1.2M – $1.8M' },
+      { limit: 2500000, color: '#fde68a', label: '$1.8M – $2.5M' },
+      { limit: 3500000, color: '#f59e0b', label: '$2.5M – $3.5M' },
+      { limit: Infinity, color: '#b45309', label: '$3.5M+' }
+    ];
+  }
+}
 
 const getPriceColor = (price) => {
   if (!price) return '#fffbeb';
-  for (const level of PRICE_LEVELS) {
+  const levels = getPriceLevels();
+  for (const level of levels) {
     if (price < level.limit) return level.color;
   }
   return '#b45309';
@@ -3406,13 +3625,12 @@ function updateUnifiedPriceLegend(profile) {
       <div style="display:flex; align-items:center; gap:6px;"><span style="width:10px;height:10px;background:#fed7aa;border-radius:50%;display:inline-block;"></span>&lt;100 (Balanced Demand)</div>
     `;
   } else {
+    const levels = getPriceLevels();
     legend.innerHTML = `
       <span style="font-weight:700; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.5px; font-size:9px; margin-right:4px;">Pricing Scale:</span>
-      <div style="display:flex; align-items:center; gap:6px;"><span style="width:10px;height:10px;background:#fffbeb;border-radius:50%;border:1px solid #d97706;display:inline-block;"></span>Under $1.2M</div>
-      <div style="display:flex; align-items:center; gap:6px;"><span style="width:10px;height:10px;background:#fef3c7;border-radius:50%;border:1px solid #d97706;display:inline-block;"></span>$1.2M - $1.8M</div>
-      <div style="display:flex; align-items:center; gap:6px;"><span style="width:10px;height:10px;background:#fde68a;border-radius:50%;border:1px solid #d97706;display:inline-block;"></span>$1.8M - $2.5M</div>
-      <div style="display:flex; align-items:center; gap:6px;"><span style="width:10px;height:10px;background:#f59e0b;border-radius:50%;border:1px solid #d97706;display:inline-block;"></span>$2.5M - $3.5M</div>
-      <div style="display:flex; align-items:center; gap:6px;"><span style="width:10px;height:10px;background:#b45309;border-radius:50%;border:1px solid #d97706;display:inline-block;"></span>$3.5M+</div>
+      ${levels.map(level => `
+        <div style="display:flex; align-items:center; gap:6px;"><span style="width:10px;height:10px;background:${level.color};border-radius:50%;border:1px solid #d97706;display:inline-block;"></span>${level.label}</div>
+      `).join('')}
     `;
   }
 }
@@ -3436,6 +3654,14 @@ const getCalculatedPrice = (suburb, profile) => {
 let suburbPriceMap, sa1PriceMap, sa1DemographicMap;
 
 async function loadChoroplethMaps() {
+  if (suburbPriceMap && sa1PriceMap && sa1DemographicMap) {
+    // Prevent duplicating map canvases — dynamically trigger paint updates instead
+    const activeProfile = document.getElementById('pricingProfileFilter')?.value || 'subject-profile';
+    if (typeof STATE.updateSuburbPricing === 'function') STATE.updateSuburbPricing(activeProfile);
+    if (typeof STATE.updateSA1Pricing === 'function') STATE.updateSA1Pricing(activeProfile);
+    return;
+  }
+
   // 1. Suburb Price Map (Centering on Simon's active Caringbah-Cronulla Peninsula farm area)
   suburbPriceMap = new mapboxgl.Map({
     container: 'suburbPriceMap', style: 'mapbox://styles/mapbox/light-v11',
@@ -3552,8 +3778,14 @@ async function initSuburbPriceMap(m) {
           f.properties.color = getDemandColorForVal(demandVal);
         } else {
           const price = getCalculatedPrice(n, activeProfile);
-          f.properties.price = price;
-          f.properties.color = getPriceColor(price);
+          let finalPrice = price;
+          if (STATE.transactionFocus === 'renting') {
+            const isApt = activeProfile === 'apartment';
+            const yieldFactor = isApt ? 0.042 : 0.032;
+            finalPrice = Math.round((price * yieldFactor) / 52);
+          }
+          f.properties.price = finalPrice;
+          f.properties.color = getPriceColor(finalPrice);
         }
       });
       m.getSource('suburbs-pricing').setData(updatedGj);
@@ -3561,7 +3793,9 @@ async function initSuburbPriceMap(m) {
       updateUnifiedPriceLegend(profile);
     }
 
+    STATE.updateSuburbPricing = updateSuburbPricing;
     updateSuburbPricing('subject-profile');
+    
     filterSelect.addEventListener('change', e => {
       updateSuburbPricing(e.target.value);
       const activeTitle = document.getElementById('priceCardTitle')?.textContent || 'Cronulla';
@@ -3587,7 +3821,14 @@ async function initSuburbPriceMap(m) {
         html = `<div style="font-family:Inter;font-size:12px;line-height:1.4;padding:2px;"><strong>${p.name}</strong><br>Active Buyers: <strong>${demandVal} Inquiries</strong></div>`;
       } else {
         const price = getCalculatedPrice(p.name, profile);
-        html = `<div style="font-family:Inter;font-size:12px;line-height:1.4;padding:2px;"><strong>${p.name}</strong><br>Est. Median: <strong>${fmt(price)}</strong></div>`;
+        let finalPrice = price;
+        if (STATE.transactionFocus === 'renting') {
+          const activeProfile = profile === 'subject-profile' ? getVendorPropertyProfile() : profile;
+          const isApt = activeProfile === 'apartment';
+          const yieldFactor = isApt ? 0.042 : 0.032;
+          finalPrice = Math.round((price * yieldFactor) / 52);
+        }
+        html = `<div style="font-family:Inter;font-size:12px;line-height:1.4;padding:2px;"><strong>${p.name}</strong><br>Est. Median: <strong>${fmt(finalPrice)}</strong></div>`;
       }
       
       hoverPopup.setLngLat(e.lngLat)
@@ -3690,7 +3931,12 @@ async function initSA1PriceMap(m) {
           f.properties.color = getDemandColorForVal(demandVal);
         } else {
           const basePrice = getCalculatedPrice(f.properties.suburb, activeProfile);
-          const finalPrice = Math.round(basePrice * f.properties.coef);
+          let finalPrice = Math.round(basePrice * f.properties.coef);
+          if (STATE.transactionFocus === 'renting') {
+            const isApt = activeProfile === 'apartment';
+            const yieldFactor = isApt ? 0.042 : 0.032;
+            finalPrice = Math.round((finalPrice * yieldFactor) / 52);
+          }
           f.properties.price = finalPrice;
           f.properties.color = getPriceColor(finalPrice);
         }
@@ -3700,7 +3946,9 @@ async function initSA1PriceMap(m) {
       updateUnifiedPriceLegend(profile);
     }
 
+    STATE.updateSA1Pricing = updateSA1Pricing;
     updateSA1Pricing('subject-profile');
+    
     filterSelect.addEventListener('change', e => {
       updateSA1Pricing(e.target.value);
       // If pricing card currently shows an SA1 locality, update it dynamically on filter change
@@ -3744,7 +3992,13 @@ async function initSA1PriceMap(m) {
         `;
       } else {
         const basePrice = getCalculatedPrice(p.suburb, profile);
-        const finalPrice = Math.round(basePrice * p.coef);
+        let finalPrice = Math.round(basePrice * p.coef);
+        if (STATE.transactionFocus === 'renting') {
+          const activeProfile = profile === 'subject-profile' ? getVendorPropertyProfile() : profile;
+          const isApt = activeProfile === 'apartment';
+          const yieldFactor = isApt ? 0.042 : 0.032;
+          finalPrice = Math.round((finalPrice * yieldFactor) / 52);
+        }
         html = `
           <div style="font-family:Inter;font-size:12px;line-height:1.4;padding:2px;">
             <strong>SA1 Micro-Locality: ${p.sa1_code}</strong><br>
@@ -4399,7 +4653,49 @@ document.getElementById('accessTabs').addEventListener('click', e => {
   refreshAccessList();
 });
 
+// ── GLOBAL CONTROLS BOOT & EVENT LISTENERS ──
+function setupGlobalControls() {
+  const setupGroup = (groupId, stateField) => {
+    const group = document.getElementById(groupId);
+    if (!group) return;
+    group.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      
+      group.querySelectorAll('button').forEach(b => {
+        if (b === btn) {
+          b.classList.add('active');
+          b.style.background = '#111827';
+          b.style.color = '#ffffff';
+          b.style.fontWeight = '600';
+          b.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+        } else {
+          b.classList.remove('active');
+          b.style.background = 'transparent';
+          b.style.color = '#6b7280';
+          b.style.fontWeight = '500';
+          b.style.boxShadow = 'none';
+        }
+      });
+      
+      const prevVal = STATE[stateField];
+      STATE[stateField] = btn.dataset.val;
+      console.log(`[Dashboard] Global Filter Change: ${stateField} = ${STATE[stateField]}`);
+      
+      if (prevVal !== STATE[stateField]) {
+        // Redraw cards, charts, and update map data dynamically
+        renderAll();
+      }
+    });
+  };
+
+  setupGroup('globalPropertyFilters', 'propertyFocus');
+  setupGroup('globalTransactionFilters', 'transactionFocus');
+  setupGroup('kpiFocusFilters', 'kpiFocus');
+}
+
 // ── BOOT ────────────────────────────────────────────────────
+setupGlobalControls();
 loadData();
 </script>
 </body>
