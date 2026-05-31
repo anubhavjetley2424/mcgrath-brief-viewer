@@ -1301,10 +1301,10 @@ function generateMockData() {
   ];
 
   const sales = [];
-  for (let i = 0; i < 35; i++) {
+  for (let i = 0; i < 350; i++) {
     const sub = suburbs[Math.floor(Math.random() * suburbs.length)];
     const price = 800000 + Math.floor(Math.random() * 3700000);
-    const daysAgo = Math.floor(Math.random() * 730);
+    const daysAgo = Math.floor(Math.random() * 1095);
     const d = new Date(); d.setDate(d.getDate() - daysAgo);
     const photos = fallbackPhotos.slice(0, 2 + Math.floor(Math.random() * 2));
     sales.push({
@@ -1665,7 +1665,7 @@ function renderKPIs(d) {
   document.getElementById('kpiSalesCount').textContent = filtered.length;
   const label = STATE.periodDays <= 365 ? Math.round(STATE.periodDays / 30) + ' months' : STATE.periodDays <= 730 ? '2 years' : 'all time';
   document.getElementById('kpiSalesSub').textContent = `Last ${label}`;
-  document.getElementById('kpiActive').textContent = d.active_listings?.length || 0;
+  document.getElementById('kpiActive').textContent = (d.active_listings || []).filter(l => !l.is_withdrawn).length;
   document.getElementById('kpiDOM').textContent = d.kpis?.dom_avg || 28;
   document.getElementById('kpiDOMSub').textContent = 'Suburb average';
   document.getElementById('kpiGrowth').textContent = `+${d.kpis?.growth_12mo_pct || 7.2}%`;
@@ -1678,7 +1678,7 @@ function filterByPeriod(sales) {
 
 function getFilteredProperties(d) {
   let items = STATE.activeTab === 'active'
-    ? (d.active_listings || [])
+    ? (d.active_listings || []).filter(l => !l.is_withdrawn)
     : filterByPeriod(d.sales || []);
     
   if (STATE.similarFilter && d.subject) {
@@ -2034,7 +2034,7 @@ function refreshMainMapLayers(d) {
   }
 
   if (STATE.mapLayers.listings) {
-    let listings = d.active_listings || [];
+    let listings = (d.active_listings || []).filter(l => !l.is_withdrawn);
     if (STATE.similarFilter && d.subject) {
       const s = d.subject;
       listings = listings.filter(p => {
