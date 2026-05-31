@@ -5103,8 +5103,8 @@ document.querySelector('.map-layer-toggles').addEventListener('click', e => {
 function renderAIAgentNotes(d) {
   const section = document.getElementById('aiAgentNotesSection');
   const container = document.getElementById('aiAgentNotesContent');
-  
-  // Always display the section so Simon can see the premium Royal Blue container and instructions
+
+  // Always show the section so Simon sees either the notes or how to generate them.
   section.style.display = 'block';
   container.innerHTML = '';
   
@@ -5136,16 +5136,14 @@ function renderAIAgentNotes(d) {
     }
   }
   
-  // If no notes are present (e.g. mock mode or deal has no notes yet), render a helpful royal-blue instruction card
+  // No notes yet — plain-white card matching the rest of the dashboard (dark text).
   container.innerHTML = `
     <div style="display:flex; flex-direction:column; gap:12px;">
-      <p style="margin:0; font-size:14px; line-height:1.5; color:rgba(255, 255, 255, 0.95); font-weight: 500;">
-        No AI Agent Notes Summary has been generated for this deal yet. 
+      <p style="margin:0; font-size:14px; line-height:1.5; color:var(--text); font-weight:500;">
+        No AI Agent Notes summary has been generated for this deal yet.
       </p>
-      <div style="background:rgba(255,255,255,0.12); padding:16px 20px; border-radius:10px; border-left:4px solid #ffffff; font-size:13px; line-height:1.55; color:#ffffff; font-weight: normal;">
-        <strong>How to generate:</strong> Drag this deal to the <strong>"Pre-Appointment Prep"</strong> stage on your McGrath Dashboard. 
-        The AI Agent workflow will automatically trigger, scrape comparable active and sold listings, calculate Google commute travel times, 
-        rank the top schools, and write your 6–8 concise Talking Points back here!
+      <div style="background:var(--bg-alt); padding:16px 20px; border-radius:10px; border-left:3px solid var(--accent-red); font-size:13px; line-height:1.55; color:var(--text-secondary);">
+        <strong style="color:var(--text);">How to generate:</strong> Move this deal to the <strong>Pre-Appointment Prep</strong> stage. The AI workflow then scrapes comparable sales and listings, calculates commute times, ranks nearby schools, and writes 6&ndash;8 concise talking points back here.
       </div>
     </div>
   `;
