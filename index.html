@@ -1900,17 +1900,20 @@ function renderPropertyIndex(d) {
   const subjBaths = Number(subj.baths) || null;
   const subjCars = Number(subj.parking) || null;
 
-  // Build cohort: same-suburb sold properties (VG sales) where bed count is
-  // within ±1 of the subject. Falls back to whole-suburb if too few similar.
-  const all = (d.sales || []).filter(s => s.suburb);
-  let cohort = subjBeds
-    ? all.filter(s => s.beds == null || Math.abs((Number(s.beds) || subjBeds) - subjBeds) <= 1)
-    : all;
-  // VG sales don't always carry beds — fall back to all sales if cohort too thin.
-  if (cohort.length < 8) cohort = all;
+  // Two cohorts:
+  //  · saleCohort   = VG sales (good for LAND, no beds/baths/parking)
+  //  · listingCohort = Domain active listings (good for BEDS/BATHS/PARKING)
+  // VG doesn't track property features; Domain doesn't have sold price for
+  // every house. So we draw each percentile from whichever cohort has the data.
+  const saleCohort = (d.sales || []).filter(s => s.suburb);
+  let listingCohort = (d.active_listings || []).filter(l => l.suburb);
+  if (subjBeds && listingCohort.length >= 12) {
+    listingCohort = listingCohort.filter(l =>
+      l.beds == null || Math.abs((Number(l.beds) || subjBeds) - subjBeds) <= 1);
+  }
 
-  const cohortLabel = cohort.length
-    ? `Cohort: ${cohort.length} ${subj.suburb ? subj.suburb : 'suburb'} sales${subjBeds ? `, ${subjBeds}-bed ±1` : ''}`
+  const cohortLabel = (saleCohort.length || listingCohort.length)
+    ? `Cohort: ${saleCohort.length} VG sales · ${listingCohort.length} live listings${subjBeds ? ` (${subjBeds}-bed ±1)` : ''}`
     : 'Cohort: insufficient data';
 
   // Percentile helper — fraction of cohort values <= the subject's value.
@@ -1923,34 +1926,35 @@ function renderPropertyIndex(d) {
     return Math.round((belowEq / clean.length) * 100);
   }
 
-  // Build the four rows
+  // Build the four rows. Land draws from VG sales (which carry land_area_sqm);
+  // beds/baths/parking draw from Domain active listings (which carry features).
   const rows = [
     {
       key: 'land',
       label: 'Land size',
       subjStr: subjLand ? `${subjLand} m²` : '—',
-      pct: pct(cohort.map(s => s.land_area_sqm), subjLand),
+      pct: pct(saleCohort.map(s => s.land_area_sqm).concat(listingCohort.map(l => l.land_size_sqm)), subjLand),
       hint: 'larger = higher percentile'
     },
     {
       key: 'beds',
       label: 'Bedrooms',
       subjStr: subjBeds ? `${subjBeds}` : '—',
-      pct: pct(cohort.map(s => s.beds).filter(v => v != null), subjBeds),
+      pct: pct(listingCohort.map(l => l.beds), subjBeds),
       hint: 'more beds = higher'
     },
     {
       key: 'baths',
       label: 'Bathrooms',
       subjStr: subjBaths ? `${subjBaths}` : '—',
-      pct: pct(cohort.map(s => s.baths).filter(v => v != null), subjBaths),
+      pct: pct(listingCohort.map(l => l.baths), subjBaths),
       hint: 'more baths = higher'
     },
     {
       key: 'cars',
       label: 'Parking',
       subjStr: subjCars ? `${subjCars}` : '—',
-      pct: pct(cohort.map(s => s.parking).filter(v => v != null), subjCars),
+      pct: pct(listingCohort.map(l => l.parking), subjCars),
       hint: 'more spaces = higher'
     }
   ];
