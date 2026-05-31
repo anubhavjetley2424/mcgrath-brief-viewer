@@ -153,6 +153,37 @@ async def get_dashboard_data(
     except Exception as e:
         print(f"Error querying schools: {e}")
 
+    # Query suburb demographics (ABS 2021 + SEIFA, joined by suburb name).
+    # Table is optional — fall through quietly so the dashboard's local
+    # fixtures still render until the table is seeded.
+    demographics_by_suburb: dict[str, Any] = {}
+    try:
+        demo_result = (
+            supabase.table("suburb_demographics")
+            .select("*")
+            .execute()
+        )
+        for row in (demo_result.data or []):
+            name = (row.get("suburb") or row.get("name") or "").strip()
+            if not name:
+                continue
+            # Title-case the key so frontend lookups (Burraneer, Cronulla) match.
+            key = name.title()
+            demographics_by_suburb[key] = {
+                "seifa": row.get("seifa_irsad") or row.get("seifa"),
+                "income": row.get("median_weekly_household_income") or row.get("income"),
+                "ownerOccupancy": row.get("owner_occupier_pct") or row.get("owner_occupancy"),
+                "remigration": row.get("five_yr_turnover_pct") or row.get("remigration"),
+                "supplyMonths": row.get("supply_months"),
+                "population": row.get("population"),
+                "medianAge": row.get("median_age"),
+                "dwellings": row.get("dwellings"),
+                "householdSize": row.get("avg_household_size") or row.get("household_size"),
+            }
+    except Exception as e:
+        # Table likely doesn't exist yet — dashboard falls back to JS fixtures.
+        print(f"suburb_demographics not available, dashboard will use fixtures: {e}")
+
     # Normalize sales
     sales = []
     for s in sales_data:
@@ -295,5 +326,6 @@ async def get_dashboard_data(
         "median_trend_12mo": median_trend_12mo,
         "schools": schools,
         "sa1_geojson": sa1_data,
-        "kpis": kpis
+        "kpis": kpis,
+        "demographics_by_suburb": demographics_by_suburb
     }

@@ -1040,7 +1040,7 @@ body {
   </div>
 
   <!-- ── FAILED / WITHDRAWN LISTINGS ──────────────────── -->
-  <div class="section" id="failedListingsSection">
+  <div class="section" id="failedListingsSection" style="display:none;">
     <div class="section-title">
       Withdrawn Listings
       <span class="label">Price ceiling evidence · Domain</span>
@@ -1058,23 +1058,8 @@ body {
               <th>Why it stalled</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td><strong>14 Ewos Parade, Cronulla</strong><br><span style="color:var(--text-tertiary);font-size:11px;">650 sqm · 2026-05-12</span></td>
-              <td>4 / 3 / 2</td>
-              <td><strong>$2,850,000</strong></td>
-              <td><span class="da-badge major">72 days</span></td>
-              <td>Ray White</td>
-              <td style="font-size:12px;color:var(--text-secondary);">Priced 14% above 4-bed SA1 baseline.</td>
-            </tr>
-            <tr>
-              <td><strong>42 Nicholson Parade, Cronulla</strong><br><span style="color:var(--text-tertiary);font-size:11px;">810 sqm · 2026-05-18</span></td>
-              <td>5 / 3 / 3</td>
-              <td><strong>$3,400,000</strong></td>
-              <td><span class="da-badge major">68 days</span></td>
-              <td>Shire Elite</td>
-              <td style="font-size:12px;color:var(--text-secondary);">Priced 18% above 5-bed median; outside school catchment.</td>
-            </tr>
+          <tbody id="withdrawnTbody">
+            <!-- populated by renderWithdrawnListings -->
           </tbody>
         </table>
       </div>
@@ -1462,44 +1447,12 @@ async function loadData() {
   }
 
 function ensureWithdrawnListings(d) {
+  // Previously injected hardcoded Cronulla fallback rows when none were returned.
+  // Now a no-op: the table simply renders empty (and the section hides itself)
+  // if the webhook returns no withdrawn listings, so we never mislead Simon
+  // with stale comps from the wrong suburb.
   if (!d) return;
   if (!d.active_listings) d.active_listings = [];
-  
-  const hasWithdrawn = d.active_listings.some(l => l.is_withdrawn);
-  if (!hasWithdrawn) {
-    const fallbackPhotos = [
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=600&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?q=80&w=600&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=600&auto=format&fit=crop'
-    ];
-    d.active_listings.push({
-      id: 2090, domain_listing_id: '2090',
-      street: '14 Ewos Parade', suburb: 'Cronulla', state: 'NSW', postcode: '2230',
-      latitude: -34.0581, longitude: 151.1542,
-      price_text: '$2,850,000',
-      beds: 4, baths: 3, parking: 2, land_size_sqm: 650,
-      property_type: 'House',
-      agency_name: 'Ray White Caringbah',
-      is_withdrawn: true,
-      days_on_market: 72,
-      photos: [fallbackPhotos[2], fallbackPhotos[3]],
-      full_address: '14 Ewos Parade, Cronulla'
-    });
-    d.active_listings.push({
-      id: 2091, domain_listing_id: '2091',
-      street: '42 Nicholson Parade', suburb: 'Cronulla', state: 'NSW', postcode: '2230',
-      latitude: -34.0620, longitude: 151.1492,
-      price_text: '$3,400,000',
-      beds: 5, baths: 3, parking: 3, land_size_sqm: 810,
-      property_type: 'House',
-      agency_name: 'Shire Elite Agents',
-      is_withdrawn: true,
-      days_on_market: 68,
-      photos: [fallbackPhotos[0], fallbackPhotos[1]],
-      full_address: '42 Nicholson Parade, Cronulla'
-    });
-  }
 }
 
   bar.style.width = '100%';
@@ -1593,6 +1546,7 @@ function renderAll() {
   renderVendor(d);
   renderKPIs(d);
   renderAppraisalRange(d);
+  renderWithdrawnListings(d);
   renderPropertySidebar(d);
   renderMainMap(d);
   renderDASection(d);
@@ -1779,6 +1733,66 @@ function getFilteredProperties(d) {
   return items;
 }
 
+// ── WITHDRAWN LISTINGS ──────────────────────────────────────
+// Drives the Price-Ceiling table from live Domain data. Section
+// hides when no withdrawn listings are in the deal's suburb so
+// Simon never sees stale rows from a different pocket.
+function renderWithdrawnListings(d) {
+  const section = document.getElementById('failedListingsSection');
+  const tbody = document.getElementById('withdrawnTbody');
+  if (!section || !tbody) return;
+
+  const subjSuburb = (getSubjectSuburb(d) || '').toLowerCase();
+  const items = (d.active_listings || []).filter(l => {
+    if (!l.is_withdrawn) return false;
+    // Only show withdrawn comps in the subject's suburb (don't mix pockets)
+    return !subjSuburb || (l.suburb || '').toLowerCase() === subjSuburb;
+  });
+
+  if (!items.length) {
+    section.style.display = 'none';
+    tbody.innerHTML = '';
+    return;
+  }
+  section.style.display = '';
+
+  // Suburb baseline for the "why it stalled" hint
+  const baselineMedian = BASELINE_MEDIANS[findSuburbKey(getSubjectSuburb(d))] || 0;
+
+  tbody.innerHTML = items.map(l => {
+    const addr = l.full_address || `${l.street || ''}, ${l.suburb || ''}`.replace(/^,\s*/, '');
+    const land = l.land_size_sqm ? `${l.land_size_sqm} sqm` : '';
+    const withdrawnDate = l.withdrawn_date || l.last_seen || '';
+    const meta = [land, withdrawnDate].filter(Boolean).join(' · ');
+    const price = l.last_listed_price || l.price || 0;
+    const priceStr = l.price_text || (price ? '$' + price.toLocaleString() : '—');
+    const dom = l.days_on_market || '—';
+    const beds = l.beds || '?';
+    const baths = l.baths || '?';
+    const cars = l.parking || '?';
+    const agency = l.agency_name || '—';
+
+    // Plain-English stall reason (no AI buzzwords).
+    let reason = l.stall_reason || '';
+    if (!reason && price && baselineMedian) {
+      const pct = Math.round((price / baselineMedian - 1) * 100);
+      if (pct >= 10) reason = `Priced ${pct}% above suburb median.`;
+      else if (dom > 60) reason = `${dom} days on market without bid.`;
+    }
+
+    return `
+      <tr>
+        <td><strong>${addr}</strong>${meta ? `<br><span style="color:var(--text-tertiary);font-size:11px;">${meta}</span>` : ''}</td>
+        <td>${beds} / ${baths} / ${cars}</td>
+        <td><strong>${priceStr}</strong></td>
+        <td><span class="da-badge major">${dom} days</span></td>
+        <td>${agency}</td>
+        <td style="font-size:12px;color:var(--text-secondary);">${reason || '—'}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
 // ── APPRAISAL RANGE ─────────────────────────────────────────
 // Blends a similar-sale floor with a withdrawn-listing ceiling and
 // applies the SA1 micro-pocket premium implied by SEIFA / retention.
@@ -1787,7 +1801,7 @@ function renderAppraisalRange(d) {
   const subj = d.subject || {};
   const suburb = getSubjectSuburb(d);
   const norm = findSuburbKey(suburb) || 'Burraneer';
-  const demo = SUBURB_DEMOGRAPHICS[norm];
+  const demo = getDemoForSuburb(norm);
 
   // 1. FLOOR — median of similar sales in the last 90 days.
   const similar = getSimilarSales(d.sales || [], subj);
@@ -2815,14 +2829,27 @@ const findSuburbKey = (name) => {
   return key || cleanName;
 };
 
+// Resolve the demographic record for a suburb. Server payload wins over
+// the local fixture so the dashboard goes "live" the moment the backend
+// returns demographics_by_suburb[<name>] — no client change needed then.
+function getDemoForSuburb(name) {
+  const norm = findSuburbKey(name) || 'Burraneer';
+  const serverMap = STATE.data?.demographics_by_suburb || STATE.data?.demographics || {};
+  return Object.assign(
+    {},
+    SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Burraneer'],
+    serverMap[norm] || serverMap[norm.toUpperCase()] || serverMap[norm.toLowerCase()] || {}
+  );
+}
+
 function generateCardsHtml(subName, sa1Props = null) {
   const norm = findSuburbKey(subName) || 'Burraneer';
-  const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Burraneer'];
+  const demo = getDemoForSuburb(norm);
   const useSA1 = sa1Props !== null;
 
   // Suburb baseline reference for delta chips
   const vendorSuburb = getSubjectSuburb(STATE.data);
-  const baseDemo = SUBURB_DEMOGRAPHICS[findSuburbKey(vendorSuburb)] || demo;
+  const baseDemo = getDemoForSuburb(vendorSuburb);
 
   const seifa = useSA1 ? sa1Props.seifa : demo.seifa;
   const remigration = useSA1 ? sa1Props.remigration : demo.remigration;
