@@ -692,29 +692,14 @@ body {
 <div class="app">
 
   <!-- ── GLOBAL APPRAISAL CONTROLS ── -->
-  <div class="global-appraisal-controls" style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border-light); margin-bottom: 20px; flex-wrap: wrap; gap: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-family: 'Inter', sans-serif;">
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span style="font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px;">Property Focus:</span>
-      <div class="toggle-group" id="globalPropertyFilters" style="display: flex; background: #f3f4f6; padding: 2px; border-radius: 6px;">
-        <button class="toggle-btn active" data-val="houses" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #ffffff; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Houses</button>
-        <button class="toggle-btn" data-val="apartments" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;">Apartments</button>
-      </div>
+  <div class="global-appraisal-controls" style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border-light); margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-family: 'Inter', sans-serif;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 11px; font-weight: 700; color: #111827; text-transform: uppercase; letter-spacing: 0.5px;">Appraisal Focus:</span>
+      <span style="font-size: 11px; color: #6b7280; font-weight: 500;">Toggle between general suburb market baselines and comparable property-matched analysis.</span>
     </div>
-    
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span style="font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px;">Appraisal Mode:</span>
-      <div class="toggle-group" id="globalTransactionFilters" style="display: flex; background: #f3f4f6; padding: 2px; border-radius: 6px;">
-        <button class="toggle-btn active" data-val="selling" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #ffffff; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Selling</button>
-        <button class="toggle-btn" data-val="renting" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;">Renting</button>
-      </div>
-    </div>
-
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span style="font-size: 11px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px;">KPI Summary Focus:</span>
-      <div class="toggle-group" id="kpiFocusFilters" style="display: flex; background: #f3f4f6; padding: 2px; border-radius: 6px;">
-        <button class="toggle-btn active" data-val="overall" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #ffffff; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Suburb Baseline</button>
-        <button class="toggle-btn" data-val="similar" style="padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;">Similar Properties</button>
-      </div>
+    <div class="toggle-group" id="kpiFocusFilters" style="display: flex; background: #f3f4f6; padding: 2px; border-radius: 6px;">
+      <button class="toggle-btn" data-val="overall" style="padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;">Suburb Baseline (General Market)</button>
+      <button class="toggle-btn active" data-val="similar" style="padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #111827; color: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Similar Properties (Comparable Analysis)</button>
     </div>
   </div>
 
@@ -1290,7 +1275,7 @@ let STATE = {
   analyticsSuburbs: [],
   propertyFocus: 'houses',
   transactionFocus: 'selling',
-  kpiFocus: 'overall'
+  kpiFocus: 'similar'
 };
 
 // ── UTILITIES ───────────────────────────────────────────────
@@ -4689,8 +4674,6 @@ function setupGlobalControls() {
     });
   };
 
-  setupGroup('globalPropertyFilters', 'propertyFocus');
-  setupGroup('globalTransactionFilters', 'transactionFocus');
   setupGroup('kpiFocusFilters', 'kpiFocus');
 }
 
