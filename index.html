@@ -918,7 +918,7 @@ body {
             </div>
 
             <div style="margin-top:auto; font-size:11px; color:#9ca3af; line-height:1.4; border-top:1px solid var(--border-light); padding-top:10px;">
-              ℹ️ Pricing fills are calculated from official government NSW Valuer General (VG) bulk transaction records over the last 12-24 months. Click on any boundary area on the map to inspect its real-time price context.
+              Note: Pricing fills are calculated from official government NSW Valuer General (VG) bulk transaction records over the last 12-24 months. Click on any boundary area on the map to inspect its real-time price context.
             </div>
           </div>
         </div>
@@ -1034,7 +1034,7 @@ body {
             
             <!-- Map header -->
             <div style="font-size: 10.5px; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
-              <span>📊</span> Micro-Market Sales Scatter Plot
+              Micro-Market Sales Scatter Plot
             </div>
             
             <!-- Map container -->
@@ -1064,7 +1064,7 @@ body {
             </div>
             
             <div style="font-size: 11px; line-height: 1.4; color: #7f1d1d; background: rgba(254, 226, 226, 0.45); padding: 8px 10px; border-radius: 6px; border: 1px dashed #fca5a5; margin: 0;">
-              <strong style="color: #991b1b; font-weight: 700;">🤖 AI Failure Diagnosis:</strong> Price was set 14% above comparable 4-bed SA1 micro-market baselines. The Private Treaty format lacked campaign urgency, and buyer shortlisting dropped by 65% after week 3 as the listing grew stale.
+              <strong style="color: #991b1b; font-weight: 700;">AI Failure Diagnosis:</strong> Price was set 14% above comparable 4-bed SA1 micro-market baselines. The Private Treaty format lacked campaign urgency, and buyer shortlisting dropped by 65% after week 3 as the listing grew stale.
             </div>
           </div>
         </div>
@@ -1086,7 +1086,7 @@ body {
             
             <!-- Map header -->
             <div style="font-size: 10.5px; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
-              <span>📊</span> Micro-Market Sales Scatter Plot
+              Micro-Market Sales Scatter Plot
             </div>
             
             <!-- Map container -->
@@ -1116,7 +1116,7 @@ body {
             </div>
             
             <div style="font-size: 11px; line-height: 1.4; color: #7f1d1d; background: rgba(254, 226, 226, 0.45); padding: 8px 10px; border-radius: 6px; border: 1px dashed #fca5a5; margin: 0;">
-              <strong style="color: #991b1b; font-weight: 700;">🤖 AI Failure Diagnosis:</strong> Price was set 18% above the standard Cronulla 5-bed median. Local SA1 boundaries indicate zero schools within a 1.2km radius, causing high-budget families to gravitate to school catchments in Woolooware.
+              <strong style="color: #991b1b; font-weight: 700;">AI Failure Diagnosis:</strong> Price was set 18% above the standard Cronulla 5-bed median. Local SA1 boundaries indicate zero schools within a 1.2km radius, causing high-budget families to gravitate to school catchments in Woolooware.
             </div>
           </div>
         </div>
@@ -1191,17 +1191,44 @@ body {
             <!-- Populated dynamically inside renderSocioGrid -->
           </div>
 
-          <!-- Comparative Demographics Chart -->
-          <div id="demographicCompareContainer" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border-light);">
-            <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-              <h5 style="margin:0; font-size:11px; font-weight:700; color:#111827; font-family:'Inter', sans-serif; text-transform:uppercase; letter-spacing:0.5px;">📊 Suburb Demographic Comparison</h5>
-              <span style="font-size:10px; color:#6b7280; font-family:'Inter', sans-serif;">Comparing Pinned Suburb with selected regions</span>
+          <!-- Comparative & Historical Demographic Charts -->
+          <div id="demographicCompareContainer" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border-light); display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            <!-- Left Column: Suburb Demographic Comparison (Bar Chart) -->
+            <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <h5 style="margin:0; font-size:11px; font-weight:700; color:#111827; font-family:'Inter', sans-serif; text-transform:uppercase; letter-spacing:0.5px;">Suburb Demographic Comparison</h5>
+                <select id="demographicCompareMetric" style="padding: 4px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: #ffffff; font-family: 'Inter', sans-serif; font-weight: 500; color: #111827; outline: none; cursor: pointer;">
+                  <option value="income">Weekly Household Income</option>
+                  <option value="seifa">SEIFA Advantage Index</option>
+                  <option value="medianAge">Median Age</option>
+                  <option value="population">Population</option>
+                  <option value="remigration">Re-Migration Rate</option>
+                  <option value="supplyMonths">Supply Months</option>
+                </select>
+              </div>
+              <div style="position: relative; height: 200px; width: 100%;">
+                <canvas id="demographicsCompareChart"></canvas>
+              </div>
             </div>
-            <div style="position: relative; height: 180px; width: 100%;">
-              <canvas id="demographicsCompareChart"></canvas>
+
+            <!-- Right Column: Vendor Suburb Historical & Forecast Trend (Line Chart) -->
+            <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <h5 id="demographicTrendTitle" style="margin:0; font-size:11px; font-weight:700; color:#111827; font-family:'Inter', sans-serif; text-transform:uppercase; letter-spacing:0.5px;">Vendor Suburb Trend</h5>
+                <select id="demographicTrendMetric" style="padding: 4px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: #ffffff; font-family: 'Inter', sans-serif; font-weight: 500; color: #111827; outline: none; cursor: pointer;">
+                  <option value="population">Population & Forecast</option>
+                  <option value="income">Weekly Household Income</option>
+                  <option value="seifa">SEIFA Advantage Index</option>
+                  <option value="medianAge">Median Age</option>
+                  <option value="remigration">Re-Migration Rate</option>
+                </select>
+              </div>
+              <div style="position: relative; height: 200px; width: 100%;">
+                <canvas id="demographicsTrendChart"></canvas>
+              </div>
             </div>
           </div>
-        </div>
+
 
       </div>
     </div>
@@ -1215,7 +1242,6 @@ body {
     </div>
     <div class="card" style="background: linear-gradient(135deg, #1e40af, #1d4ed8); border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(29, 78, 216, 0.25); color: #ffffff; padding: 28px;">
       <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 16px;">
-        <span style="font-size: 28px; line-height: 1;">⚡</span>
         <h3 style="margin:0; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #ffffff; font-family: 'Inter';">Simon's AI Agent Notes (Concise Summary)</h3>
       </div>
       <div id="aiAgentNotesContent" style="font-size: 14px; line-height: 1.6; display: flex; flex-direction: column; gap: 12px; color: rgba(255, 255, 255, 0.95); font-weight: 500; font-family: 'Inter';">
@@ -1266,7 +1292,7 @@ const CONFIG = {
 if (!CONFIG.mapboxToken || !CONFIG.mapboxToken.startsWith('pk.')) {
   console.error('[Dashboard] Mapbox token not configured. Pass ?token=pk.xxx in the URL or set up GitHub Actions deployment.');
   document.querySelector('.app').insertAdjacentHTML('afterbegin',
-    '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-top:16px;font-size:13px;color:#991b1b;">⚠️ Mapbox token not configured. Add <code>?token=YOUR_TOKEN</code> to the URL or deploy via GitHub Actions.</div>'
+    '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;margin-top:16px;font-size:13px;color:#991b1b;">Attention: Mapbox token not configured. Add <code>?token=YOUR_TOKEN</code> to the URL or deploy via GitHub Actions.</div>'
   );
 }
 
@@ -1608,7 +1634,7 @@ function initAnalyticsSuburbs(defaultSub) {
       
       btn.textContent = sub === 'all' ? 'All Suburbs' : sub;
       if (isSubject) {
-        btn.textContent = sub + ' 📍';
+        btn.textContent = sub + ' (Subject)';
       }
       
       btn.addEventListener('click', () => {
@@ -1885,7 +1911,7 @@ function renderPropertySidebar(d) {
       : (price || '—');
       
     const dateOrAgency = item.is_withdrawn
-      ? `<div style="font-size:11px; color:#b91c1c; font-weight:600; margin-top:4px;">⚠️ Failed after ${item.days_on_market}d on market via ${item.agency_name}</div>`
+      ? `<div style="font-size:11px; color:#b91c1c; font-weight:600; margin-top:4px;">Withdrawn after ${item.days_on_market}d on market via ${item.agency_name}</div>`
       : (isActive && item.agency_name ? `<div class="prop-card-date">${item.agency_name}</div>` : (!isActive && item.contract_date ? `<div class="prop-card-date">Sold ${new Date(item.contract_date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</div>` : ''));
 
     card.innerHTML = `
@@ -2079,7 +2105,7 @@ function refreshMainMapLayers(d) {
       let extraHtml = '';
       if (p.is_withdrawn) {
         priceText = `<span style="color:#ef4444;font-weight:800;">${p.price}</span>`;
-        extraHtml = `<br><span style="font-size:10px;font-weight:700;color:#dc2626;">⚠️ Withdrawn after ${p.days_on_market}d via ${p.agency_name}</span>`;
+        extraHtml = `<br><span style="font-size:10px;font-weight:700;color:#dc2626;">Withdrawn after ${p.days_on_market}d via ${p.agency_name}</span>`;
       }
       const titleColor = p.is_withdrawn ? '#dc2626' : (type === 'sales' ? '#E2231A' : '#2563eb');
       const addrText = p.addr || 'Address Unavailable';
@@ -2383,15 +2409,15 @@ function refreshAccessList() {
         etaHtml = `
           <div style="margin-top: 6px; font-size: 11px; display: flex; flex-direction: column; gap: 4px; color: var(--text-secondary); background: #f9fafb; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-light);">
             <div style="display:flex; justify-content:space-between;">
-              <span>🚇 Train:</span>
+              <span>Train:</span>
               <strong style="color:var(--text);">${opt.train || 'N/A'}</strong>
             </div>
             <div style="display:flex; justify-content:space-between;">
-              <span>🚗 Drive (Peak):</span>
+              <span>Drive (Peak):</span>
               <strong style="color:var(--text);">${opt.drivePeak || 'N/A'}</strong>
             </div>
             <div style="display:flex; justify-content:space-between;">
-              <span>🚗 Drive (Off-Peak):</span>
+              <span>Drive (Off-Peak):</span>
               <strong style="color:var(--text);">${opt.driveOffPeak || 'N/A'}</strong>
             </div>
           </div>
@@ -2401,10 +2427,10 @@ function refreshAccessList() {
         if (dist < 1.5) {
           const walkMin = Math.round(dist * 12) || 1;
           const driveMin = Math.round(dist * 2) || 1;
-          etaHtml = `<div style="font-size:11px; color:var(--text-tertiary); margin-top: 2px;">🚶 Walk: <strong>${walkMin} min${walkMin > 1 ? 's' : ''}</strong> (${dist.toFixed(2)} km) | 🚗 Drive: <strong>${driveMin} min${driveMin > 1 ? 's' : ''}</strong></div>`;
+          etaHtml = `<div style="font-size:11px; color:var(--text-tertiary); margin-top: 2px;">Walk: <strong>${walkMin} min${walkMin > 1 ? 's' : ''}</strong> (${dist.toFixed(2)} km) | Drive: <strong>${driveMin} min${driveMin > 1 ? 's' : ''}</strong></div>`;
         } else {
           const driveMin = Math.round(dist * 1.5) || 1;
-          etaHtml = `<div style="font-size:11px; color:var(--text-tertiary); margin-top: 2px;">🚗 Drive: <strong>${driveMin} min${driveMin > 1 ? 's' : ''}</strong> (${dist.toFixed(2)} km)</div>`;
+          etaHtml = `<div style="font-size:11px; color:var(--text-tertiary); margin-top: 2px;">Drive: <strong>${driveMin} min${driveMin > 1 ? 's' : ''}</strong> (${dist.toFixed(2)} km)</div>`;
         }
       }
     }
@@ -2894,26 +2920,126 @@ function renderSocioGrid(suburb, sa1Props = null) {
   renderDemographicsCompareChart();
 }
 
+const HISTORICAL_SUBURB_TRENDS = {
+  'Burraneer': {
+    years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
+    income: [2120, 2480, 2854, 3210, 3580],
+    seifa: [1098, 1112, 1124, 1135, 1145],
+    population: [3250, 3420, 3612, 3820, 4050],
+    medianAge: [39, 41, 42, 43, 44],
+    remigration: [5.6, 4.8, 4.2, 3.8, 3.5]
+  },
+  'Cronulla': {
+    years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
+    income: [1650, 1910, 2158, 2410, 2680],
+    seifa: [1062, 1074, 1082, 1092, 1102],
+    population: [16200, 17350, 18437, 19600, 20800],
+    medianAge: [36, 37, 38, 39, 40],
+    remigration: [14.5, 13.2, 12.3, 11.5, 10.8]
+  },
+  'Woolooware': {
+    years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
+    income: [1850, 2180, 2480, 2780, 3090],
+    seifa: [1070, 1082, 1092, 1102, 1112],
+    population: [6100, 6520, 6920, 7350, 7800],
+    medianAge: [38, 39, 40, 41, 42],
+    remigration: [9.2, 8.1, 7.2, 6.5, 5.8]
+  },
+  'Caringbah South': {
+    years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
+    income: [1950, 2280, 2620, 2950, 3280],
+    seifa: [1076, 1088, 1098, 1108, 1118],
+    population: [11100, 11650, 12242, 12850, 13500],
+    medianAge: [39, 40, 41, 42, 43],
+    remigration: [7.2, 6.1, 5.4, 4.8, 4.2]
+  },
+  'Miranda': {
+    years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
+    income: [1380, 1580, 1812, 2050, 2310],
+    seifa: [1012, 1022, 1031, 1040, 1050],
+    population: [15100, 16300, 17543, 18900, 20400],
+    medianAge: [37, 38, 39, 40, 41],
+    remigration: [13.8, 12.4, 11.5, 10.6, 9.8]
+  },
+  'Sylvania Waters': {
+    years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
+    income: [1910, 2210, 2510, 2820, 3150],
+    seifa: [1062, 1074, 1084, 1094, 1104],
+    population: [2920, 3080, 3215, 3380, 3550],
+    medianAge: [41, 43, 44, 45, 46],
+    remigration: [8.5, 7.2, 6.2, 5.5, 4.8]
+  },
+  'Caringbah': {
+    years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
+    income: [1480, 1710, 1945, 2190, 2450],
+    seifa: [1022, 1032, 1042, 1052, 1062],
+    population: [10200, 10900, 11658, 12450, 13300],
+    medianAge: [37, 38, 39, 40, 41],
+    remigration: [12.1, 10.8, 9.8, 8.9, 8.1]
+  },
+  'Gymea': {
+    years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
+    income: [1520, 1760, 2012, 2270, 2540],
+    seifa: [1038, 1048, 1058, 1068, 1078],
+    population: [9100, 9650, 10243, 10850, 11500],
+    medianAge: [38, 39, 40, 41, 42],
+    remigration: [10.2, 9.1, 8.1, 7.3, 6.6]
+  }
+};
+
+const getSuburbTrendData = (suburb) => {
+  const norm = findSuburbKey(suburb) || 'Burraneer';
+  if (HISTORICAL_SUBURB_TRENDS[norm]) {
+    return HISTORICAL_SUBURB_TRENDS[norm];
+  }
+  
+  const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Burraneer'];
+  const inc = demo.income;
+  const seif = demo.seifa;
+  const pop = demo.population;
+  const age = demo.medianAge;
+  const remig = demo.remigration;
+  
+  return {
+    years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
+    income: [Math.round(inc * 0.75), Math.round(inc * 0.88), inc, Math.round(inc * 1.12), Math.round(inc * 1.25)],
+    seifa: [Math.round(seif * 0.98), Math.round(seif * 0.99), seif, Math.round(seif * 1.01), Math.round(seif * 1.02)],
+    population: [Math.round(pop * 0.90), Math.round(pop * 0.95), pop, Math.round(pop * 1.06), Math.round(pop * 1.12)],
+    medianAge: [Math.max(30, age - 3), Math.max(30, age - 1), age, age + 1, age + 2],
+    remigration: [Math.round(remig * 1.35 * 10)/10, Math.round(remig * 1.15 * 10)/10, remig, Math.round(remig * 0.9 * 10)/10, Math.round(remig * 0.8 * 10)/10]
+  };
+};
+
+const METRIC_CONFIGS = {
+  income: { label: 'Weekly Household Income', color: '#111827', format: v => '$' + v.toLocaleString() + '/wk', suffix: '/wk' },
+  seifa: { label: 'SEIFA Advantage Index', color: '#E2231A', format: v => v.toLocaleString(), suffix: '' },
+  medianAge: { label: 'Median Age', color: '#374151', format: v => v + ' yrs', suffix: ' yrs' },
+  population: { label: 'Population', color: '#4b5563', format: v => v.toLocaleString(), suffix: '' },
+  remigration: { label: 'Re-Migration Rate', color: '#9ca3af', format: v => v + '%', suffix: '%' },
+  supplyMonths: { label: 'Supply Months', color: '#6b7280', format: v => v + ' mo', suffix: ' mo' }
+};
+
 function renderDemographicsCompareChart() {
+  const dropdown = document.getElementById('demographicCompareMetric');
+  const metric = dropdown ? dropdown.value : 'income';
+  
   const vendorSuburb = getSubjectSuburb(STATE.data);
   let comparedList = (STATE.analyticsSuburbs || []).filter(s => s !== 'all');
   if (comparedList.length <= 1) {
     comparedList = [vendorSuburb, 'Cronulla', 'Woolooware'].filter((val, index, self) => self.indexOf(val) === index);
   }
 
-  // Ensure vendor suburb is at index 0
   comparedList = comparedList.filter(s => s !== vendorSuburb);
   comparedList.unshift(vendorSuburb);
   comparedList = comparedList.slice(0, 3);
 
   const labels = comparedList;
-  const incomeData = comparedList.map(s => {
+  const config = METRIC_CONFIGS[metric] || METRIC_CONFIGS.income;
+
+  const dataValues = comparedList.map(s => {
     const norm = findSuburbKey(s);
-    return SUBURB_DEMOGRAPHICS[norm]?.income || 1750;
-  });
-  const seifaData = comparedList.map(s => {
-    const norm = findSuburbKey(s);
-    return SUBURB_DEMOGRAPHICS[norm]?.seifa || 1000;
+    const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Burraneer'];
+    return demo[metric] || 0;
   });
 
   const canvas = document.getElementById('demographicsCompareChart');
@@ -2928,42 +3054,21 @@ function renderDemographicsCompareChart() {
     type: 'bar',
     data: {
       labels: labels,
-      datasets: [
-        {
-          label: 'Weekly Household Income ($)',
-          data: incomeData,
-          backgroundColor: '#111827',
-          borderColor: '#111827',
-          borderWidth: 1,
-          yAxisID: 'yIncome',
-          barPercentage: 0.55,
-          categoryPercentage: 0.7
-        },
-        {
-          label: 'SEIFA Advantage Index',
-          data: seifaData,
-          backgroundColor: '#E2231A',
-          borderColor: '#E2231A',
-          borderWidth: 1,
-          yAxisID: 'ySeifa',
-          barPercentage: 0.55,
-          categoryPercentage: 0.7
-        }
-      ]
+      datasets: [{
+        label: config.label,
+        data: dataValues,
+        backgroundColor: config.color,
+        borderColor: config.color,
+        borderWidth: 1,
+        barPercentage: 0.45,
+        categoryPercentage: 0.6
+      }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          display: true,
-          position: 'bottom',
-          labels: {
-            font: { size: 10, family: 'Inter', weight: '500' },
-            color: '#4b5563',
-            boxWidth: 12
-          }
-        },
+        legend: { display: false },
         tooltip: {
           backgroundColor: 'rgba(17, 24, 39, 0.95)',
           titleFont: { size: 11, family: 'Inter', weight: '700' },
@@ -2972,16 +3077,7 @@ function renderDemographicsCompareChart() {
           cornerRadius: 6,
           callbacks: {
             label: function(context) {
-              let label = context.dataset.label || '';
-              if (label) {
-                label += ': ';
-              }
-              if (context.datasetIndex === 0) {
-                label += '$' + context.raw.toLocaleString() + '/wk';
-              } else {
-                label += context.raw;
-              }
-              return label;
+              return config.label + ': ' + config.format(context.raw);
             }
           }
         }
@@ -2991,45 +3087,105 @@ function renderDemographicsCompareChart() {
           grid: { display: false },
           ticks: { font: { size: 10, family: 'Inter', weight: '600' }, color: '#111827' }
         },
-        yIncome: {
-          type: 'linear',
-          position: 'left',
-          title: {
-            display: true,
-            text: 'Weekly Income ($)',
-            font: { size: 9, family: 'Inter', weight: '600' },
-            color: '#111827'
-          },
+        y: {
+          grid: { color: 'rgba(0,0,0,0.05)' },
           ticks: {
             font: { size: 9, family: 'Inter' },
             color: '#4b5563',
-            callback: v => '$' + v
-          },
-          grid: { drawOnChartArea: true, color: 'rgba(0,0,0,0.05)' },
-          min: 1000,
-          max: 3200
-        },
-        ySeifa: {
-          type: 'linear',
-          position: 'right',
-          title: {
-            display: true,
-            text: 'SEIFA IRSAD Index',
-            font: { size: 9, family: 'Inter', weight: '600' },
-            color: '#E2231A'
-          },
-          ticks: {
-            font: { size: 9, family: 'Inter' },
-            color: '#4b5563'
-          },
-          grid: { drawOnChartArea: false },
-          min: 950,
-          max: 1150
+            callback: v => config.format(v)
+          }
         }
       }
     }
   });
 }
+
+function renderDemographicsTrendChart() {
+  const dropdown = document.getElementById('demographicTrendMetric');
+  const metric = dropdown ? dropdown.value : 'population';
+
+  const vendorSuburb = getSubjectSuburb(STATE.data);
+  const norm = findSuburbKey(vendorSuburb) || 'Burraneer';
+
+  const trendTitle = document.getElementById('demographicTrendTitle');
+  if (trendTitle) {
+    trendTitle.textContent = `${norm} Trend`;
+  }
+
+  const trendData = getSuburbTrendData(norm);
+  const config = METRIC_CONFIGS[metric] || METRIC_CONFIGS.population;
+  
+  const timelineLabels = trendData.years;
+  const timelineValues = trendData[metric];
+
+  const canvas = document.getElementById('demographicsTrendChart');
+  if (!canvas) return;
+
+  if (STATE.charts.demographicsTrend) {
+    STATE.charts.demographicsTrend.destroy();
+  }
+
+  const ctx = canvas.getContext('2d');
+  
+  const pointBgColors = timelineLabels.map(label => {
+    return label.includes('Forecast') ? '#ffffff' : '#E2231A';
+  });
+
+  STATE.charts.demographicsTrend = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: timelineLabels,
+      datasets: [{
+        label: config.label,
+        data: timelineValues,
+        borderColor: '#E2231A',
+        backgroundColor: 'rgba(226, 35, 26, 0.05)',
+        borderWidth: 2,
+        tension: 0.35,
+        fill: true,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointBackgroundColor: pointBgColors,
+        pointBorderColor: '#E2231A',
+        pointBorderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(17, 24, 39, 0.95)',
+          titleFont: { size: 11, family: 'Inter', weight: '700' },
+          bodyFont: { size: 10, family: 'Inter' },
+          padding: 8,
+          cornerRadius: 6,
+          callbacks: {
+            label: function(context) {
+              return config.label + ': ' + config.format(context.raw);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 9, family: 'Inter', weight: '600' }, color: '#111827' }
+        },
+        y: {
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: {
+            font: { size: 9, family: 'Inter' },
+            color: '#4b5563',
+            callback: v => config.format(v)
+          }
+        }
+      }
+    }
+  });
+}
+
 
 function updatePricingCard(name, type, coef = 1.0, sa1Code = null) {
   const title = document.getElementById('priceCardTitle');
@@ -4811,6 +4967,21 @@ function setupGlobalControls() {
   };
 
   setupGroup('kpiFocusFilters', 'kpiFocus');
+
+  // Socioeconomic Demographics dual charts dropdown listeners
+  const compSelect = document.getElementById('demographicCompareMetric');
+  if (compSelect) {
+    compSelect.addEventListener('change', () => {
+      renderDemographicsCompareChart();
+    });
+  }
+
+  const trendSelect = document.getElementById('demographicTrendMetric');
+  if (trendSelect) {
+    trendSelect.addEventListener('change', () => {
+      renderDemographicsTrendChart();
+    });
+  }
 }
 
 // ── BOOT ────────────────────────────────────────────────────
