@@ -570,7 +570,7 @@ body {
 /* ── SOCIO GRID ─────────────────────────────────────────── */
 .socio-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
 }
 .socio-card {
@@ -656,6 +656,7 @@ body {
   .chart-card.wide, .chart-card.narrow { grid-column: span 1 !important; }
   .chart-card.wide .chart-wrap, .chart-card.narrow .chart-wrap { height: 220px !important; }
   .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  .socio-grid { grid-template-columns: repeat(3, 1fr); }
   #failedListingsGrid { grid-template-columns: 1fr !important; }
 }
 @media (max-width: 768px) {
@@ -665,8 +666,6 @@ body {
   .chart-card.wide, .chart-card.narrow { grid-column: span 1 !important; }
   .chart-card.wide .chart-wrap, .chart-card.narrow .chart-wrap { height: 220px !important; }
   .socio-grid { grid-template-columns: 1fr 1fr; }
-  .failed-card { grid-template-columns: 1fr !important; }
-  .failed-card > div:first-child { border-right: none !important; border-bottom: 1px solid #fee2e2 !important; }
 }
 </style>
 </head>
@@ -680,7 +679,7 @@ body {
   <div class="brand" style="display:flex; align-items:center;">
     <div style="font-family:'DM Sans', 'Inter', -apple-system, sans-serif; font-size:24px; font-weight:500; letter-spacing:-0.04em; color:#ffffff; line-height:1; text-transform:none;">McGrath</div>
     <div style="height: 20px; width: 1px; background: rgba(255,255,255,0.22); margin: 0 4px 0 12px;"></div>
-    <div class="brand-sub" style="color: rgba(255,255,255,0.55); font-family:'Inter', sans-serif; letter-spacing:1px; font-size:10px; font-weight:600; text-transform:none; margin-left: 8px;">Simon Jaegar Appraisal Dashboard</div>
+    <div class="brand-sub" style="color: rgba(255,255,255,0.55); font-family:'Inter', sans-serif; letter-spacing:1px; font-size:10px; font-weight:600; text-transform:none; margin-left: 8px;">Simon Jaeger · Appraisal Console</div>
   </div>
   <div class="topbar-meta">
     <span class="meta-chip"><span class="status-dot"></span> Live</span>
@@ -703,8 +702,8 @@ body {
   <!-- ── KPI FOCUS TOGGLE ── -->
   <div style="display: flex; justify-content: flex-end; margin-bottom: 16px; font-family: 'Inter', sans-serif;">
     <div class="toggle-group" id="kpiFocusFilters" style="display: flex; background: #f3f4f6; padding: 2px; border-radius: 6px; border: 1px solid var(--border-light);">
-      <button class="toggle-btn" data-val="overall" style="padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;">Suburb Baseline (General Market)</button>
-      <button class="toggle-btn active" data-val="similar" style="padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #111827; color: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Similar Properties (Comparable Analysis)</button>
+      <button class="toggle-btn" data-val="overall" style="padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;">Whole Suburb</button>
+      <button class="toggle-btn active" data-val="similar" style="padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #111827; color: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Similar Only</button>
     </div>
   </div>
 
@@ -735,6 +734,40 @@ body {
       <div class="kpi-label">12-Month Growth</div>
       <div class="kpi-value" id="kpiGrowth">—</div>
       <div class="kpi-change up" id="kpiGrowthSub">Year-on-year</div>
+    </div>
+  </div>
+
+  <!-- ── APPRAISAL RANGE ──────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      Appraisal Range
+      <span class="label">Floor · ceiling · midpoint</span>
+    </div>
+    <div class="card">
+      <div class="card-body" style="display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap:24px; align-items:center;">
+        <div>
+          <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:6px;">Suggested range</div>
+          <div style="font-family:var(--font-display); font-size:30px; font-weight:800; color:var(--text); line-height:1.1; letter-spacing:-0.01em;">
+            <span id="rangeFloor">—</span> &mdash; <span id="rangeCeiling">—</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">Midpoint <strong id="rangeMid" style="color:var(--text);">—</strong></div>
+        </div>
+        <div style="border-left:1px solid var(--border-light); padding-left:20px;">
+          <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:4px;">Floor</div>
+          <div style="font-size:14px; font-weight:600; color:var(--text);" id="rangeFloorLabel">VG sales · 90d</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;" id="rangeFloorMeta">—</div>
+        </div>
+        <div style="border-left:1px solid var(--border-light); padding-left:20px;">
+          <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:4px;">Ceiling</div>
+          <div style="font-size:14px; font-weight:600; color:var(--text);" id="rangeCeilingLabel">Withdrawn comps</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;" id="rangeCeilingMeta">—</div>
+        </div>
+        <div style="border-left:1px solid var(--border-light); padding-left:20px;">
+          <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:4px;">SA1 Premium</div>
+          <div style="font-size:14px; font-weight:600; color:var(--text);" id="rangePremium">—</div>
+          <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;" id="rangePremiumMeta">SEIFA · school catchment</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -795,7 +828,7 @@ body {
   <div class="section">
     <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-        <span id="vendorDemandSectionTitle" style="font-weight:700;">Vendor Demand &amp; Property Liquidity Trends</span>
+        <span id="vendorDemandSectionTitle" style="font-weight:700;">Demand &amp; Liquidity</span>
         <select id="vendorDemandSuburbFilter" class="demo-select" style="font-size:12px; padding:4px 8px; border-radius:6px; border:1px solid var(--border); width:auto; font-weight:600; cursor:pointer;">
           <!-- Populated dynamically via JS -->
         </select>
@@ -838,13 +871,13 @@ body {
   <!-- ── GEOGRAPHIC PRICING BOUNDARIES ────────────────── -->
   <div class="section">
     <div class="section-title">
-      Chloropleth Suburb &amp; SA1 Property Economics
-      <span class="label">NSW Government VG &amp; Active Demand Economics</span>
+      Pricing Boundaries
+      <span class="label">Suburb &amp; SA1 medians · NSW VG</span>
     </div>
     <div class="choropleth-row">
       <div class="choropleth-card" style="grid-column: span 2;">
         <div class="choropleth-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom: none;">
-          <h4>Chloropleth Suburb &amp; SA1 Property Economics</h4>
+          <h4>Median price by area</h4>
           <div style="display:flex; align-items:center; gap:12px;">
             <div class="toggle-group" style="display:flex; background:#f3f4f6; padding:3px; border-radius:8px; border:1px solid #e5e7eb; font-family:'Inter', sans-serif;">
               <button id="toggleSuburbPricing" class="toggle-btn active" style="padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:none; background:#ffffff; color:#111827; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Suburb View</button>
@@ -918,7 +951,7 @@ body {
             </div>
 
             <div style="margin-top:auto; font-size:11px; color:#9ca3af; line-height:1.4; border-top:1px solid var(--border-light); padding-top:10px;">
-              Note: Pricing fills are calculated from official government NSW Valuer General (VG) bulk transaction records over the last 12-24 months. Click on any boundary area on the map to inspect its real-time price context.
+              NSW VG sales, last 12–24 mo. Click any area to inspect.
             </div>
           </div>
         </div>
@@ -930,8 +963,8 @@ body {
   <div class="section">
     <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom: 12px;">
       <div>
-        <span>Suburb-Wide Market Analytics (Wholistic Overview)</span>
-        <span class="label" style="margin-top:4px;">Historical clearance rates, price segments, and averages</span>
+        <span>Market Analytics</span>
+        <span class="label" style="margin-top:4px;">Trend · segments · DOM · clearance</span>
       </div>
       <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
         <!-- Suburb Comparison Selector (Dynamic click pills) -->
@@ -1009,117 +1042,41 @@ body {
   <!-- ── FAILED / WITHDRAWN LISTINGS ──────────────────── -->
   <div class="section" id="failedListingsSection">
     <div class="section-title">
-      Failed / Withdrawn Competitor Listings
-      <span class="label" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; font-weight: 600;">Strategic Leverage</span>
+      Withdrawn Listings
+      <span class="label">Price ceiling evidence · Domain</span>
     </div>
-    <div class="card" style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px;">
-      <div style="margin-bottom: 16px; font-size: 13.5px; color: var(--text-secondary); line-height: 1.5; font-family: 'Inter', sans-serif;">
-        These competing properties were recently **withdrawn from the market** after 60+ days without selling. Sourced directly via **Domain.com Scraped Listings**, this data provides real-time evidence of price ceilings and pocket-specific buyer resistance.
-      </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-family: 'Inter', sans-serif;" id="failedListingsGrid">
-        <!-- Card 1: 14 Ewos Parade -->
-        <div class="failed-card" style="border: 1px solid #fee2e2; background: #fff5f5; border-radius: var(--radius-md); overflow: hidden; display: grid; grid-template-columns: 1.25fr 2fr; gap: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.01); transition: all 0.2s;">
-          <!-- Left column: Cover photo carousel and scatter plot map -->
-          <div style="position: relative; display: flex; flex-direction: column; gap: 10px; height: 100%; border-right: 1px solid #fee2e2; background: rgba(254, 226, 226, 0.4); padding: 12px;">
-            <!-- Unsplash Property Photo Carousel -->
-            <div class="failed-carousel" id="carousel-ewos" style="position: relative; width: 100%; height: 215px; overflow: hidden; border-radius: 6px; border: 1px solid #fee2e2;">
-              <div class="failed-slides" style="display: flex; width: 300%; height: 100%; transition: transform 0.3s ease;">
-                <img src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=600&auto=format&fit=crop" style="width: 33.333%; height: 100%; object-fit: cover;" alt="14 Ewos Exterior">
-                <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop" style="width: 33.333%; height: 100%; object-fit: cover;" alt="14 Ewos Kitchen">
-                <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=600&auto=format&fit=crop" style="width: 33.333%; height: 100%; object-fit: cover;" alt="14 Ewos Living">
-              </div>
-              <button onclick="slideFailed('ewos', -1)" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.55); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; outline: none; z-index: 10;">&lt;</button>
-              <button onclick="slideFailed('ewos', 1)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.55); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; outline: none; z-index: 10;">&gt;</button>
-            </div>
-            
-            <!-- Map header -->
-            <div style="font-size: 10.5px; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
-              Micro-Market Sales Scatter Plot
-            </div>
-            
-            <!-- Map container -->
-            <div id="failedMap1" style="width: 100%; height: 215px; border-radius: 6px; border: 1px solid #fee2e2; box-shadow: 0 1px 3px rgba(0,0,0,0.05);"></div>
-            <span style="font-size: 9.5px; font-weight: 600; color: #991b1b; text-align: center; display: block;">Sourced: Domain.com</span>
-          </div>
-          
-          <!-- Right column: Property info, Leverage, AI reasons -->
-          <div style="padding: 16px 16px 16px 0; display: flex; flex-direction: column; gap: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-              <div>
-                <h4 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #111827;">14 Ewos Parade, Cronulla</h4>
-                <p style="margin: 2px 0 0 0; font-size: 11.5px; color: var(--text-secondary); font-weight: 500;">4 Bed · 3 Bath · 2 Car · 650 sqm</p>
-              </div>
-              <span style="background: #fee2e2; color: #991b1b; font-size: 9.5px; font-weight: 700; padding: 4px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Withdrawn (72 DOM)</span>
-            </div>
-            
-            <div style="font-size: 11px; color: var(--text-secondary); display: grid; grid-template-columns: 1.15fr 1fr; gap: 4px; background: #ffffff; padding: 8px 10px; border-radius: 6px; border: 1px solid #fee2e2;">
-              <div>Last Listed: <strong style="color: var(--text); font-weight: 600;">$2,850,000</strong></div>
-              <div>Sale Type: <strong style="color: var(--text); font-weight: 600;">Private Treaty</strong></div>
-              <div>Agency: <strong style="color: var(--text); font-weight: 600;">Ray White</strong></div>
-              <div>Postcode: <strong style="color: var(--text); font-weight: 600;">2230</strong></div>
-            </div>
-            
-            <div style="font-size: 11.5px; line-height: 1.45; color: #4b5563; background: #ffffff; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #9ca3af; margin: 0;">
-              <strong style="color: var(--text); font-weight: 600;">Market Insight:</strong> "Ray White listed this 4-bedroom home for 72 days on market at $2,850,000. Sourced from Domain.com, it failed to sell and was withdrawn on 2026-05-12. This indicates that local buyers resisted this pricing relative to the Cronulla suburb baseline median of $2,340,000."
-            </div>
-            
-            <div style="font-size: 11px; line-height: 1.4; color: #7f1d1d; background: rgba(254, 226, 226, 0.45); padding: 8px 10px; border-radius: 6px; border: 1px dashed #fca5a5; margin: 0;">
-              <strong style="color: #991b1b; font-weight: 700;">AI Failure Diagnosis:</strong> Price was set 14% above comparable 4-bed SA1 micro-market baselines. The Private Treaty format lacked campaign urgency, and buyer shortlisting dropped by 65% after week 3 as the listing grew stale.
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 2: 42 Nicholson Parade -->
-        <div class="failed-card" style="border: 1px solid #fee2e2; background: #fff5f5; border-radius: var(--radius-md); overflow: hidden; display: grid; grid-template-columns: 1.25fr 2fr; gap: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.01); transition: all 0.2s;">
-          <!-- Left column: Cover photo carousel and scatter plot map -->
-          <div style="position: relative; display: flex; flex-direction: column; gap: 10px; height: 100%; border-right: 1px solid #fee2e2; background: rgba(254, 226, 226, 0.4); padding: 12px;">
-            <!-- Unsplash Property Photo Carousel -->
-            <div class="failed-carousel" id="carousel-nicholson" style="position: relative; width: 100%; height: 215px; overflow: hidden; border-radius: 6px; border: 1px solid #fee2e2;">
-              <div class="failed-slides" style="display: flex; width: 300%; height: 100%; transition: transform 0.3s ease;">
-                <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=600&auto=format&fit=crop" style="width: 33.333%; height: 100%; object-fit: cover;" alt="42 Nicholson Pool">
-                <img src="https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=600&auto=format&fit=crop" style="width: 33.333%; height: 100%; object-fit: cover;" alt="42 Nicholson Bath">
-                <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=600&auto=format&fit=crop" style="width: 33.333%; height: 100%; object-fit: cover;" alt="42 Nicholson Bed">
-              </div>
-              <button onclick="slideFailed('nicholson', -1)" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.55); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; outline: none; z-index: 10;">&lt;</button>
-              <button onclick="slideFailed('nicholson', 1)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.55); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; outline: none; z-index: 10;">&gt;</button>
-            </div>
-            
-            <!-- Map header -->
-            <div style="font-size: 10.5px; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
-              Micro-Market Sales Scatter Plot
-            </div>
-            
-            <!-- Map container -->
-            <div id="failedMap2" style="width: 100%; height: 215px; border-radius: 6px; border: 1px solid #fee2e2; box-shadow: 0 1px 3px rgba(0,0,0,0.05);"></div>
-            <span style="font-size: 9.5px; font-weight: 600; color: #991b1b; text-align: center; display: block;">Sourced: Domain.com</span>
-          </div>
-          
-          <!-- Right column: Property info, Leverage, AI reasons -->
-          <div style="padding: 16px 16px 16px 0; display: flex; flex-direction: column; gap: 10px;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
-              <div>
-                <h4 style="margin: 0; font-size: 14.5px; font-weight: 700; color: #111827;">42 Nicholson Parade, Cronulla</h4>
-                <p style="margin: 2px 0 0 0; font-size: 11.5px; color: var(--text-secondary); font-weight: 500;">5 Bed · 3 Bath · 3 Car · 810 sqm</p>
-              </div>
-              <span style="background: #fee2e2; color: #991b1b; font-size: 9.5px; font-weight: 700; padding: 4px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Withdrawn (68 DOM)</span>
-            </div>
-            
-            <div style="font-size: 11px; color: var(--text-secondary); display: grid; grid-template-columns: 1.15fr 1fr; gap: 4px; background: #ffffff; padding: 8px 10px; border-radius: 6px; border: 1px solid #fee2e2;">
-              <div>Last Listed: <strong style="color: var(--text); font-weight: 600;">$3,400,000</strong></div>
-              <div>Sale Type: <strong style="color: var(--text); font-weight: 600;">Private Treaty</strong></div>
-              <div>Agency: <strong style="color: var(--text); font-weight: 600;">Shire Elite</strong></div>
-              <div>Postcode: <strong style="color: var(--text); font-weight: 600;">2230</strong></div>
-            </div>
-            
-            <div style="font-size: 11.5px; line-height: 1.45; color: #4b5563; background: #ffffff; padding: 8px 10px; border-radius: 6px; border-left: 3px solid #9ca3af; margin: 0;">
-              <strong style="color: var(--text); font-weight: 600;">Market Insight:</strong> "Shire Elite Agents listed this 5-bedroom home for 68 days on market at $3,400,000. Sourced from Domain.com, it failed to sell and was withdrawn on 2026-05-18. This demonstrates strong price resistance in the premium bracket above $3,000,000."
-            </div>
-            
-            <div style="font-size: 11px; line-height: 1.4; color: #7f1d1d; background: rgba(254, 226, 226, 0.45); padding: 8px 10px; border-radius: 6px; border: 1px dashed #fca5a5; margin: 0;">
-              <strong style="color: #991b1b; font-weight: 700;">AI Failure Diagnosis:</strong> Price was set 18% above the standard Cronulla 5-bed median. Local SA1 boundaries indicate zero schools within a 1.2km radius, causing high-budget families to gravitate to school catchments in Woolooware.
-            </div>
-          </div>
-        </div>
+    <div class="card">
+      <div class="card-body" style="padding: 0;">
+        <table class="data-table" id="withdrawnTable">
+          <thead>
+            <tr>
+              <th>Address</th>
+              <th>Beds</th>
+              <th>Last Listed</th>
+              <th>DOM</th>
+              <th>Agency</th>
+              <th>Why it stalled</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>14 Ewos Parade, Cronulla</strong><br><span style="color:var(--text-tertiary);font-size:11px;">650 sqm · 2026-05-12</span></td>
+              <td>4 / 3 / 2</td>
+              <td><strong>$2,850,000</strong></td>
+              <td><span class="da-badge major">72 days</span></td>
+              <td>Ray White</td>
+              <td style="font-size:12px;color:var(--text-secondary);">Priced 14% above 4-bed SA1 baseline.</td>
+            </tr>
+            <tr>
+              <td><strong>42 Nicholson Parade, Cronulla</strong><br><span style="color:var(--text-tertiary);font-size:11px;">810 sqm · 2026-05-18</span></td>
+              <td>5 / 3 / 3</td>
+              <td><strong>$3,400,000</strong></td>
+              <td><span class="da-badge major">68 days</span></td>
+              <td>Shire Elite</td>
+              <td style="font-size:12px;color:var(--text-secondary);">Priced 18% above 5-bed median; outside school catchment.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -1153,8 +1110,8 @@ body {
   <!-- ── CHOROPLETH MAPS ──────────────────────────────── -->
   <div class="section">
     <div class="section-title">
-      Geographic Demographic Intelligence
-      <span class="label">Socioeconomic &amp; ABS census boundaries</span>
+      Demographics
+      <span class="label">ABS Census · SA1 boundaries</span>
     </div>
     <div class="choropleth-row" style="grid-template-columns: 1fr;">
       <div class="choropleth-card">
@@ -1167,10 +1124,8 @@ body {
             </div>
             <select id="sa1DemographicFilter" class="demo-select">
               <option value="seifa">SEIFA Index (IRSAD)</option>
-              <option value="popDensity">Population Density</option>
-              <option value="medianAge">Median Age</option>
-              <option value="remigration">Re-Migration Rate</option>
-              <option value="ethnicity">Top Ancestry</option>
+              <option value="income">Weekly Income</option>
+              <option value="remigration">5-yr Turnover</option>
             </select>
           </div>
         </div>
@@ -1190,46 +1145,6 @@ body {
           <div class="socio-grid" id="socioGrid">
             <!-- Populated dynamically inside renderSocioGrid -->
           </div>
-
-          <!-- Comparative & Historical Demographic Charts -->
-          <div id="demographicCompareContainer" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border-light); display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-            <!-- Left Column: Suburb Demographic Comparison (Bar Chart) -->
-            <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <h5 style="margin:0; font-size:11px; font-weight:700; color:#111827; font-family:'Inter', sans-serif; text-transform:uppercase; letter-spacing:0.5px;">Suburb Demographic Comparison</h5>
-                <select id="demographicCompareMetric" style="padding: 4px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: #ffffff; font-family: 'Inter', sans-serif; font-weight: 500; color: #111827; outline: none; cursor: pointer;">
-                  <option value="income">Weekly Household Income</option>
-                  <option value="seifa">SEIFA Advantage Index</option>
-                  <option value="medianAge">Median Age</option>
-                  <option value="population">Population</option>
-                  <option value="remigration">Re-Migration Rate</option>
-                  <option value="supplyMonths">Supply Months</option>
-                </select>
-              </div>
-              <div style="position: relative; height: 200px; width: 100%;">
-                <canvas id="demographicsCompareChart"></canvas>
-              </div>
-            </div>
-
-            <!-- Right Column: Vendor Suburb Historical & Forecast Trend (Line Chart) -->
-            <div style="background: #ffffff; border: 1px solid var(--border-light); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                <h5 id="demographicTrendTitle" style="margin:0; font-size:11px; font-weight:700; color:#111827; font-family:'Inter', sans-serif; text-transform:uppercase; letter-spacing:0.5px;">Vendor Suburb Trend</h5>
-                <select id="demographicTrendMetric" style="padding: 4px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; background: #ffffff; font-family: 'Inter', sans-serif; font-weight: 500; color: #111827; outline: none; cursor: pointer;">
-                  <option value="population">Population & Forecast</option>
-                  <option value="income">Weekly Household Income</option>
-                  <option value="seifa">SEIFA Advantage Index</option>
-                  <option value="medianAge">Median Age</option>
-                  <option value="remigration">Re-Migration Rate</option>
-                </select>
-              </div>
-              <div style="position: relative; height: 200px; width: 100%;">
-                <canvas id="demographicsTrendChart"></canvas>
-              </div>
-            </div>
-          </div>
-
-
       </div>
     </div>
   </div>
@@ -1237,15 +1152,14 @@ body {
     <!-- ── AI AGENT NOTES SUMMARY ────────────────────────── -->
   <div class="section" id="aiAgentNotesSection" style="display:none; margin-top: 32px; margin-bottom: 48px;">
     <div class="section-title">
-      AI Appraisal Intelligence
-      <span class="label">Simon's Agent Prep Notes Summary</span>
+      Agent Notes
+      <span class="label">AI summary for Simon</span>
     </div>
-    <div class="card" style="background: linear-gradient(135deg, #1e40af, #1d4ed8); border: none; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(29, 78, 216, 0.25); color: #ffffff; padding: 28px;">
-      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 16px;">
-        <h3 style="margin:0; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #ffffff; font-family: 'Inter';">Simon's AI Agent Notes (Concise Summary)</h3>
-      </div>
-      <div id="aiAgentNotesContent" style="font-size: 14px; line-height: 1.6; display: flex; flex-direction: column; gap: 12px; color: rgba(255, 255, 255, 0.95); font-weight: 500; font-family: 'Inter';">
-        <!-- Dynamically rendered 6-8 bullet points -->
+    <div class="card">
+      <div class="card-body">
+        <div id="aiAgentNotesContent" style="font-size: 13.5px; line-height: 1.55; display: flex; flex-direction: column; gap: 10px; color: var(--text);">
+          <!-- Dynamically rendered 6-8 bullet points -->
+        </div>
       </div>
     </div>
   </div>
@@ -1678,6 +1592,7 @@ function renderAll() {
   initAnalyticsSuburbs(subName);
   renderVendor(d);
   renderKPIs(d);
+  renderAppraisalRange(d);
   renderPropertySidebar(d);
   renderMainMap(d);
   renderDASection(d);
@@ -1864,6 +1779,74 @@ function getFilteredProperties(d) {
   return items;
 }
 
+// ── APPRAISAL RANGE ─────────────────────────────────────────
+// Blends a similar-sale floor with a withdrawn-listing ceiling and
+// applies the SA1 micro-pocket premium implied by SEIFA / retention.
+function renderAppraisalRange(d) {
+  if (!d) return;
+  const subj = d.subject || {};
+  const suburb = getSubjectSuburb(d);
+  const norm = findSuburbKey(suburb) || 'Burraneer';
+  const demo = SUBURB_DEMOGRAPHICS[norm];
+
+  // 1. FLOOR — median of similar sales in the last 90 days.
+  const similar = getSimilarSales(d.sales || [], subj);
+  const recent90 = similar.filter(s => {
+    const dt = s.contract_date || s.settlement_date || s.date;
+    return dt && daysSince(dt) <= 90;
+  });
+  const recentPrices = recent90.map(s => s.purchase_price || s.price || 0).filter(Boolean).sort((a, b) => a - b);
+  const med = (arr) => arr.length ? (arr.length % 2 ? arr[(arr.length-1)/2] : (arr[arr.length/2-1] + arr[arr.length/2]) / 2) : 0;
+  let floor = med(recentPrices);
+  let floorN = recent90.length;
+
+  // Fallback: if too few 90-day sales, widen to 12 months of similar.
+  if (floorN < 3) {
+    const yr = similar.filter(s => {
+      const dt = s.contract_date || s.settlement_date || s.date;
+      return dt && daysSince(dt) <= 365;
+    });
+    const yrPrices = yr.map(s => s.purchase_price || s.price || 0).filter(Boolean).sort((a, b) => a - b);
+    if (yrPrices.length) { floor = med(yrPrices); floorN = yr.length; }
+  }
+
+  // Fallback to suburb baseline median if still empty.
+  if (!floor && demo) floor = BASELINE_MEDIANS[norm] || 1500000;
+
+  // 2. SA1 PREMIUM — SEIFA above suburb mean and high retention both lift price.
+  const baselineSeifa = 1050; // shire-wide rough baseline
+  const seifaLift = demo ? Math.max(-0.05, Math.min(0.10, (demo.seifa - baselineSeifa) / 1000)) : 0;
+  const retentionLift = demo ? Math.max(0, (100 - demo.remigration - 90) / 200) : 0; // capped, small effect
+  const premium = seifaLift + retentionLift;
+  floor = Math.round(floor * (1 + premium));
+
+  // 3. CEILING — min withdrawn listing in the area, discounted 3% (the level the market refused).
+  const withdrawn = (d.active_listings || []).filter(l => l.is_withdrawn && (l.last_listed_price || l.price));
+  const wPrices = withdrawn.map(l => l.last_listed_price || l.price).filter(Boolean).sort((a, b) => a - b);
+  let ceiling = wPrices.length ? Math.round(wPrices[0] * 0.97) : Math.round(floor * 1.12);
+  let ceilingN = wPrices.length;
+
+  // Clamp inverted ranges (ceiling must exceed floor).
+  if (ceiling <= floor) ceiling = Math.round(floor * 1.08);
+  const mid = Math.round((floor + ceiling) / 2);
+
+  // 4. RENDER
+  const $ = (id) => document.getElementById(id);
+  const fmtM = (n) => '$' + (n / 1e6).toFixed(2) + 'M';
+  $('rangeFloor').textContent = fmtM(floor);
+  $('rangeCeiling').textContent = fmtM(ceiling);
+  $('rangeMid').textContent = fmtM(mid);
+  $('rangeFloorMeta').textContent = floorN
+    ? `${floorN} similar sale${floorN !== 1 ? 's' : ''}, last 90d`
+    : 'Suburb baseline (no recent comps)';
+  $('rangeCeilingMeta').textContent = ceilingN
+    ? `${ceilingN} withdrawn @ $${(wPrices[0]/1e6).toFixed(2)}M+`
+    : 'No withdrawn listings · est. +8%';
+  const pctStr = (premium >= 0 ? '+' : '') + (premium * 100).toFixed(1) + '%';
+  $('rangePremium').textContent = pctStr;
+  $('rangePremiumMeta').textContent = demo ? `SEIFA ${demo.seifa} · retention ${(100 - demo.remigration).toFixed(1)}%` : 'No SA1 data';
+}
+
 // ── PROPERTY SIDEBAR with inline carousel ───────────────────
 function renderPropertySidebar(d) {
   const container = document.getElementById('propertySidebar');
@@ -1971,6 +1954,9 @@ let failedMap2Instance = null;
 
 // Scatter Map Rendering Engine for Failed listings
 function renderFailedListingsMaps() {
+  // Per-card scatter maps were removed in favour of a single withdrawn-listings table.
+  // No-op if the legacy containers aren't on the page.
+  if (!document.getElementById('failedMap1') || !document.getElementById('failedMap2')) return;
   if (typeof mapboxgl === 'undefined') return;
   mapboxgl.accessToken = CONFIG.mapboxToken;
 
@@ -2796,30 +2782,30 @@ const BASELINE_MEDIANS = {
 };
 
 const SUBURB_DEMOGRAPHICS = {
-  'Cronulla': { seifa: 1082, popDensity: 4350, medianAge: 38, remigration: 12.3, ethnicity: 'English', population: 18437, income: 2158, ownerOccupancy: 62.4, supplyMonths: 1.4 },
-  'Burraneer': { seifa: 1124, popDensity: 1820, medianAge: 42, remigration: 4.2, ethnicity: 'Australian', population: 3612, income: 2854, ownerOccupancy: 84.1, supplyMonths: 1.8 },
-  'Woolooware': { seifa: 1092, popDensity: 2840, medianAge: 40, remigration: 7.2, ethnicity: 'English', population: 6920, income: 2480, ownerOccupancy: 74.2, supplyMonths: 1.5 },
-  'Caringbah South': { seifa: 1098, popDensity: 2150, medianAge: 41, remigration: 5.4, ethnicity: 'Australian', population: 12242, income: 2620, ownerOccupancy: 79.8, supplyMonths: 1.6 },
-  'Miranda': { seifa: 1031, popDensity: 3820, medianAge: 39, remigration: 11.5, ethnicity: 'Irish', population: 17543, income: 1812, ownerOccupancy: 61.2, supplyMonths: 2.2 },
-  'Sylvania Waters': { seifa: 1084, popDensity: 1650, medianAge: 44, remigration: 6.2, ethnicity: 'Greek', population: 3215, income: 2510, ownerOccupancy: 78.4, supplyMonths: 1.9 },
-  'Caringbah': { seifa: 1042, popDensity: 3120, medianAge: 39, remigration: 9.8, ethnicity: 'English', population: 11658, income: 1945, ownerOccupancy: 58.7, supplyMonths: 1.7 },
-  'Gymea': { seifa: 1058, popDensity: 2980, medianAge: 40, remigration: 8.1, ethnicity: 'Australian', population: 10243, income: 2012, ownerOccupancy: 68.4, supplyMonths: 1.5 },
-  'Gymea Bay': { seifa: 1102, popDensity: 1920, medianAge: 41, remigration: 4.8, ethnicity: 'Australian', population: 7120, income: 2712, ownerOccupancy: 85.5, supplyMonths: 1.6 },
-  'Sylvania': { seifa: 1051, popDensity: 2320, medianAge: 42, remigration: 7.4, ethnicity: 'Greek', population: 10425, income: 2045, ownerOccupancy: 76.2, supplyMonths: 2.0 },
-  'Kirrawee': { seifa: 1048, popDensity: 3210, medianAge: 38, remigration: 10.4, ethnicity: 'English', population: 9812, income: 1980, ownerOccupancy: 65.4, supplyMonths: 1.6 },
-  'Sutherland': { seifa: 1028, popDensity: 3450, medianAge: 37, remigration: 13.2, ethnicity: 'Irish', population: 10814, income: 1824, ownerOccupancy: 52.8, supplyMonths: 1.8 },
-  'Jannali': { seifa: 1052, popDensity: 2800, medianAge: 39, remigration: 10.9, ethnicity: 'Australian', population: 8912, income: 1910, ownerOccupancy: 70.5, supplyMonths: 1.7 },
-  'Como': { seifa: 1071, popDensity: 2200, medianAge: 41, remigration: 7.8, ethnicity: 'English', population: 3942, income: 2240, ownerOccupancy: 78.0, supplyMonths: 1.6 },
-  'Oyster Bay': { seifa: 1084, popDensity: 2100, medianAge: 42, remigration: 6.9, ethnicity: 'Australian', population: 5120, income: 2350, ownerOccupancy: 81.2, supplyMonths: 1.8 },
-  'Bonnet Bay': { seifa: 1090, popDensity: 1800, medianAge: 40, remigration: 5.8, ethnicity: 'English', population: 2150, income: 2420, ownerOccupancy: 83.5, supplyMonths: 1.9 },
-  'Kareela': { seifa: 1088, popDensity: 2400, medianAge: 43, remigration: 7.2, ethnicity: 'Australian', population: 3420, income: 2210, ownerOccupancy: 82.0, supplyMonths: 1.7 },
-  'Loftus': { seifa: 1065, popDensity: 1900, medianAge: 39, remigration: 8.4, ethnicity: 'Australian', population: 4120, income: 1980, ownerOccupancy: 75.8, supplyMonths: 1.9 },
-  'Engadine': { seifa: 1042, popDensity: 2200, medianAge: 39, remigration: 9.8, ethnicity: 'English', population: 17420, income: 1820, ownerOccupancy: 71.2, supplyMonths: 2.1 },
-  'Heathcote': { seifa: 1035, popDensity: 1500, medianAge: 40, remigration: 8.2, ethnicity: 'Australian', population: 6150, income: 1780, ownerOccupancy: 73.0, supplyMonths: 2.3 },
-  'Taren Point': { seifa: 1068, popDensity: 1980, medianAge: 44, remigration: 9.0, ethnicity: 'Greek', population: 1720, income: 2150, ownerOccupancy: 72.8, supplyMonths: 2.3 },
-  'Dolans Bay': { seifa: 1110, popDensity: 1550, medianAge: 45, remigration: 5.5, ethnicity: 'English', population: 620, income: 2950, ownerOccupancy: 85.0, supplyMonths: 2.1 },
-  'Lilli Pilli': { seifa: 1108, popDensity: 1780, medianAge: 43, remigration: 6.1, ethnicity: 'Australian', population: 3182, income: 2780, ownerOccupancy: 82.5, supplyMonths: 1.7 },
-  'Bundeena': { seifa: 1050, popDensity: 800, medianAge: 46, remigration: 11.5, ethnicity: 'Australian', population: 1910, income: 1650, ownerOccupancy: 68.2, supplyMonths: 2.4 }
+  'Cronulla': { seifa: 1082, popDensity: 4350, medianAge: 38, remigration: 12.3, ethnicity: 'English', population: 18437, income: 2158, ownerOccupancy: 62.4, supplyMonths: 1.4, dwellings: 9840, householdSize: 1.9 },
+  'Burraneer': { seifa: 1124, popDensity: 1820, medianAge: 42, remigration: 4.2, ethnicity: 'Australian', population: 3631, income: 2854, ownerOccupancy: 84.1, supplyMonths: 1.8, dwellings: 1320, householdSize: 3.1 },
+  'Woolooware': { seifa: 1092, popDensity: 2840, medianAge: 40, remigration: 7.2, ethnicity: 'English', population: 6920, income: 2480, ownerOccupancy: 74.2, supplyMonths: 1.5, dwellings: 2950, householdSize: 2.6 },
+  'Caringbah South': { seifa: 1098, popDensity: 2150, medianAge: 41, remigration: 5.4, ethnicity: 'Australian', population: 12242, income: 2620, ownerOccupancy: 79.8, supplyMonths: 1.6, dwellings: 4650, householdSize: 2.9 },
+  'Miranda': { seifa: 1031, popDensity: 3820, medianAge: 39, remigration: 11.5, ethnicity: 'Irish', population: 17543, income: 1812, ownerOccupancy: 61.2, supplyMonths: 2.2, dwellings: 8100, householdSize: 2.4 },
+  'Sylvania Waters': { seifa: 1084, popDensity: 1650, medianAge: 44, remigration: 6.2, ethnicity: 'Greek', population: 3215, income: 2510, ownerOccupancy: 78.4, supplyMonths: 1.9, dwellings: 1380, householdSize: 2.7 },
+  'Caringbah': { seifa: 1042, popDensity: 3120, medianAge: 39, remigration: 9.8, ethnicity: 'English', population: 11658, income: 1945, ownerOccupancy: 58.7, supplyMonths: 1.7, dwellings: 5620, householdSize: 2.3 },
+  'Gymea': { seifa: 1058, popDensity: 2980, medianAge: 40, remigration: 8.1, ethnicity: 'Australian', population: 10243, income: 2012, ownerOccupancy: 68.4, supplyMonths: 1.5, dwellings: 4520, householdSize: 2.5 },
+  'Gymea Bay': { seifa: 1102, popDensity: 1920, medianAge: 41, remigration: 4.8, ethnicity: 'Australian', population: 7120, income: 2712, ownerOccupancy: 85.5, supplyMonths: 1.6, dwellings: 2680, householdSize: 2.9 },
+  'Sylvania': { seifa: 1051, popDensity: 2320, medianAge: 42, remigration: 7.4, ethnicity: 'Greek', population: 10425, income: 2045, ownerOccupancy: 76.2, supplyMonths: 2.0, dwellings: 4250, householdSize: 2.6 },
+  'Kirrawee': { seifa: 1048, popDensity: 3210, medianAge: 38, remigration: 10.4, ethnicity: 'English', population: 9812, income: 1980, ownerOccupancy: 65.4, supplyMonths: 1.6, dwellings: 4420, householdSize: 2.4 },
+  'Sutherland': { seifa: 1028, popDensity: 3450, medianAge: 37, remigration: 13.2, ethnicity: 'Irish', population: 10814, income: 1824, ownerOccupancy: 52.8, supplyMonths: 1.8, dwellings: 5410, householdSize: 2.2 },
+  'Jannali': { seifa: 1052, popDensity: 2800, medianAge: 39, remigration: 10.9, ethnicity: 'Australian', population: 8912, income: 1910, ownerOccupancy: 70.5, supplyMonths: 1.7, dwellings: 3820, householdSize: 2.5 },
+  'Como': { seifa: 1071, popDensity: 2200, medianAge: 41, remigration: 7.8, ethnicity: 'English', population: 3942, income: 2240, ownerOccupancy: 78.0, supplyMonths: 1.6, dwellings: 1540, householdSize: 2.7 },
+  'Oyster Bay': { seifa: 1084, popDensity: 2100, medianAge: 42, remigration: 6.9, ethnicity: 'Australian', population: 5120, income: 2350, ownerOccupancy: 81.2, supplyMonths: 1.8, dwellings: 1950, householdSize: 2.8 },
+  'Bonnet Bay': { seifa: 1090, popDensity: 1800, medianAge: 40, remigration: 5.8, ethnicity: 'English', population: 2150, income: 2420, ownerOccupancy: 83.5, supplyMonths: 1.9, dwellings: 820, householdSize: 2.9 },
+  'Kareela': { seifa: 1088, popDensity: 2400, medianAge: 43, remigration: 7.2, ethnicity: 'Australian', population: 3420, income: 2210, ownerOccupancy: 82.0, supplyMonths: 1.7, dwellings: 1390, householdSize: 2.6 },
+  'Loftus': { seifa: 1065, popDensity: 1900, medianAge: 39, remigration: 8.4, ethnicity: 'Australian', population: 4120, income: 1980, ownerOccupancy: 75.8, supplyMonths: 1.9, dwellings: 1580, householdSize: 2.8 },
+  'Engadine': { seifa: 1042, popDensity: 2200, medianAge: 39, remigration: 9.8, ethnicity: 'English', population: 17420, income: 1820, ownerOccupancy: 71.2, supplyMonths: 2.1, dwellings: 6850, householdSize: 2.7 },
+  'Heathcote': { seifa: 1035, popDensity: 1500, medianAge: 40, remigration: 8.2, ethnicity: 'Australian', population: 6150, income: 1780, ownerOccupancy: 73.0, supplyMonths: 2.3, dwellings: 2380, householdSize: 2.8 },
+  'Taren Point': { seifa: 1068, popDensity: 1980, medianAge: 44, remigration: 9.0, ethnicity: 'Greek', population: 1720, income: 2150, ownerOccupancy: 72.8, supplyMonths: 2.3, dwellings: 780, householdSize: 2.4 },
+  'Dolans Bay': { seifa: 1110, popDensity: 1550, medianAge: 45, remigration: 5.5, ethnicity: 'English', population: 620, income: 2950, ownerOccupancy: 85.0, supplyMonths: 2.1, dwellings: 250, householdSize: 2.9 },
+  'Lilli Pilli': { seifa: 1108, popDensity: 1780, medianAge: 43, remigration: 6.1, ethnicity: 'Australian', population: 3182, income: 2780, ownerOccupancy: 82.5, supplyMonths: 1.7, dwellings: 1220, householdSize: 2.8 },
+  'Bundeena': { seifa: 1050, popDensity: 800, medianAge: 46, remigration: 11.5, ethnicity: 'Australian', population: 1910, income: 1650, ownerOccupancy: 68.2, supplyMonths: 2.4, dwellings: 1120, householdSize: 2.0 }
 };
 
 const findSuburbKey = (name) => {
@@ -2829,95 +2815,148 @@ const findSuburbKey = (name) => {
   return key || cleanName;
 };
 
+function generateCardsHtml(subName, sa1Props = null) {
+  const norm = findSuburbKey(subName) || 'Burraneer';
+  const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Burraneer'];
+  const useSA1 = sa1Props !== null;
+
+  // Suburb baseline reference for delta chips
+  const vendorSuburb = getSubjectSuburb(STATE.data);
+  const baseDemo = SUBURB_DEMOGRAPHICS[findSuburbKey(vendorSuburb)] || demo;
+
+  const seifa = useSA1 ? sa1Props.seifa : demo.seifa;
+  const remigration = useSA1 ? sa1Props.remigration : demo.remigration;
+  const supply = useSA1 ? sa1Props.supplyMonths : demo.supplyMonths;
+  const income = demo.income;
+  const ownerOcc = demo.ownerOccupancy || 0;
+  const retention = (100 - remigration).toFixed(1);
+  const baseRetention = (100 - baseDemo.remigration).toFixed(1);
+
+  // Delta chip helper
+  const chip = (val, base, fmt = v => v) => {
+    if (!useSA1 || val === base) return '';
+    const d = val - base;
+    const sign = d >= 0 ? '+' : '';
+    const col = d >= 0 ? '#059669' : '#d42020';
+    return `<span style="display:inline-block;margin-left:6px;font-size:10px;font-weight:700;color:${col};">${sign}${fmt(d)}</span>`;
+  };
+
+  // Market temp
+  let tempLabel = 'Hot Seller\'s';
+  let tempColor = '#ea580c';
+  if (supply < 1.6) { tempLabel = 'Extreme Seller\'s'; tempColor = '#7c2d12'; }
+  else if (supply > 2.4) { tempLabel = 'Buyer\'s Market'; tempColor = '#2563eb'; }
+  else if (supply >= 2.0) { tempLabel = 'Balanced'; tempColor = '#059669'; }
+
+  return `
+    <div class="socio-card" style="transition: all 0.3s ease;">
+      <div class="s-label">SEIFA (IRSAD)</div>
+      <div class="s-value">${seifa}${chip(seifa, baseDemo.seifa)}</div>
+      <div class="s-sub">Premium tier · higher = wealthier buyers</div>
+    </div>
+    <div class="socio-card" style="transition: all 0.3s ease;">
+      <div class="s-label">Weekly Income</div>
+      <div class="s-value">$${income.toLocaleString()}${chip(income, baseDemo.income, d => '$' + Math.round(d).toLocaleString())}</div>
+      <div class="s-sub">Borrowing power signal</div>
+    </div>
+    <div class="socio-card" style="transition: all 0.3s ease;">
+      <div class="s-label">Owner-Occupier</div>
+      <div class="s-value">${ownerOcc.toFixed(1)}%${chip(ownerOcc, baseDemo.ownerOccupancy || 0, d => d.toFixed(1) + 'pp')}</div>
+      <div class="s-sub">Stability · higher = fewer investors</div>
+    </div>
+    <div class="socio-card" style="transition: all 0.3s ease;">
+      <div class="s-label">5-yr Retention</div>
+      <div class="s-value">${retention}%${chip(parseFloat(retention), parseFloat(baseRetention), d => d.toFixed(1) + 'pp')}</div>
+      <div class="s-sub">Buy-and-hold pocket signal</div>
+    </div>
+    <div class="socio-card" style="transition: all 0.3s ease; border-left: 4px solid ${tempColor}; background: rgba(0,0,0,0.015);">
+      <div class="s-label" style="color:${tempColor}; font-weight:700;">Market Temp</div>
+      <div class="s-value" style="font-size:18px; color:${tempColor};">${tempLabel}</div>
+      <div class="s-sub">${supply} mo supply</div>
+    </div>
+  `;
+}
+
 function renderSocioGrid(suburb, sa1Props = null) {
   const vendorSuburb = getSubjectSuburb(STATE.data);
-  const norm = findSuburbKey(vendorSuburb) || 'Burraneer';
-  const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Burraneer'];
+  const normVendor = findSuburbKey(vendorSuburb) || 'Burraneer';
+  const normClicked = findSuburbKey(suburb) || 'Burraneer';
   const grid = document.getElementById('socioGrid');
   if (!grid) return;
   
   let useSA1 = sa1Props !== null;
+  let normSA1Sub = '';
   if (useSA1) {
     const sa1Sub = sa1Props.suburb || sa1Props.SA2_NAME_2021 || '';
-    if (findSuburbKey(sa1Sub).toLowerCase() !== norm.toLowerCase()) {
-      useSA1 = false; // Ignore SA1 props from other suburbs to keep cards pinned to vendor suburb!
-    }
+    normSA1Sub = findSuburbKey(sa1Sub);
   }
-  
+
+  // Determine if the clicked region is different from the locked vendor suburb
+  const isDifferent = (useSA1 ? normSA1Sub.toLowerCase() : normClicked.toLowerCase()) !== normVendor.toLowerCase();
+
   // Dynamically update the socioeconomic grid titles above the cards
   const socioTitle = document.getElementById('socioGridTitle');
   const socioSub = document.getElementById('socioGridSubtitle');
   if (socioTitle && socioSub) {
-    if (useSA1) {
-      socioTitle.textContent = `SA1 Micro-Locality: ${sa1Props.SA1_CODE_2021}`;
-      socioSub.textContent = `Sub-region Profile (vs Suburb Baseline ${norm})`;
+    if (isDifferent) {
+      socioTitle.textContent = `Demographic Intelligence Comparison`;
+      socioSub.textContent = `Locked Vendor Suburb vs Compared Region`;
     } else {
-      socioTitle.textContent = `${norm} (Broad Suburb Baseline)`;
-      socioSub.textContent = `Census Demographic Data Profile`;
+      if (useSA1) {
+        socioTitle.textContent = `SA1 Micro-Locality: ${sa1Props.SA1_CODE_2021}`;
+        socioSub.textContent = `Sub-region Profile (vs Suburb Baseline ${normVendor})`;
+      } else {
+        socioTitle.textContent = `${normVendor} (Broad Suburb Baseline)`;
+        socioSub.textContent = `Census Demographic Data Profile`;
+      }
     }
   }
-  
-  const seifa = useSA1 ? sa1Props.seifa : demo.seifa;
-  const popDensity = useSA1 ? sa1Props.popDensity : demo.popDensity;
-  const medianAge = useSA1 ? sa1Props.medianAge : demo.medianAge;
-  const remigration = useSA1 ? sa1Props.remigration : demo.remigration;
-  const supply = useSA1 ? sa1Props.supplyMonths : demo.supplyMonths;
-  const population = useSA1 ? 'N/A' : demo.population.toLocaleString();
-  const income = useSA1 ? 'N/A' : `$${demo.income.toLocaleString()}/wk`;
-  
-  // Classify Supply/Demand Months
-  let tempLabel = 'Hot Seller\'s';
-  let tempColor = '#ea580c'; // Hot Orange
-  let tempDesc = 'High buyer demand, low inventory supply.';
-  if (supply < 1.6) {
-    tempLabel = 'Extreme Seller\'s';
-    tempColor = '#7c2d12'; // Deep Red-Hot
-    tempDesc = 'Severe supply shortage. Rapid sales turnover.';
-  } else if (supply > 2.4) {
-    tempLabel = 'Buyer\'s Market';
-    tempColor = '#2563eb'; // Blue
-    tempDesc = 'High inventory choice. Buyer negotiation advantage.';
-  } else if (supply >= 2.0) {
-    tempLabel = 'Healthy Balanced';
-    tempColor = '#059669'; // Green
-    tempDesc = 'Balanced inventory choice and buyer demand.';
+
+  if (isDifferent) {
+    // 1fr 1fr Split Layout for Comparison
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = '1fr 1fr';
+    grid.style.gap = '24px';
+    
+    grid.innerHTML = `
+      <!-- Left Column: Locked Vendor Suburb -->
+      <div style="display:flex; flex-direction:column; gap:12px; border-right: 1px dashed var(--border-light); padding-right:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #111827; padding-bottom:6px; margin-bottom:4px;">
+          <span style="font-family:'Inter', sans-serif; font-size:12px; font-weight:700; color:#111827; text-transform:uppercase; letter-spacing:0.5px;">
+            Locked Vendor Suburb: ${normVendor}
+          </span>
+          <span style="font-size:10.5px; color:#6b7280; font-weight:500;">
+            Subject Baseline
+          </span>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px;">
+          ${generateCardsHtml(normVendor, null)}
+        </div>
+      </div>
+
+      <!-- Right Column: Clicked Region -->
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #E2231A; padding-bottom:6px; margin-bottom:4px;">
+          <span style="font-family:'Inter', sans-serif; font-size:12px; font-weight:700; color:#E2231A; text-transform:uppercase; letter-spacing:0.5px;">
+            Compared Region: ${useSA1 ? `SA1 ${sa1Props.SA1_CODE_2021} (${normClicked})` : normClicked}
+          </span>
+          <span style="font-size:10.5px; color:#E2231A; font-weight:600;">
+            Clicked Area
+          </span>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px;">
+          ${generateCardsHtml(suburb, sa1Props)}
+        </div>
+      </div>
+    `;
+  } else {
+    // 5-column row layout matching the trimmed card set
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(5, 1fr)';
+    grid.style.gap = '12px';
+
+    grid.innerHTML = generateCardsHtml(normVendor, sa1Props);
   }
-
-  grid.innerHTML = `
-    <div class="socio-card" style="transition: all 0.3s ease; border-top: ${useSA1 ? '3px solid #111827' : 'none'};">
-      <div class="s-label">Population</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${population}</div>
-      <div class="s-sub">${useSA1 ? `SA1 Block: ${sa1Props.SA1_CODE_2021}` : `${norm} · 2021 Census`}</div>
-    </div>
-    <div class="socio-card" style="transition: all 0.3s ease;">
-      <div class="s-label">Weekly Household Income</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${income}</div>
-      <div class="s-sub">${useSA1 ? 'Available at Suburb level' : 'vs $1,750 Sydney median'}</div>
-    </div>
-    <div class="socio-card" style="transition: all 0.3s ease;">
-      <div class="s-label">SEIFA Advantage Index</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${seifa}</div>
-      <div class="s-sub">${useSA1 ? 'SA1 Micro-Locality IRSAD' : 'Advantage rank (Top 15% nationally)'}</div>
-    </div>
-    <div class="socio-card" style="transition: all 0.3s ease;">
-      <div class="s-label">Median Age</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${medianAge} yrs</div>
-      <div class="s-sub">${useSA1 ? 'SA1 Median Age' : 'Family-oriented demographic'}</div>
-    </div>
-    <div class="socio-card" style="transition: all 0.3s ease; border-left: 4px solid ${tempColor}; background: rgba(0,0,0,0.015);">
-      <div class="s-label" style="color:${tempColor}; font-weight:700;">Market Temperature</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700; color:${tempColor};">${tempLabel}</div>
-      <div class="s-sub">${supply} Months Supply · ${tempDesc}</div>
-    </div>
-    <div class="socio-card" style="transition: all 0.3s ease;">
-      <div class="s-label">Re-Migration Rate</div>
-      <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${remigration}%</div>
-      <div class="s-sub">${useSA1 ? 'SA1 Re-Migration Rate' : '5yr suburb retention & turnover'}</div>
-    </div>
-  `;
-
-  // Render comparative bar chart below cards
-  renderDemographicsCompareChart();
 }
 
 const HISTORICAL_SUBURB_TRENDS = {
@@ -2925,9 +2964,11 @@ const HISTORICAL_SUBURB_TRENDS = {
     years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
     income: [2120, 2480, 2854, 3210, 3580],
     seifa: [1098, 1112, 1124, 1135, 1145],
-    population: [3250, 3420, 3612, 3820, 4050],
+    population: [3250, 3420, 3631, 3800, 3865],
     medianAge: [39, 41, 42, 43, 44],
-    remigration: [5.6, 4.8, 4.2, 3.8, 3.5]
+    remigration: [5.6, 4.8, 4.2, 3.8, 3.5],
+    dwellings: [1190, 1250, 1320, 1390, 1440],
+    householdSize: [3.3, 3.2, 3.1, 3.0, 2.9]
   },
   'Cronulla': {
     years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
@@ -2935,7 +2976,9 @@ const HISTORICAL_SUBURB_TRENDS = {
     seifa: [1062, 1074, 1082, 1092, 1102],
     population: [16200, 17350, 18437, 19600, 20800],
     medianAge: [36, 37, 38, 39, 40],
-    remigration: [14.5, 13.2, 12.3, 11.5, 10.8]
+    remigration: [14.5, 13.2, 12.3, 11.5, 10.8],
+    dwellings: [8650, 9200, 9840, 10550, 11200],
+    householdSize: [2.1, 2.0, 1.9, 1.85, 1.8]
   },
   'Woolooware': {
     years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
@@ -2943,7 +2986,9 @@ const HISTORICAL_SUBURB_TRENDS = {
     seifa: [1070, 1082, 1092, 1102, 1112],
     population: [6100, 6520, 6920, 7350, 7800],
     medianAge: [38, 39, 40, 41, 42],
-    remigration: [9.2, 8.1, 7.2, 6.5, 5.8]
+    remigration: [9.2, 8.1, 7.2, 6.5, 5.8],
+    dwellings: [2540, 2720, 2950, 3210, 3480],
+    householdSize: [2.8, 2.7, 2.6, 2.5, 2.4]
   },
   'Caringbah South': {
     years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
@@ -2951,7 +2996,9 @@ const HISTORICAL_SUBURB_TRENDS = {
     seifa: [1076, 1088, 1098, 1108, 1118],
     population: [11100, 11650, 12242, 12850, 13500],
     medianAge: [39, 40, 41, 42, 43],
-    remigration: [7.2, 6.1, 5.4, 4.8, 4.2]
+    remigration: [7.2, 6.1, 5.4, 4.8, 4.2],
+    dwellings: [4120, 4380, 4650, 4980, 5320],
+    householdSize: [3.1, 3.0, 2.9, 2.8, 2.7]
   },
   'Miranda': {
     years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
@@ -2959,7 +3006,9 @@ const HISTORICAL_SUBURB_TRENDS = {
     seifa: [1012, 1022, 1031, 1040, 1050],
     population: [15100, 16300, 17543, 18900, 20400],
     medianAge: [37, 38, 39, 40, 41],
-    remigration: [13.8, 12.4, 11.5, 10.6, 9.8]
+    remigration: [13.8, 12.4, 11.5, 10.6, 9.8],
+    dwellings: [6950, 7450, 8100, 8820, 9550],
+    householdSize: [2.6, 2.5, 2.4, 2.35, 2.3]
   },
   'Sylvania Waters': {
     years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
@@ -2967,7 +3016,9 @@ const HISTORICAL_SUBURB_TRENDS = {
     seifa: [1062, 1074, 1084, 1094, 1104],
     population: [2920, 3080, 3215, 3380, 3550],
     medianAge: [41, 43, 44, 45, 46],
-    remigration: [8.5, 7.2, 6.2, 5.5, 4.8]
+    remigration: [8.5, 7.2, 6.2, 5.5, 4.8],
+    dwellings: [1220, 1300, 1380, 1480, 1580],
+    householdSize: [2.9, 2.8, 2.7, 2.65, 2.6]
   },
   'Caringbah': {
     years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
@@ -2975,7 +3026,9 @@ const HISTORICAL_SUBURB_TRENDS = {
     seifa: [1022, 1032, 1042, 1052, 1062],
     population: [10200, 10900, 11658, 12450, 13300],
     medianAge: [37, 38, 39, 40, 41],
-    remigration: [12.1, 10.8, 9.8, 8.9, 8.1]
+    remigration: [12.1, 10.8, 9.8, 8.9, 8.1],
+    dwellings: [4920, 5240, 5620, 6080, 6550],
+    householdSize: [2.5, 2.4, 2.3, 2.25, 2.2]
   },
   'Gymea': {
     years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
@@ -2983,7 +3036,9 @@ const HISTORICAL_SUBURB_TRENDS = {
     seifa: [1038, 1048, 1058, 1068, 1078],
     population: [9100, 9650, 10243, 10850, 11500],
     medianAge: [38, 39, 40, 41, 42],
-    remigration: [10.2, 9.1, 8.1, 7.3, 6.6]
+    remigration: [10.2, 9.1, 8.1, 7.3, 6.6],
+    dwellings: [3950, 4210, 4520, 4880, 5250],
+    householdSize: [2.7, 2.6, 2.5, 2.45, 2.4]
   }
 };
 
@@ -2999,6 +3054,8 @@ const getSuburbTrendData = (suburb) => {
   const pop = demo.population;
   const age = demo.medianAge;
   const remig = demo.remigration;
+  const dw = demo.dwellings || Math.round(pop / (demo.householdSize || 2.5));
+  const hh = demo.householdSize || 2.5;
   
   return {
     years: ['2011', '2016', '2021', '2026 Forecast', '2031 Forecast'],
@@ -3006,7 +3063,9 @@ const getSuburbTrendData = (suburb) => {
     seifa: [Math.round(seif * 0.98), Math.round(seif * 0.99), seif, Math.round(seif * 1.01), Math.round(seif * 1.02)],
     population: [Math.round(pop * 0.90), Math.round(pop * 0.95), pop, Math.round(pop * 1.06), Math.round(pop * 1.12)],
     medianAge: [Math.max(30, age - 3), Math.max(30, age - 1), age, age + 1, age + 2],
-    remigration: [Math.round(remig * 1.35 * 10)/10, Math.round(remig * 1.15 * 10)/10, remig, Math.round(remig * 0.9 * 10)/10, Math.round(remig * 0.8 * 10)/10]
+    remigration: [Math.round(remig * 1.35 * 10)/10, Math.round(remig * 1.15 * 10)/10, remig, Math.round(remig * 0.9 * 10)/10, Math.round(remig * 0.8 * 10)/10],
+    dwellings: [Math.round(dw * 0.85), Math.round(dw * 0.93), dw, Math.round(dw * 1.07), Math.round(dw * 1.15)],
+    householdSize: [Math.round((hh + 0.2) * 10)/10, Math.round((hh + 0.1) * 10)/10, hh, Math.round((hh - 0.1) * 10)/10, Math.round((hh - 0.2) * 10)/10]
   };
 };
 
@@ -3016,10 +3075,14 @@ const METRIC_CONFIGS = {
   medianAge: { label: 'Median Age', color: '#374151', format: v => v + ' yrs', suffix: ' yrs' },
   population: { label: 'Population', color: '#4b5563', format: v => v.toLocaleString(), suffix: '' },
   remigration: { label: 'Re-Migration Rate', color: '#9ca3af', format: v => v + '%', suffix: '%' },
-  supplyMonths: { label: 'Supply Months', color: '#6b7280', format: v => v + ' mo', suffix: ' mo' }
+  supplyMonths: { label: 'Supply Months', color: '#6b7280', format: v => v + ' mo', suffix: ' mo' },
+  dwellings: { label: 'Dwelling Count', color: '#047857', format: v => v.toLocaleString() + ' dwellings', suffix: ' dwellings' },
+  householdSize: { label: 'Avg Household Size', color: '#4f46e5', format: v => v.toFixed(1) + ' people', suffix: ' people' }
 };
 
 function renderDemographicsCompareChart() {
+  // Dual demographic comparison chart removed in favour of inline delta chips on the 5-card grid.
+  if (!document.getElementById('demographicsCompareChart')) return;
   const dropdown = document.getElementById('demographicCompareMetric');
   const metric = dropdown ? dropdown.value : 'income';
   
@@ -3101,6 +3164,8 @@ function renderDemographicsCompareChart() {
 }
 
 function renderDemographicsTrendChart() {
+  // Historical demographic trend chart removed; suburb-level history lives in Market Analytics.
+  if (!document.getElementById('demographicsTrendChart')) return;
   const dropdown = document.getElementById('demographicTrendMetric');
   const metric = dropdown ? dropdown.value : 'population';
 
