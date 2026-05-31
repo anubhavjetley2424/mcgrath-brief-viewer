@@ -771,6 +771,27 @@ body {
     </div>
   </div>
 
+  <!-- ── PROPERTY INDEX ───────────────────────────────── -->
+  <div class="section">
+    <div class="section-title">
+      Property Index
+      <span class="label">Percentile vs. suburb cohort</span>
+    </div>
+    <div class="card">
+      <div class="card-body" style="display:grid; grid-template-columns: 2fr 1fr; gap:24px; align-items:start;">
+        <div id="propIndexBars" style="display:flex; flex-direction:column; gap:14px;">
+          <!-- 4 percentile rows injected by JS -->
+        </div>
+        <div style="border-left:1px solid var(--border-light); padding-left:20px;">
+          <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-tertiary); margin-bottom:6px;">Overall ranking</div>
+          <div style="font-family:var(--font-display); font-size:36px; font-weight:800; color:var(--text); line-height:1;" id="propIndexOverallPct">—</div>
+          <div style="font-size:12px; color:var(--text-secondary); margin-top:4px;" id="propIndexOverallLabel">Calculating…</div>
+          <div style="font-size:11px; color:var(--text-tertiary); margin-top:10px;" id="propIndexCohort">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── MARKET POSITIONING (Map + Sidebar) ───────────── -->
   <div class="section">
     <div class="section-title">
@@ -1546,6 +1567,7 @@ function renderAll() {
   renderVendor(d);
   renderKPIs(d);
   renderAppraisalRange(d);
+  renderPropertyIndex(d);
   renderWithdrawnListings(d);
   renderPropertySidebar(d);
   renderMainMap(d);
@@ -1859,6 +1881,122 @@ function renderAppraisalRange(d) {
   const pctStr = (premium >= 0 ? '+' : '') + (premium * 100).toFixed(1) + '%';
   $('rangePremium').textContent = pctStr;
   $('rangePremiumMeta').textContent = demo ? `SEIFA ${demo.seifa} · retention ${(100 - demo.remigration).toFixed(1)}%` : 'No SA1 data';
+}
+
+// ── PROPERTY INDEX ──────────────────────────────────────────
+// Ranks the subject property's physical attributes against the same-suburb
+// (and same-bedroom-band) sold cohort. Renders 4 percentile bars + overall.
+function renderPropertyIndex(d) {
+  if (!d) return;
+  const wrap = document.getElementById('propIndexBars');
+  const $ovr = document.getElementById('propIndexOverallPct');
+  const $ovrLbl = document.getElementById('propIndexOverallLabel');
+  const $cohort = document.getElementById('propIndexCohort');
+  if (!wrap || !$ovr) return;
+
+  const subj = d.subject || {};
+  const subjLand = Number(subj.land_size) || null;
+  const subjBeds = Number(subj.beds) || null;
+  const subjBaths = Number(subj.baths) || null;
+  const subjCars = Number(subj.parking) || null;
+
+  // Build cohort: same-suburb sold properties (VG sales) where bed count is
+  // within ±1 of the subject. Falls back to whole-suburb if too few similar.
+  const all = (d.sales || []).filter(s => s.suburb);
+  let cohort = subjBeds
+    ? all.filter(s => s.beds == null || Math.abs((Number(s.beds) || subjBeds) - subjBeds) <= 1)
+    : all;
+  // VG sales don't always carry beds — fall back to all sales if cohort too thin.
+  if (cohort.length < 8) cohort = all;
+
+  const cohortLabel = cohort.length
+    ? `Cohort: ${cohort.length} ${subj.suburb ? subj.suburb : 'suburb'} sales${subjBeds ? `, ${subjBeds}-bed ±1` : ''}`
+    : 'Cohort: insufficient data';
+
+  // Percentile helper — fraction of cohort values <= the subject's value.
+  // Returns 0..100. If subject value is null or cohort empty, returns null.
+  function pct(values, subjVal) {
+    if (subjVal == null || !values.length) return null;
+    const clean = values.filter(v => v != null && !isNaN(v));
+    if (!clean.length) return null;
+    const belowEq = clean.filter(v => Number(v) <= Number(subjVal)).length;
+    return Math.round((belowEq / clean.length) * 100);
+  }
+
+  // Build the four rows
+  const rows = [
+    {
+      key: 'land',
+      label: 'Land size',
+      subjStr: subjLand ? `${subjLand} m²` : '—',
+      pct: pct(cohort.map(s => s.land_area_sqm), subjLand),
+      hint: 'larger = higher percentile'
+    },
+    {
+      key: 'beds',
+      label: 'Bedrooms',
+      subjStr: subjBeds ? `${subjBeds}` : '—',
+      pct: pct(cohort.map(s => s.beds).filter(v => v != null), subjBeds),
+      hint: 'more beds = higher'
+    },
+    {
+      key: 'baths',
+      label: 'Bathrooms',
+      subjStr: subjBaths ? `${subjBaths}` : '—',
+      pct: pct(cohort.map(s => s.baths).filter(v => v != null), subjBaths),
+      hint: 'more baths = higher'
+    },
+    {
+      key: 'cars',
+      label: 'Parking',
+      subjStr: subjCars ? `${subjCars}` : '—',
+      pct: pct(cohort.map(s => s.parking).filter(v => v != null), subjCars),
+      hint: 'more spaces = higher'
+    }
+  ];
+
+  // Render each row as a label / value / bar gauge
+  wrap.innerHTML = rows.map(r => {
+    const pctVal = r.pct;
+    const pctTxt = pctVal == null ? '—' : `${pctVal}th`;
+    const barW = pctVal == null ? 0 : pctVal;
+    const barColor = pctVal == null
+      ? '#e5e7eb'
+      : (pctVal >= 70 ? '#059669' : pctVal >= 40 ? '#111827' : '#9ca3af');
+    return `
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; font-size:13px; margin-bottom:5px;">
+          <span style="font-weight:600; color:var(--text);">${r.label}</span>
+          <span style="color:var(--text-secondary);">
+            <span style="font-variant-numeric:tabular-nums;">${r.subjStr}</span>
+            <span style="margin:0 8px; color:var(--text-tertiary);">·</span>
+            <span style="font-weight:700; color:${barColor};">${pctTxt} pctl</span>
+          </span>
+        </div>
+        <div style="height:8px; background:#f3f4f6; border-radius:4px; overflow:hidden;">
+          <div style="height:100%; width:${barW}%; background:${barColor}; transition:width 300ms ease;"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Overall ranking = mean of available percentile values
+  const valid = rows.map(r => r.pct).filter(p => p != null);
+  if (valid.length) {
+    const mean = Math.round(valid.reduce((a, b) => a + b, 0) / valid.length);
+    $ovr.textContent = `${mean}th`;
+    $ovr.style.color = mean >= 70 ? '#059669' : mean >= 40 ? '#111827' : '#9ca3af';
+    $ovrLbl.textContent = mean >= 80 ? 'Top quintile of cohort'
+                        : mean >= 60 ? 'Above-median property'
+                        : mean >= 40 ? 'Mid-cohort'
+                        : mean >= 20 ? 'Below median'
+                        : 'Bottom quintile';
+  } else {
+    $ovr.textContent = '—';
+    $ovr.style.color = '#9ca3af';
+    $ovrLbl.textContent = 'Insufficient data';
+  }
+  $cohort.textContent = cohortLabel;
 }
 
 // ── PROPERTY SIDEBAR with inline carousel ───────────────────
