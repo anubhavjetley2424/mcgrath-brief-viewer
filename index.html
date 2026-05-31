@@ -1551,6 +1551,8 @@ function initAnalyticsSuburbs(defaultSub) {
   
   if (!STATE.analyticsSuburbs || STATE.analyticsSuburbs.length === 0) {
     STATE.analyticsSuburbs = [defaultSub];
+  } else if (!STATE.analyticsSuburbs.includes(defaultSub) && !STATE.analyticsSuburbs.includes('all')) {
+    STATE.analyticsSuburbs.unshift(defaultSub);
   }
   
   const popularSuburbs = ['all', 'Burraneer', 'Cronulla', 'Woolooware', 'Caringbah South', 'Caringbah', 'Miranda', 'Gymea'];
@@ -1564,27 +1566,39 @@ function initAnalyticsSuburbs(defaultSub) {
         
       const btn = document.createElement('button');
       btn.className = 'toggle-btn';
+      
+      // Distinct premium border or weight for the locked subject suburb
+      const isSubject = sub === defaultSub;
+      
       btn.style.cssText = isSelected
-        ? 'padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #111827; color: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;'
-        : 'padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;';
+        ? `padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: ${isSubject ? '1.5px solid #d42020' : 'none'}; background: #111827; color: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;`
+        : `padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;`;
       
       btn.textContent = sub === 'all' ? 'All Suburbs' : sub;
+      if (isSubject) {
+        btn.textContent = sub + ' 📍';
+      }
+      
       btn.addEventListener('click', () => {
         if (sub === 'all') {
-          STATE.analyticsSuburbs = ['all'];
+          STATE.analyticsSuburbs = ['all', defaultSub];
+        } else if (isSubject) {
+          // Vendor's suburb is locked as the baseline!
+          return;
         } else {
           STATE.analyticsSuburbs = STATE.analyticsSuburbs.filter(x => x !== 'all');
           if (STATE.analyticsSuburbs.includes(sub)) {
             STATE.analyticsSuburbs = STATE.analyticsSuburbs.filter(x => x !== sub);
-            if (STATE.analyticsSuburbs.length === 0) {
-              STATE.analyticsSuburbs = ['all'];
-            }
           } else {
             if (STATE.analyticsSuburbs.length < 3) {
               STATE.analyticsSuburbs.push(sub);
             } else {
               console.warn('Maximum 3 suburbs compared');
             }
+          }
+          // Lock defaultSub in the list
+          if (!STATE.analyticsSuburbs.includes(defaultSub)) {
+            STATE.analyticsSuburbs.unshift(defaultSub);
           }
         }
         drawPills();
