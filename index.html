@@ -656,6 +656,7 @@ body {
   .chart-card.wide, .chart-card.narrow { grid-column: span 1 !important; }
   .chart-card.wide .chart-wrap, .chart-card.narrow .chart-wrap { height: 220px !important; }
   .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  #failedListingsGrid { grid-template-columns: 1fr !important; }
 }
 @media (max-width: 768px) {
   .topbar { flex-direction: column; gap: 10px; }
@@ -664,6 +665,8 @@ body {
   .chart-card.wide, .chart-card.narrow { grid-column: span 1 !important; }
   .chart-card.wide .chart-wrap, .chart-card.narrow .chart-wrap { height: 220px !important; }
   .socio-grid { grid-template-columns: 1fr 1fr; }
+  .failed-card { grid-template-columns: 1fr !important; }
+  .failed-card > div:first-child { border-right: none !important; border-bottom: 1px solid #fee2e2 !important; }
 }
 </style>
 </head>
@@ -1004,7 +1007,7 @@ body {
       </div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-family: 'Inter', sans-serif;" id="failedListingsGrid">
         <!-- Card 1: 14 Ewos Parade -->
-        <div style="border: 1px solid #fee2e2; background: #fff5f5; border-radius: var(--radius-md); overflow: hidden; display: grid; grid-template-columns: 1.25fr 2fr; gap: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.01); transition: all 0.2s;">
+        <div class="failed-card" style="border: 1px solid #fee2e2; background: #fff5f5; border-radius: var(--radius-md); overflow: hidden; display: grid; grid-template-columns: 1.25fr 2fr; gap: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.01); transition: all 0.2s;">
           <!-- Left column: Cover photo carousel and Surveyor satellite map -->
           <div style="position: relative; display: flex; flex-direction: column; gap: 10px; height: 100%; border-right: 1px solid #fee2e2; background: rgba(254, 226, 226, 0.4); padding: 12px;">
             <!-- Unsplash Property Photo Carousel -->
@@ -1056,7 +1059,7 @@ body {
         </div>
 
         <!-- Card 2: 42 Nicholson Parade -->
-        <div style="border: 1px solid #fee2e2; background: #fff5f5; border-radius: var(--radius-md); overflow: hidden; display: grid; grid-template-columns: 1.25fr 2fr; gap: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.01); transition: all 0.2s;">
+        <div class="failed-card" style="border: 1px solid #fee2e2; background: #fff5f5; border-radius: var(--radius-md); overflow: hidden; display: grid; grid-template-columns: 1.25fr 2fr; gap: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.01); transition: all 0.2s;">
           <!-- Left column: Cover photo carousel and Surveyor satellite map -->
           <div style="position: relative; display: flex; flex-direction: column; gap: 10px; height: 100%; border-right: 1px solid #fee2e2; background: rgba(254, 226, 226, 0.4); padding: 12px;">
             <!-- Unsplash Property Photo Carousel -->
