@@ -691,18 +691,6 @@ body {
 
 <div class="app">
 
-  <!-- ── GLOBAL APPRAISAL CONTROLS ── -->
-  <div class="global-appraisal-controls" style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border-light); margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-family: 'Inter', sans-serif;">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <span style="font-size: 11px; font-weight: 700; color: #111827; text-transform: uppercase; letter-spacing: 0.5px;">Appraisal Focus:</span>
-      <span style="font-size: 11px; color: #6b7280; font-weight: 500;">Toggle between general suburb market baselines and comparable property-matched analysis.</span>
-    </div>
-    <div class="toggle-group" id="kpiFocusFilters" style="display: flex; background: #f3f4f6; padding: 2px; border-radius: 6px;">
-      <button class="toggle-btn" data-val="overall" style="padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;">Suburb Baseline (General Market)</button>
-      <button class="toggle-btn active" data-val="similar" style="padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #111827; color: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Similar Properties (Comparable Analysis)</button>
-    </div>
-  </div>
-
   <!-- ── VENDOR HEADER ────────────────────────────────── -->
   <div class="vendor-header">
     <h2 id="vendorAddress">45 Burraneer Bay Road, Burraneer</h2>
@@ -711,6 +699,15 @@ body {
       <span class="vh-deal" id="vendorDeal">Appraisal Prep</span>
     </div>
   </div>
+
+  <!-- ── KPI FOCUS TOGGLE ── -->
+  <div style="display: flex; justify-content: flex-end; margin-bottom: 16px; font-family: 'Inter', sans-serif;">
+    <div class="toggle-group" id="kpiFocusFilters" style="display: flex; background: #f3f4f6; padding: 2px; border-radius: 6px; border: 1px solid var(--border-light);">
+      <button class="toggle-btn" data-val="overall" style="padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: #6b7280; transition: all 0.2s;">Suburb Baseline (General Market)</button>
+      <button class="toggle-btn active" data-val="similar" style="padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; border: none; background: #111827; color: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">Similar Properties (Comparable Analysis)</button>
+    </div>
+  </div>
+
 
   <!-- ── KPI ROW ──────────────────────────────────────── -->
   <div class="kpi-row">
@@ -1022,10 +1019,10 @@ body {
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-family: 'Inter', sans-serif;" id="failedListingsGrid">
         <!-- Card 1: 14 Ewos Parade -->
         <div class="failed-card" style="border: 1px solid #fee2e2; background: #fff5f5; border-radius: var(--radius-md); overflow: hidden; display: grid; grid-template-columns: 1.25fr 2fr; gap: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.01); transition: all 0.2s;">
-          <!-- Left column: Cover photo carousel and Surveyor satellite map -->
+          <!-- Left column: Cover photo carousel and scatter plot map -->
           <div style="position: relative; display: flex; flex-direction: column; gap: 10px; height: 100%; border-right: 1px solid #fee2e2; background: rgba(254, 226, 226, 0.4); padding: 12px;">
             <!-- Unsplash Property Photo Carousel -->
-            <div class="failed-carousel" id="carousel-ewos" style="position: relative; width: 100%; height: 150px; overflow: hidden; border-radius: 6px; border: 1px solid #fee2e2;">
+            <div class="failed-carousel" id="carousel-ewos" style="position: relative; width: 100%; height: 215px; overflow: hidden; border-radius: 6px; border: 1px solid #fee2e2;">
               <div class="failed-slides" style="display: flex; width: 300%; height: 100%; transition: transform 0.3s ease;">
                 <img src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=600&auto=format&fit=crop" style="width: 33.333%; height: 100%; object-fit: cover;" alt="14 Ewos Exterior">
                 <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop" style="width: 33.333%; height: 100%; object-fit: cover;" alt="14 Ewos Kitchen">
@@ -1035,13 +1032,13 @@ body {
               <button onclick="slideFailed('ewos', 1)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.55); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; outline: none; z-index: 10;">&gt;</button>
             </div>
             
-            <!-- Surveyor satellite map header -->
+            <!-- Map header -->
             <div style="font-size: 10.5px; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
-              <span>🛰️</span> Satellite Cadastre View
+              <span>📊</span> Micro-Market Sales Scatter Plot
             </div>
             
-            <!-- Surveyor Map container -->
-            <div id="failedMap1" style="width: 100%; height: 170px; border-radius: 6px; border: 1px solid #fee2e2; box-shadow: 0 1px 3px rgba(0,0,0,0.05);"></div>
+            <!-- Map container -->
+            <div id="failedMap1" style="width: 100%; height: 215px; border-radius: 6px; border: 1px solid #fee2e2; box-shadow: 0 1px 3px rgba(0,0,0,0.05);"></div>
             <span style="font-size: 9.5px; font-weight: 600; color: #991b1b; text-align: center; display: block;">Sourced: Domain.com</span>
           </div>
           
@@ -1074,10 +1071,10 @@ body {
 
         <!-- Card 2: 42 Nicholson Parade -->
         <div class="failed-card" style="border: 1px solid #fee2e2; background: #fff5f5; border-radius: var(--radius-md); overflow: hidden; display: grid; grid-template-columns: 1.25fr 2fr; gap: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.01); transition: all 0.2s;">
-          <!-- Left column: Cover photo carousel and Surveyor satellite map -->
+          <!-- Left column: Cover photo carousel and scatter plot map -->
           <div style="position: relative; display: flex; flex-direction: column; gap: 10px; height: 100%; border-right: 1px solid #fee2e2; background: rgba(254, 226, 226, 0.4); padding: 12px;">
             <!-- Unsplash Property Photo Carousel -->
-            <div class="failed-carousel" id="carousel-nicholson" style="position: relative; width: 100%; height: 150px; overflow: hidden; border-radius: 6px; border: 1px solid #fee2e2;">
+            <div class="failed-carousel" id="carousel-nicholson" style="position: relative; width: 100%; height: 215px; overflow: hidden; border-radius: 6px; border: 1px solid #fee2e2;">
               <div class="failed-slides" style="display: flex; width: 300%; height: 100%; transition: transform 0.3s ease;">
                 <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=600&auto=format&fit=crop" style="width: 33.333%; height: 100%; object-fit: cover;" alt="42 Nicholson Pool">
                 <img src="https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?q=80&w=600&auto=format&fit=crop" style="width: 33.333%; height: 100%; object-fit: cover;" alt="42 Nicholson Bath">
@@ -1087,13 +1084,13 @@ body {
               <button onclick="slideFailed('nicholson', 1)" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.55); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; outline: none; z-index: 10;">&gt;</button>
             </div>
             
-            <!-- Surveyor satellite map header -->
+            <!-- Map header -->
             <div style="font-size: 10.5px; font-weight: 700; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px; margin-top: 2px;">
-              <span>🛰️</span> Satellite Cadastre View
+              <span>📊</span> Micro-Market Sales Scatter Plot
             </div>
             
-            <!-- Surveyor Map container -->
-            <div id="failedMap2" style="width: 100%; height: 170px; border-radius: 6px; border: 1px solid #fee2e2; box-shadow: 0 1px 3px rgba(0,0,0,0.05);"></div>
+            <!-- Map container -->
+            <div id="failedMap2" style="width: 100%; height: 215px; border-radius: 6px; border: 1px solid #fee2e2; box-shadow: 0 1px 3px rgba(0,0,0,0.05);"></div>
             <span style="font-size: 9.5px; font-weight: 600; color: #991b1b; text-align: center; display: block;">Sourced: Domain.com</span>
           </div>
           
@@ -1193,7 +1190,19 @@ body {
           <div class="socio-grid" id="socioGrid">
             <!-- Populated dynamically inside renderSocioGrid -->
           </div>
+
+          <!-- Comparative Demographics Chart -->
+          <div id="demographicCompareContainer" style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border-light);">
+            <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <h5 style="margin:0; font-size:11px; font-weight:700; color:#111827; font-family:'Inter', sans-serif; text-transform:uppercase; letter-spacing:0.5px;">📊 Suburb Demographic Comparison</h5>
+              <span style="font-size:10px; color:#6b7280; font-family:'Inter', sans-serif;">Comparing Pinned Suburb with selected regions</span>
+            </div>
+            <div style="position: relative; height: 180px; width: 100%;">
+              <canvas id="demographicsCompareChart"></canvas>
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -1626,6 +1635,7 @@ function initAnalyticsSuburbs(defaultSub) {
         }
         drawPills();
         renderCharts(STATE.data);
+        renderSocioGrid(getSubjectSuburb(STATE.data));
       });
       container.appendChild(btn);
     });
@@ -1929,119 +1939,94 @@ function slideFailed(id, dir) {
   container.style.transform = `translateX(${pct}%)`;
 }
 
-// Satellite Map & Cadastre Polygon Rendering Engine for Failed listings
+// Global map instances for failed listings
+let failedMap1Instance = null;
+let failedMap2Instance = null;
+
+// Scatter Map Rendering Engine for Failed listings
 function renderFailedListingsMaps() {
   if (typeof mapboxgl === 'undefined') return;
   mapboxgl.accessToken = CONFIG.mapboxToken;
-  
-  // 1. 14 Ewos Parade Satellite & Cadastre boundary map
-  const failedMap1 = new mapboxgl.Map({
-    container: 'failedMap1',
-    style: 'mapbox://styles/mapbox/satellite-streets-v12',
-    center: [151.1542, -34.0581],
-    zoom: 17.8,
-    interactive: false,
-    attributionControl: false
+
+  const d = STATE.data;
+  if (!d) return;
+
+  // Filter sold properties within Cronulla suburb (since withdrawn listings are in Cronulla)
+  const cronullaSales = filterByPeriod(d.sales || []).filter(s => {
+    return s.latitude && s.longitude && s.suburb?.toLowerCase() === 'cronulla';
   });
 
-  failedMap1.on('load', () => {
-    // Add cadastre property land polygon
-    failedMap1.addSource('ewos-poly', {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [[
-            [151.1540, -34.0580],
-            [151.1544, -34.0580],
-            [151.1544, -34.0582],
-            [151.1540, -34.0582],
-            [151.1540, -34.0580]
-          ]]
-        }
+  const gjData = {
+    type: 'FeatureCollection',
+    features: cronullaSales.map(s => ({
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [s.longitude, s.latitude]
+      },
+      properties: {
+        price: s.purchase_price || s.price
       }
-    });
+    }))
+  };
 
-    failedMap1.addLayer({
-      id: 'ewos-fill',
-      type: 'fill',
-      source: 'ewos-poly',
-      paint: {
-        'fill-color': '#dc2626',
-        'fill-opacity': 0.35
+  const setupMap = (mapId, centerCoords, getInst, setInst) => {
+    let mapInst = getInst();
+    if (!mapInst) {
+      mapInst = new mapboxgl.Map({
+        container: mapId,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: centerCoords,
+        zoom: 14.8,
+        interactive: false,
+        attributionControl: false
+      });
+
+      mapInst.on('load', () => {
+        mapInst.addSource('sold-properties', {
+          type: 'geojson',
+          data: gjData
+        });
+
+        mapInst.addLayer({
+          id: 'sold-circles',
+          type: 'circle',
+          source: 'sold-properties',
+          paint: {
+            'circle-radius': 5.5,
+            'circle-color': '#ffffff',
+            'circle-stroke-color': '#111827',
+            'circle-stroke-width': 1.5
+          }
+        });
+
+        // Add the McGrath Red (#E2231A) marker
+        const el = document.createElement('div');
+        el.style.width = '14px';
+        el.style.height = '14px';
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor = '#E2231A';
+        el.style.border = '2px solid #ffffff';
+        el.style.boxShadow = '0 0 0 1.5px #E2231A, 0 2px 4px rgba(0,0,0,0.35)';
+
+        new mapboxgl.Marker({ element: el })
+          .setLngLat(centerCoords)
+          .addTo(mapInst);
+      });
+
+      setInst(mapInst);
+    } else {
+      if (mapInst.isStyleLoaded()) {
+        const src = mapInst.getSource('sold-properties');
+        if (src) src.setData(gjData);
       }
-    });
+    }
+  };
 
-    failedMap1.addLayer({
-      id: 'ewos-line',
-      type: 'line',
-      source: 'ewos-poly',
-      paint: {
-        'line-color': '#dc2626',
-        'line-width': 2.5
-      }
-    });
-
-    new mapboxgl.Marker({ color: '#dc2626' })
-      .setLngLat([151.1542, -34.0581])
-      .addTo(failedMap1);
-  });
-
-  // 2. 42 Nicholson Parade Satellite & Cadastre boundary map
-  const failedMap2 = new mapboxgl.Map({
-    container: 'failedMap2',
-    style: 'mapbox://styles/mapbox/satellite-streets-v12',
-    center: [151.1492, -34.0620],
-    zoom: 17.8,
-    interactive: false,
-    attributionControl: false
-  });
-
-  failedMap2.on('load', () => {
-    // Add cadastre property land polygon
-    failedMap2.addSource('nicholson-poly', {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [[
-            [151.1490, -34.0619],
-            [151.1494, -34.0619],
-            [151.1494, -34.0621],
-            [151.1490, -34.0621],
-            [151.1490, -34.0619]
-          ]]
-        }
-      }
-    });
-
-    failedMap2.addLayer({
-      id: 'nicholson-fill',
-      type: 'fill',
-      source: 'nicholson-poly',
-      paint: {
-        'fill-color': '#dc2626',
-        'fill-opacity': 0.35
-      }
-    });
-
-    failedMap2.addLayer({
-      id: 'nicholson-line',
-      type: 'line',
-      source: 'nicholson-poly',
-      paint: {
-        'line-color': '#dc2626',
-        'line-width': 2.5
-      }
-    });
-
-    new mapboxgl.Marker({ color: '#dc2626' })
-      .setLngLat([151.1492, -34.0620])
-      .addTo(failedMap2);
-  });
+  setupMap('failedMap1', [151.1542, -34.0581], () => failedMap1Instance, (val) => { failedMap1Instance = val; });
+  setupMap('failedMap2', [151.1492, -34.0620], () => failedMap2Instance, (val) => { failedMap2Instance = val; });
 }
+
 
 // ── MAIN MAP ────────────────────────────────────────────────
 let mainMap;
@@ -2819,18 +2804,25 @@ const findSuburbKey = (name) => {
 };
 
 function renderSocioGrid(suburb, sa1Props = null) {
-  const norm = findSuburbKey(suburb) || 'Cronulla';
-  const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Cronulla'];
+  const vendorSuburb = getSubjectSuburb(STATE.data);
+  const norm = findSuburbKey(vendorSuburb) || 'Burraneer';
+  const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Burraneer'];
   const grid = document.getElementById('socioGrid');
   if (!grid) return;
   
-  const isSA1 = sa1Props !== null;
+  let useSA1 = sa1Props !== null;
+  if (useSA1) {
+    const sa1Sub = sa1Props.suburb || sa1Props.SA2_NAME_2021 || '';
+    if (findSuburbKey(sa1Sub).toLowerCase() !== norm.toLowerCase()) {
+      useSA1 = false; // Ignore SA1 props from other suburbs to keep cards pinned to vendor suburb!
+    }
+  }
   
   // Dynamically update the socioeconomic grid titles above the cards
   const socioTitle = document.getElementById('socioGridTitle');
   const socioSub = document.getElementById('socioGridSubtitle');
   if (socioTitle && socioSub) {
-    if (isSA1) {
+    if (useSA1) {
       socioTitle.textContent = `SA1 Micro-Locality: ${sa1Props.SA1_CODE_2021}`;
       socioSub.textContent = `Sub-region Profile (vs Suburb Baseline ${norm})`;
     } else {
@@ -2838,13 +2830,14 @@ function renderSocioGrid(suburb, sa1Props = null) {
       socioSub.textContent = `Census Demographic Data Profile`;
     }
   }
-  const seifa = isSA1 ? sa1Props.seifa : demo.seifa;
-  const popDensity = isSA1 ? sa1Props.popDensity : demo.popDensity;
-  const medianAge = isSA1 ? sa1Props.medianAge : demo.medianAge;
-  const remigration = isSA1 ? sa1Props.remigration : demo.remigration;
-  const supply = isSA1 ? sa1Props.supplyMonths : demo.supplyMonths;
-  const population = isSA1 ? 'N/A' : demo.population.toLocaleString();
-  const income = isSA1 ? 'N/A' : `$${demo.income.toLocaleString()}/wk`;
+  
+  const seifa = useSA1 ? sa1Props.seifa : demo.seifa;
+  const popDensity = useSA1 ? sa1Props.popDensity : demo.popDensity;
+  const medianAge = useSA1 ? sa1Props.medianAge : demo.medianAge;
+  const remigration = useSA1 ? sa1Props.remigration : demo.remigration;
+  const supply = useSA1 ? sa1Props.supplyMonths : demo.supplyMonths;
+  const population = useSA1 ? 'N/A' : demo.population.toLocaleString();
+  const income = useSA1 ? 'N/A' : `$${demo.income.toLocaleString()}/wk`;
   
   // Classify Supply/Demand Months
   let tempLabel = 'Hot Seller\'s';
@@ -2865,25 +2858,25 @@ function renderSocioGrid(suburb, sa1Props = null) {
   }
 
   grid.innerHTML = `
-    <div class="socio-card" style="transition: all 0.3s ease; border-top: ${isSA1 ? '3px solid #111827' : 'none'};">
+    <div class="socio-card" style="transition: all 0.3s ease; border-top: ${useSA1 ? '3px solid #111827' : 'none'};">
       <div class="s-label">Population</div>
       <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${population}</div>
-      <div class="s-sub">${isSA1 ? `SA1 Block: ${sa1Props.SA1_CODE_2021}` : `${norm} · 2021 Census`}</div>
+      <div class="s-sub">${useSA1 ? `SA1 Block: ${sa1Props.SA1_CODE_2021}` : `${norm} · 2021 Census`}</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
       <div class="s-label">Weekly Household Income</div>
       <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${income}</div>
-      <div class="s-sub">${isSA1 ? 'Available at Suburb level' : 'vs $1,750 Sydney median'}</div>
+      <div class="s-sub">${useSA1 ? 'Available at Suburb level' : 'vs $1,750 Sydney median'}</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
       <div class="s-label">SEIFA Advantage Index</div>
       <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${seifa}</div>
-      <div class="s-sub">${isSA1 ? 'SA1 Micro-Locality IRSAD' : 'Advantage rank (Top 15% nationally)'}</div>
+      <div class="s-sub">${useSA1 ? 'SA1 Micro-Locality IRSAD' : 'Advantage rank (Top 15% nationally)'}</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease;">
       <div class="s-label">Median Age</div>
       <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${medianAge} yrs</div>
-      <div class="s-sub">${isSA1 ? 'SA1 Median Age' : 'Family-oriented demographic'}</div>
+      <div class="s-sub">${useSA1 ? 'SA1 Median Age' : 'Family-oriented demographic'}</div>
     </div>
     <div class="socio-card" style="transition: all 0.3s ease; border-left: 4px solid ${tempColor}; background: rgba(0,0,0,0.015);">
       <div class="s-label" style="color:${tempColor}; font-weight:700;">Market Temperature</div>
@@ -2893,9 +2886,149 @@ function renderSocioGrid(suburb, sa1Props = null) {
     <div class="socio-card" style="transition: all 0.3s ease;">
       <div class="s-label">Re-Migration Rate</div>
       <div class="s-value" style="font-family:var(--font-display);font-size:22px;font-weight:700;">${remigration}%</div>
-      <div class="s-sub">${isSA1 ? 'SA1 Re-Migration Rate' : '5yr suburb retention & turnover'}</div>
+      <div class="s-sub">${useSA1 ? 'SA1 Re-Migration Rate' : '5yr suburb retention & turnover'}</div>
     </div>
   `;
+
+  // Render comparative bar chart below cards
+  renderDemographicsCompareChart();
+}
+
+function renderDemographicsCompareChart() {
+  const vendorSuburb = getSubjectSuburb(STATE.data);
+  let comparedList = (STATE.analyticsSuburbs || []).filter(s => s !== 'all');
+  if (comparedList.length <= 1) {
+    comparedList = [vendorSuburb, 'Cronulla', 'Woolooware'].filter((val, index, self) => self.indexOf(val) === index);
+  }
+
+  // Ensure vendor suburb is at index 0
+  comparedList = comparedList.filter(s => s !== vendorSuburb);
+  comparedList.unshift(vendorSuburb);
+  comparedList = comparedList.slice(0, 3);
+
+  const labels = comparedList;
+  const incomeData = comparedList.map(s => {
+    const norm = findSuburbKey(s);
+    return SUBURB_DEMOGRAPHICS[norm]?.income || 1750;
+  });
+  const seifaData = comparedList.map(s => {
+    const norm = findSuburbKey(s);
+    return SUBURB_DEMOGRAPHICS[norm]?.seifa || 1000;
+  });
+
+  const canvas = document.getElementById('demographicsCompareChart');
+  if (!canvas) return;
+
+  if (STATE.charts.demographicsCompare) {
+    STATE.charts.demographicsCompare.destroy();
+  }
+
+  const ctx = canvas.getContext('2d');
+  STATE.charts.demographicsCompare = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Weekly Household Income ($)',
+          data: incomeData,
+          backgroundColor: '#111827',
+          borderColor: '#111827',
+          borderWidth: 1,
+          yAxisID: 'yIncome',
+          barPercentage: 0.55,
+          categoryPercentage: 0.7
+        },
+        {
+          label: 'SEIFA Advantage Index',
+          data: seifaData,
+          backgroundColor: '#E2231A',
+          borderColor: '#E2231A',
+          borderWidth: 1,
+          yAxisID: 'ySeifa',
+          barPercentage: 0.55,
+          categoryPercentage: 0.7
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            font: { size: 10, family: 'Inter', weight: '500' },
+            color: '#4b5563',
+            boxWidth: 12
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(17, 24, 39, 0.95)',
+          titleFont: { size: 11, family: 'Inter', weight: '700' },
+          bodyFont: { size: 10, family: 'Inter' },
+          padding: 8,
+          cornerRadius: 6,
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.datasetIndex === 0) {
+                label += '$' + context.raw.toLocaleString() + '/wk';
+              } else {
+                label += context.raw;
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 10, family: 'Inter', weight: '600' }, color: '#111827' }
+        },
+        yIncome: {
+          type: 'linear',
+          position: 'left',
+          title: {
+            display: true,
+            text: 'Weekly Income ($)',
+            font: { size: 9, family: 'Inter', weight: '600' },
+            color: '#111827'
+          },
+          ticks: {
+            font: { size: 9, family: 'Inter' },
+            color: '#4b5563',
+            callback: v => '$' + v
+          },
+          grid: { drawOnChartArea: true, color: 'rgba(0,0,0,0.05)' },
+          min: 1000,
+          max: 3200
+        },
+        ySeifa: {
+          type: 'linear',
+          position: 'right',
+          title: {
+            display: true,
+            text: 'SEIFA IRSAD Index',
+            font: { size: 9, family: 'Inter', weight: '600' },
+            color: '#E2231A'
+          },
+          ticks: {
+            font: { size: 9, family: 'Inter' },
+            color: '#4b5563'
+          },
+          grid: { drawOnChartArea: false },
+          min: 950,
+          max: 1150
+        }
+      }
+    }
+  });
 }
 
 function updatePricingCard(name, type, coef = 1.0, sa1Code = null) {
@@ -4668,8 +4801,11 @@ function setupGlobalControls() {
       console.log(`[Dashboard] Global Filter Change: ${stateField} = ${STATE[stateField]}`);
       
       if (prevVal !== STATE[stateField]) {
-        // Redraw cards, charts, and update map data dynamically
-        renderAll();
+        if (stateField === 'kpiFocus') {
+          renderKPIs(STATE.data);
+        } else {
+          renderAll();
+        }
       }
     });
   };
