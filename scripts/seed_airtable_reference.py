@@ -37,10 +37,10 @@ if not AIRTABLE_TOKEN:
         pass
 
 if not AIRTABLE_TOKEN:
-    # Use split construction to prevent GITHUB push secret scanning blocks
-    part1 = "patU8m3uYhI5vGg5x"
-    part2 = "4c979df89965d836ea449d01b1b0451fcefe0f7a01691a329d270387b3225895"
-    AIRTABLE_TOKEN = f"{part1}.{part2}"
+    raise SystemExit(
+        "AIRTABLE_TOKEN is not set. Add it to api/.env or export it before running:\n"
+        "  export AIRTABLE_TOKEN=patXXXXXXXXXXXXXX.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    )
 
 HEADERS = {
     "Authorization": f"Bearer {AIRTABLE_TOKEN}",

@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+/* ──────────────────────────────── Design Tokens ──────────────────────────────── */
+@theme {
+  --color-surface: #f8f9fb;
+  --color-surface-alt: #ffffff;
+  --color-surface-hover: #f0f2f5;
+  --color-surface-active: #e8eaed;
+  --color-border: #e2e5ea;
+  --color-border-subtle: #eef0f3;
+  --color-text: #1a1d23;
+  --color-text-secondary: #5f6980;
+  --color-text-muted: #9ca3af;
+  --color-primary: #3b5bdb;
+  --color-primary-hover: #3451c5;
+  --color-primary-light: #edf0ff;
+  --color-primary-surface: #f5f7ff;
+  --color-success: #12b886;
+  --color-success-light: #e6fcf5;
+  --color-warning: #f59f00;
+  --color-warning-light: #fff9db;
+  --color-danger: #fa5252;
+  --color-danger-light: #fff5f5;
+  --color-info: #339af0;
+  --color-info-light: #e7f5ff;
+
+  /* Dark mode */
+  --color-dark-surface: #0f1117;
+  --color-dark-surface-alt: #181b24;
+  --color-dark-surface-hover: #1e212c;
+  --color-dark-surface-active: #262a36;
+  --color-dark-border: #2a2e3b;
+  --color-dark-border-subtle: #1f2330;
+  --color-dark-text: #e8eaed;
+  --color-dark-text-secondary: #9ca3af;
+  --color-dark-text-muted: #5f6980;
+  --color-dark-primary-light: #1e2640;
+  --color-dark-primary-surface: #151b30;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 8px -1px rgba(0,0,0,0.06), 0 1px 4px -1px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 24px -4px rgba(0,0,0,0.08), 0 2px 8px -2px rgba(0,0,0,0.04);
+  --shadow-xl: 0 16px 48px -8px rgba(0,0,0,0.12), 0 4px 16px -4px rgba(0,0,0,0.06);
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ───────────────────────── Global ───────────────────────── */
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background: var(--color-dark-surface);
+    color: var(--color-dark-text);
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  * {
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  html, body {
+    overflow-x: hidden;
+  }
+}
+
+/* ───────────────────────── Kanban ───────────────────────── */
+@layer components {
+  .kanban-column {
+    min-height: 200px;
+    border-radius: var(--radius-lg);
+    padding: 12px;
+    transition: background 0.15s ease;
+  }
+  .kanban-column.drag-over {
+    background: var(--color-primary-light);
+  }
+  .dark .kanban-column.drag-over {
+    background: var(--color-dark-primary-light);
+  }
+
+  .deal-card {
+    cursor: grab;
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+  }
+  .deal-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-border);
+  }
+  .deal-card.dragging {
+    box-shadow: var(--shadow-xl);
+    transform: rotate(2deg) scale(1.02);
+    opacity: 0.92;
+    cursor: grabbing;
+  }
+  .dark .deal-card {
+    background: var(--color-dark-surface-alt);
+    border-color: var(--color-dark-border-subtle);
+  }
+  .dark .deal-card:hover {
+    border-color: var(--color-dark-border);
+  }
+
+  /* Stat cards on dashboard */
+  .stat-card {
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .stat-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+  .dark .stat-card {
+    background: var(--color-dark-surface-alt);
+    border-color: var(--color-dark-border-subtle);
+  }
+
+  /* Draft review card */
+  .draft-card {
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s ease;
+  }
+  .draft-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+  .dark .draft-card {
+    background: var(--color-dark-surface-alt);
+    border-color: var(--color-dark-border-subtle);
+  }
+}
+
+/* ───────────────────── Animations ───────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+.animate-slide-in {
+  animation: slide-in-right 0.25s ease-out both;
+}
+.animate-pulse-dot {
+  animation: pulse-dot 2s infinite;
+}

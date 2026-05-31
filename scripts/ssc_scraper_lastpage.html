@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>
+	Sutherland Shire Council - Development Application Search Results
+</title>
+<script src='//code.jquery.com/jquery-1.7.2.min.js'></script>
+        <script>
+ document.domain = "ssc.nsw.gov.au";
+        </script>
+		<script src='/eProperty/p1/ssc-epr.js'></script>
+		<script>
+			$(document).ready(function() {
+
+                // custom script for ticket #22637
+                // author: Jerameel
+                // version: 1.0
+
+                //////////////////////////////////////////////////////////////////////////////////////////////////
+		///////// Update this if required by business/////////////////////////////////////////////////////
+
+                var customHeader = 'Make a submission in relation to this application';
+                var submissionLink = "http://www.sutherlandshire.nsw.gov.au/Development/Development-Applications/DA-Comments-and-Submissions?DANo=";
+                var submittedDoneLabel = "The notification period for submissions has ended for this application";
+                var submisstionLabel = "Submission";
+		var linkLabel = "Make a submission";
+                var notificationStartDateLabel = "Notification Start Date";
+                var notificationEndDateLabel = "Notification End Date";
+                var applicationIdLabel = "Application ID";
+
+                //////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+                if(window.location.href.toString().indexOf("eTrackApplicationDetails.aspx") !== -1){
+                        if ($("#ctl00_Content_cusPageComponents_repPageComponents_ctl01_cusPageComponentGrid_repWebGrid_ctl00_dtvWebGridListView").length > 0){
+                            // var notificationStartDateString = $("#ctl00_Content_cusPageComponents_repPageComponents_ctl01_cusPageComponentGrid_repWebGrid_ctl00_dtvWebGridListView").find('tr').eq(1).children('td').eq(1).html().split("/");
+                            // var notificationEndDateString = $("#ctl00_Content_cusPageComponents_repPageComponents_ctl01_cusPageComponentGrid_repWebGrid_ctl00_dtvWebGridListView").find('tr').eq(2).children('td').eq(1).html().split("/");
+
+                        // Check submission flag is true
+                        var headerColumns = $('.headerColumn');
+                        var submissionFlag = false;
+                        var daNumber = "";
+
+                        var notificationStartDateString = "";
+                        var notificationEndDateString = "";
+                       
+			// find values for the items that's need to be checked.
+                        $(headerColumns).each(function(index, item){
+                            if ($(item).html() == submisstionLabel){
+                                submissionFlag = $(item).siblings('td').html().toUpperCase() == "YES" ? true: false;
+				$(item).parent().hide();
+                            }
+
+                            if ($(item).html() == applicationIdLabel){
+                               if(daNumber == "")
+				{
+                                daNumber = $(item).siblings('td').html();
+				}
+                            }
+
+                            if ($(item).html() == notificationStartDateLabel){
+                                notificationStartDateString = $(item).siblings('td').text().trim() ? $(item).siblings('td').text().trim().split("/") : [];
+                            }
+
+                            if ($(item).html() == notificationEndDateLabel){
+                                notificationEndDateString = $(item).siblings('td').text().trim() ? $(item).siblings('td').text().trim().split("/") : [];
+                            }
+
+
+
+                        });
+
+			//console.log()
+
+                        if (notificationStartDateString.length > 0 && notificationEndDateString.length > 0){
+
+                            
+
+                                    var notificationStartDate = new Date(notificationStartDateString[2], notificationStartDateString[1] - 1, notificationStartDateString[0]);
+                                        var notificationEndDateDate = new Date(notificationEndDateString[2], notificationEndDateString[1] - 1, notificationEndDateString[0]);
+                                        var today = new Date();
+                                        today.setHours(0,0,0,0);
+
+                                    var customHeading = $('<div id="custom_heading"><span class="pageComponentHeading">'+customHeader+'</span><img class="sectionSeparator" src="../../App_Themes/Sutherland/Images/fullSeperator.gif" alt="" style="height:2px;width:95%;border-width:0px;"><img src="../../Images/closePanel.gif" alt="" style="border-width:0px;" title="Collapse"></div>');    
+                                    var customDiv = $('<div id="custom_div" style="overflow-y: hidden; height: auto;"><div style="height: auto;"><div><div><table class="grid" cellspacing="0" cellpadding="3" rules="cols" border="1" style="width:100%;border-collapse:collapse;"><tbody><tr class="headerRow"><th scope="col">Link</th></tr><tr class="normalRow"><td><a target="_blank">Custom Link</a></td></tr></tbody></table></div><br></div><br></div></div>');
+
+                                    // if it falls inside the date and yes for the flag
+				    if (submissionFlag)
+				    {
+                                       if (today >= notificationStartDate && today <= notificationEndDateDate)
+				       {
+                                        
+                                           // find the 
+                                        
+                                           customDiv.find('a').html(linkLabel);
+                                           customDiv.find('a').attr('href', submissionLink + daNumber)
+                                                   .attr('target', '_blank');
+                                       } 
+				       else  
+				       {
+                                           var customLink = customDiv.find('a');
+                                           $(customLink).after('<span>'+submittedDoneLabel+'</span>');
+                                           $(customLink).remove();
+                                       }
+
+
+                                       var contentPane = $("#ctl00_Content_cusPageComponents_pnlPageComponents");
+                                       contentPane.append(customHeading).append(customDiv);
+				    }
+				    else
+				    {
+					
+				    }
+
+                                
+
+                                
+                        }
+                        }
+                }
+                
+
+
+
+    			if(window.location.href.toString().indexOf("SSC.P1.WEBFOYER") !== -1){
+    	
+    			    $(".speciallink").text("").children().hide();
+    			    $(".home-cta-left").hide();
+    			}
+
+                /**
+                * Load GeoCortex Map
+                */
+                 
+                loadTreeMap();
+
+                //Check if this is the page that the map goes on
+                /**
+                if ($("span:contains('Tree Application - Tree Removal/Pruning on PRIVATE asdfasdfasdfsadf')").length == 1 && $("span:contains('Property Search')").length == 1){
+                    
+                    //console.log('this is the page...');
+
+                    //Add the "show map" button to the page
+                    $("h1").next().next().next().prepend("<div id='mapContainer'><input type='button' id='showMap' value='Open tree selector' style='background-color: #0079a2; border: 1px solid #155267;padding:10px 20px 10px 20px; font-weight: bold;color: white;' /></div>");
+
+                    //Add the hidden iFrame container
+                    $("#mapContainer").append("<div id='map'></div>");
+                    $("#map").toggle();
+                    //Add the iFrame
+                    $("#map").append("<iFrame style='width:100%;height:500px;' src='http://ssc-gis.ssc.council/html_trees/?viewer=eTrees'></iframe");
+
+                    //Click listener for "show map" button
+                    $("#showMap").click(function(){
+                        $("#map").slideToggle(function(){
+    
+                        }, function(){
+                            
+                            if($('#showMap').attr("value") == "Open tree selector"){
+                                $('#showMap').attr("value", "Close tree selector") 
+                            }else{
+                                $('#showMap').attr("value", "Open tree selector") 
+                            };
+
+                        });
+                    });
+                }else{
+                    //console.log("NOT THE PAGE!!!");
+                }
+
+                **/
+				fixNavHeadings();
+				parseStyle($('H1').first().text(), 'Home Page', function(){
+					//$('H1').first().css('background-color','red');
+				});
+				
+				if(window.location.href.indexOf("eSubmit") > -1) {
+				    
+				    $('body').attr('class','applications');
+				    
+				}else if(window.location.href.indexOf("eTrack") > -1) {
+				    
+				    if(window.location.href.indexOf("Group=TP") > -1) {
+					 $('body').attr('class','tracking-tree');
+					 
+					 $('.taskHeader').text('Tree Applications');
+				    }else if(window.location.href.indexOf("Group=DA") > -1) {
+					 $('body').attr('class','tracking-da');
+					 $('.taskHeader').text('Development Applications');
+				    }
+				    
+				   
+				}
+			    
+				$('.taskPanel ul li a').each(function(index){
+				    
+		    		    //if ($(this).text().indexOf(' - Trees') > -1){
+					//var n = 
+					
+					$(this).text($(this).text().replace(' - Trees', ' '));
+					$(this).text($(this).text().replace(' - DA', ' '));
+				
+				    //}	
+				    //alert(n);
+				});
+					
+				//parseStyle($('.app-heading').first().text(), 'Applications & Tracking', function(){
+					
+				//})				
+		
+			});
+		</script>    
+<link href="../../App_Themes/Sutherland/Default.css" type="text/css" rel="stylesheet" /></head>
+<body>
+    <form name="aspnetForm" method="post" action="/T1PRProd/WebApps/eProperty/(S(kdqp14rtt3wpy3ygadld4cmd))/P1/eTrack/eTrackApplicationSearchResults.aspx?Group=DA&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.P1.ETR.RESULT.DA" id="aspnetForm">
+<div>
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUKMTE5MDgzMDk0Nw9kFgJmD2QWAgIDD2QWBgIED2QWBAIBD2QWAmYPZBYEAgEPZBYCZg9kFgJmDw8WEB4EVGV4dAUJRWRpdCBNb2RlHgtDb21tYW5kTmFtZQUEVGFzax4PQ29tbWFuZEFyZ3VtZW50BRpQMUVQUkN1c3RvbWlzYXRpb25FZGl0TW9kZR4JQWNjZXNzS2V5ZR4QQ2F1c2VzVmFsaWRhdGlvbmgeCFRhYkluZGV4AQAAHgdUb29sVGlwZR4PVmFsaWRhdGlvbkdyb3VwZWRkAgIPZBYCZg9kFgJmDw8WEB8ABQ1SZWZyZXNoIENhY2hlHwEFBFRhc2sfAgUeUDFFUFJDdXN0b21pc2F0aW9uUmVmcmVzaENhY2hlHwNlHwRoHwUBAAAfBmUfB2VkZAIDDw8WAh4HVmlzaWJsZWhkFgICAg8PZA8PFCsAARYGHgROYW1lBQpsc0Z1bmN0aW9uHgxEZWZhdWx0VmFsdWUFFFNTQy5QMS5FVFIuUkVTVUxULkRBHg5QYXJhbWV0ZXJWYWx1ZWQUKwEBAgNkZAIHD2QWBgIBDw8WAh8AZWRkAgMPDxYCHwhoZBYCAgIPDxYCHwAFDFNlYXJjaCBEYXRlc2RkAgUPDxYEHghHcmlkVHlwZQUMRVRSQUNLU0VBUkNIHhBHcmlkQ3JpdGVyaWFMaXN0MpAFAAEAAAD/////AQAAAAAAAAAMAgAAAFBUMS5QMS5XZWIuT2JqZWN0QWRhcHRlcnMsIFZlcnNpb249MTAuNC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49bnVsbAQBAAAAnAFTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5MaXN0YDFbW1QxLlAxLldlYi5PYmplY3RBZGFwdGVycy5HcmlkQ3JpdGVyaWEsIFQxLlAxLldlYi5PYmplY3RBZGFwdGVycywgVmVyc2lvbj0xMC40LjAuMCwgQ3VsdHVyZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1udWxsXV0DAAAABl9pdGVtcwVfc2l6ZQhfdmVyc2lvbgQAACdUMS5QMS5XZWIuT2JqZWN0QWRhcHRlcnMuR3JpZENyaXRlcmlhW10CAAAACAgJAwAAAAIAAAACAAAABwMAAAAAAQAAAAQAAAAEJVQxLlAxLldlYi5PYmplY3RBZGFwdGVycy5HcmlkQ3JpdGVyaWECAAAACQQAAAAJBQAAAA0CBQQAAAAlVDEuUDEuV2ViLk9iamVjdEFkYXB0ZXJzLkdyaWRDcml0ZXJpYQUAAAAHbXNWYWx1ZQhtc1ZhbHVlMg5tc09wZXJhdG9yQ29kZQptc0NvbHVtbklkDm1zUHJvcGVydHlOYW1lAQEBAQECAAAABgYAAAAKMDEvMDUvMjAyNgYHAAAACjMxLzA1LzIwMjYGCAAAAAJEQgYJAAAAAAYKAAAADUxvZGdlbWVudERhdGUBBQAAAAQAAAAGCwAAAAJEQQkJAAAABg0AAAACQz0GDgAAAAxQcmltYXJ5R3JvdXAJDgAAAAtkFgJmD2QWBAIBD2QWAgIBDw8WAh8ABQlHcmlkIFR5cGVkZAIDDw8WAh8IaGQWAgIBDw8WAh8ABRxObyBpbmZvcm1hdGlvbiBpcyBhdmFpbGFibGUuZGQCDQ8WAh8IaGQYAwVDY3RsMDAkQ29udGVudCRjdXNSZXN1bHRzR3JpZCRyZXBXZWJHcmlkJGN0bDAwJGdyZFdlYkdyaWRUYWJ1bGFyVmlldw88KwAKAQgCBWQFQGN0bDAwJENvbnRlbnQkY3VzUmVzdWx0c0dyaWQkcmVwV2ViR3JpZCRjdGwwMCRkdHZXZWJHcmlkTGlzdFZpZXcPFCsAB2RkZGRkFgACPmQFHGN0bDAwJENvbnRlbnQkbGJsU2VhcmNoRGF0ZXMPaGQaijJVd60x3UcA02JlzXGwGD0Sng==" />
+</div>
+
+<div>
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="794B1E1F" />
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEWHwLmpMDWDwK359HKDwL38+S0BQLD0Z//CAKDjpzeCAKCqYWLDgK+1pGjDgLurtn5CALsuJ7pAgKO0+W9AQKDhpbOBgL/iqOnDwKei6OnDwK1jaOnDwLci6OnDwL7i6OnDwKajKOnDwKhiqOnDwLIiKOnDwK5jLfiDgLgirfiDgL/irfiDgKei7fiDgK1jbfiDgLci7fiDgL7i7fiDgKa4Pf0BAKa4Iv0BAKa4J/0BAKa4JP0BAK/g8WMCdro+CfdlP/Elz4OOS/efe20TrjB" />
+</div>
+        <div id="cssBounds">
+            <div id="cssBanner" >
+		<div class="banner-inner">
+		<img src="/eProperty/app_themes/sutherland/images/sutherland-council-logo.jpg" class="council-logo" alt="main council site">
+                 <span class="main-site-link"><a href="http://www.sutherlandshire.nsw.gov.au">Go to the Main Council Website</a></span>
+                 <span class="app-heading">Applications &amp; Tracking</span>	
+
+
+
+
+                    <!-- Login -->
+                    <div class="speciallink">
+                        
+                                &nbsp;<a id="ctl00_ctlLogin_cmdLogin" accesskey="L" title="Access Key: L" href="javascript:__doPostBack('ctl00$ctlLogin$cmdLogin','')">Login</a>
+                            
+                     </div>
+                    <!-- End Login -->            
+                <div id="cssBannerLogo">
+                    <a href="https://propertydevelopment.ssc.nsw.gov.au/T1PRProd/WebApps/eProperty/(S(kdqp14rtt3wpy3ygadld4cmd))/P1/GuestHome.aspx?r=SSC.P1.WEBGUEST&f=%24P1.EPR.GUESTHME.VIW" id="ctl00_cmdHomeNav">
+                        <img src="../../App_Themes/Default/Images/Empty.gif" id="ctl00_imageHomeNav" border="0" class="homeNav" />
+                    </a>
+                </div>
+</div>
+            </div>
+            <div class="clear"></div>
+            <div id="cssContentArea">
+                <div id="cssTaskpane"  class = "cssNoPrint">
+                    
+                    <div>
+                        
+                                <div class="menuPanel">
+                            
+                                <div class="menuHeader">
+                                    <span id="ctl00_Taskpane_rprMenuList_ctl01_lblMenuGroupHeader">Home</span>
+                                </div>
+                                <ul class="menuGroupList">
+	<li><a href="https://propertydevelopment.ssc.nsw.gov.au/eProperty/P1/GuestHome.aspx?r=SSC.P1.WEBGUEST&amp;f=%24P1.EPR.GUESTHME.VIW">eServices Home</a></li>
+</ul>
+                                <br />
+                            
+                                <div class="menuHeader">
+                                    <span id="ctl00_Taskpane_rprMenuList_ctl02_lblMenuGroupHeader">Track it</span>
+                                </div>
+                                <ul class="menuGroupList">
+	<li><a href="eTrackApplicationSearch.aspx?Group=DA&amp;ResultsFunction=SSC.P1.ETR.RESULT.DA&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.P1.ETR.SEARCH.DA">Development Applications</a></li><li><a href="eTrackApplicationSearch.aspx?Group=CUA&amp;ResultsFunction=SSC.P1.ETR.RSLT.CDC&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.P1.ETR.SRCH.CDC">Complying Development - Council (CDC)</a></li><li><a href="eTrackApplicationSearch.aspx?Group=PrivCert&amp;ResultsFunction=SSC.P1.ETR.RSLT.PCDC&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.P1.ETR.SRCH.PCDC">Complying Development - Private Certifiers (PCDC)</a></li><li><a href="eTrackApplicationSearch.aspx?Group=RoadsAct&amp;ResultsFunction=SSC.P1.ETR.RESULT.RD&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.P1.ETR.SEARCH.RD">Roads Act Applications</a></li><li><a href="eTrackApplicationSearch.aspx?Group=FireSafety&amp;ResultsFunction=SSC.P1.ETR.RESULT.FS&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.P1.ETR.SEARCH.FS">Fire Safety Statements</a></li><li><a href="eTrackApplicationSearch.aspx?r=SSC.P1.WEBGUEST&amp;f=SSC.P1.ETR.SEARCH.EN">Search All Types</a></li>
+</ul>
+                                <br />
+                            
+                                <div class="menuHeader">
+                                    <span id="ctl00_Taskpane_rprMenuList_ctl03_lblMenuGroupHeader">Apply For It</span>
+                                </div>
+                                <ul class="menuGroupList">
+	<li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=e735&amp;GroupCategory=e735&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.735">Outstanding Notices - s735</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=e603&amp;GroupCategory=e603&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.603">Rate Certificate - e603</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=ePlanCert&amp;GroupCategory=ePlnCert2&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.PLANCERT-2">Planning Certificate (2)</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=ePlanCert&amp;GroupCategory=ePlnCert25&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.PLANCERT-2-5">Planning Certificate (2) and (5)</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=e88G&amp;GroupCategory=e88G&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.88G">s88g Certificate</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=e88G&amp;GroupCategory=e88gUrgent&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.88G.URGENT">s88g Certificate Urgent</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=RoadsAct&amp;GroupCategory=eAcAligRes&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.RD-EACALIGRES">Driveways - Residential</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=RoadsAct&amp;GroupCategory=eAcAligDev&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.RD-EACALIGDEV">Driveways - Large Development</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=RoadsAct&amp;GroupCategory=eRDOpSiRes&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.RD-RDOPSIRES">Road Uses - Road Opening Single Residential</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=RoadsAct&amp;GroupCategory=eRDOpMultD&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.RD-RDOPMULTD">Road Uses - Multi Dwelling &amp; Non Residential Properties</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=RoadsAct&amp;GroupCategory=eCranePump&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.RD-ECRANEPUMP">Road Uses - Crane or Pump</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=RoadsAct&amp;GroupCategory=eHoardings&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.RD-EHOARDINGS">Road Uses - Hoardings</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=RoadsAct&amp;GroupCategory=eSkipBins&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.RD-ESKIPBINS">Road Uses - Skip Bins</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=RoadsAct&amp;GroupCategory=eWorkZone&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.RD-EWORKZONE">Road Uses - Work Zone</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=footpapprl&amp;GroupCategory=Aframesign&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.AFRAMESIGN">Road Uses - A Frame Permit Application</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=GenApplic&amp;GroupCategory=eTradePerm&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.TPP-ETRADEPERM">Trade Parking Permit</a></li><li><a href="http://www.sutherlandshire.nsw.gov.au/Council/Policies-and-Documents/Tasks/Report-It/Report-It-Trees">Tree Removal/Pruning on PUBLIC Land</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=GenApplic&amp;GroupCategory=FBL&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.FBL">Foreshore Building Line Application</a></li><li><a href="/eProperty/P1/eSubmit/Category.aspx?Group=ASRWaste&amp;GroupCategory=GWRecGarb&amp;r=SSC.P1.WEBGUEST&amp;f=LINK.GWR">Greenwaste/Recycling Bin</a></li>
+</ul>
+                                <br />
+                            
+                                <div class="menuHeader">
+                                    <span id="ctl00_Taskpane_rprMenuList_ctl04_lblMenuGroupHeader">User Information</span>
+                                </div>
+                                <ul class="menuGroupList">
+	<li><a href="../User/PasswordReset.aspx?r=SSC.P1.WEBGUEST&amp;f=%24P1.EPR.USERPASS.VIW">Forgotten Password</a></li><li><a href="../User/Register.aspx?r=SSC.P1.WEBGUEST&amp;f=%24P1.EPR.REGUSER.MNT">Register</a></li>
+</ul>
+                                <br />
+                            
+                                </div>
+                            
+                        
+                    </div>
+                            
+                </div>
+                
+                <div id="cssTaskpaneRelatedLinks"  class = "cssNoPrint">
+                    
+                        <div id="ctl00_RightTaskPane_tspRelatedLinks" class="taskPanel">
+<div class="taskHeader">Related Links</div>
+<ul>
+<li><a href="eTrackApplicationSearchResults.aspx?Field=S&amp;Period=TW&amp;Group=DA&amp;SearchFunction=SSC.P1.ETR.SEARCH.DA&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.ETR.SRCH.STW.DA">Submitted This Week</a></li>
+<li><a href="eTrackApplicationSearchResults.aspx?Field=S&amp;Period=LW&amp;Group=DA&amp;SearchFunction=SSC.P1.ETR.SEARCH.DA&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.ETR.SRCH.SLW.DA">Submitted Last Week</a></li>
+<li><a href="eTrackApplicationSearchResults.aspx?Field=S&amp;Period=TM&amp;Group=DA&amp;SearchFunction=SSC.P1.ETR.SEARCH.DA&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.ETR.SRCH.STM.DA">Submitted This Month</a></li>
+<li><a href="eTrackApplicationSearchResults.aspx?Field=S&amp;Period=LM&amp;Group=DA&amp;SearchFunction=SSC.P1.ETR.SEARCH.DA&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.ETR.SRCH.SLM.DA">Submitted Last Month</a></li>
+<li><a href="eTrackApplicationSearchResults.aspx?Field=D&amp;Period=TW&amp;Group=DA&amp;SearchFunction=SSC.P1.ETR.SEARCH.DA&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.ETR.SRCH.DTW.DA">Determined This Week</a></li>
+<li><a href="eTrackApplicationSearchResults.aspx?Field=D&amp;Period=LW&amp;Group=DA&amp;SearchFunction=SSC.P1.ETR.SEARCH.DA&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.ETR.SRCH.DLW.DA">Determined Last Week</a></li>
+<li><a href="eTrackApplicationSearchResults.aspx?Field=D&amp;Period=TM&amp;Group=DA&amp;SearchFunction=SSC.P1.ETR.SEARCH.DA&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.ETR.SRCH.DTM.DA">Determined This Month</a></li>
+<li><a href="eTrackApplicationSearchResults.aspx?Field=D&amp;Period=LM&amp;Group=DA&amp;SearchFunction=SSC.P1.ETR.SEARCH.DA&amp;r=SSC.P1.WEBGUEST&amp;f=SSC.ETR.SRCH.DLM.DA">Determined Last Month</a></li>
+</ul>
+<div class="taskFooter">&nbsp;</div>
+</div>
+
+                        
+                    
+                    
+                    
+    
+    
+
+                </div>
+                                
+                <div id="cssContent">
+                <div class="cssContentWorkspace">
+                    <a id="cssContentTop"></a>
+                    
+                        <h1 id="ctl00_Header_h1PageTitle">Development Application Search Results</h1>
+                    
+                    
+                    
+                              
+                    
+    
+    <span id="ctl00_Content_cusETrackApplicationSearchResults" style="display:inline-block;width:100%;"></span>
+    <br />
+    
+    
+    
+    
+
+
+
+<link rel="stylesheet" type="text/css" href="/T1PRProd/WebApps/eProperty/(S(kdqp14rtt3wpy3ygadld4cmd))/App_Themes/reset-css.css"/>
+
+<div id="ctl00_Content_cusResultsGrid_pnlCustomisationGrid">
+	
+    
+    
+    
+            <div id="ctl00_Content_cusResultsGrid_repWebGrid_ctl00_pnlSectionHeading">
+		
+                <span id="ctl00_Content_cusResultsGrid_repWebGrid_ctl00_lblSectionHeading" class="sectionHeading">Application Search Results</span>
+                                <br />
+                <img id="ctl00_Content_cusResultsGrid_repWebGrid_ctl00_imgSectionSeparator" Class="sectionSeparator" src="../../App_Themes/Sutherland/Images/HalfSeperator.gif" alt="" style="height:2px;width:50%;border-width:0px;" />
+            
+	</div>
+ 
+            
+
+            <div>
+		<table class="grid" cellspacing="0" cellpadding="3" rules="cols" border="1" id="ctl00_Content_cusResultsGrid_repWebGrid_ctl00_grdWebGridTabularView" style="width:100%;border-collapse:collapse;">
+			<tr class="headerRow">
+				<th scope="col"><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Sort$RamId')">Application Link</a></th><th scope="col"><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Sort$LodgementDate')">Lodgement Date</a></th><th scope="col"><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Sort$Description')">Description</a></th><th scope="col"><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Sort$PrimaryGroupDescription')">Group Description</a></th><th scope="col"><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Sort$PrimaryCategoryDescription')">Category Description</a></th><th scope="col"><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Sort$FormattedAddress')">Formatted Address</a></th><th scope="col"><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Sort$ApplicantNames')">Applicant Names</a></th><th scope="col"><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Sort$Decision')">Decision</a></th><th scope="col"><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Sort$DeterminedDate')">Determined Date</a></th>
+			</tr><tr class="normalRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl02$ctl01','')">DA26/0063</a></td><td>22/05/2026</td><td>Alterations and additions to an existing dwelling</td><td>Development Assessment</td><td>Dwelling Construction</td><td>2 Bermuda Place BURRANEER NSW 2230</td><td>Melissa Jane Vouris</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="alternateRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl03$ctl01','')">DA26/0064</a></td><td>7/05/2026</td><td>Demolition of existing structures and the construction of a child care centre for 38 children and associated works</td><td>Development Assessment</td><td>Child Care Centres (for DA ONLY)</td><td>7 Foch Avenue GYMEA NSW 2227</td><td>Shane Duck</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="normalRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl04$ctl01','')">DA26/0224</a></td><td>4/05/2026</td><td>Land use approval for existing works, alterations and additions to existing dwelling and attached carport</td><td>Development Assessment</td><td>Dwelling Construction</td><td>9 Nambour Road ENGADINE NSW 2233</td><td> Corona Projects Pty Ltd</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="alternateRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl05$ctl01','')">DA26/0226</a></td><td>4/05/2026</td><td>Demolition of existing structures and construction of a dual occupancy development with 2 swimming pools and strata title subdivision</td><td>Development Assessment</td><td>Dual Occupancy Construction</td><td>326 Burraneer Bay Road CARINGBAH SOUTH NSW 2229</td><td>Mark Raymundo</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="normalRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl06$ctl01','')">DA26/0228</a></td><td>1/05/2026</td><td>Construction of a swimming pool and associated landscaping works</td><td>Development Assessment</td><td>Swimming Pool Construction</td><td>48 Woodlands Road TAREN POINT NSW 2229</td><td> Exterior Architecture Pty Ltd</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="alternateRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl07$ctl01','')">DA26/0229</a></td><td>5/05/2026</td><td>Alterations and additions to an existing dwelling house</td><td>Development Assessment</td><td>Dwelling Construction</td><td>9 Dapto Place BANGOR NSW 2234</td><td> Spannenberg and Son Pty Ltd</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="normalRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl08$ctl01','')">DA26/0230</a></td><td>1/05/2026</td><td>Demolition of existing in ground swimming pool and construction of in ground swimming pool</td><td>Development Assessment</td><td>Swimming Pool Construction</td><td>10 Roper Crescent SYLVANIA WATERS NSW 2224</td><td>Alan Faglioni</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="alternateRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl09$ctl01','')">DA26/0231</a></td><td>7/05/2026</td><td>Demolition of all existing structures and construction of a residential flat building containing 45 apartments and associated car parking and landscaping</td><td>Development Assessment</td><td>Residential Flat Building Construction</td><td>33 Seaview Street CRONULLA NSW 2230</td><td> Invecon Australia Pty Limited</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="normalRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl10$ctl01','')">DA26/0232</a></td><td>4/05/2026</td><td>Demolition of existing structures and construction of an 8-storey residential flat building</td><td>Development Assessment</td><td>Residential Flat Building Construction</td><td>32 Clio Street SUTHERLAND NSW 2232</td><td> Mackenzie Architects International Pty Ltd</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="alternateRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl11$ctl01','')">DA26/0233</a></td><td>4/05/2026</td><td>Alterations and additions to unit 2 in existing dual occupancy</td><td>Development Assessment</td><td>Dwelling Construction</td><td>14 Fairs Avenue WOOLOOWARE NSW 2230</td><td>Daniel Popov</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="normalRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl12$ctl01','')">DA26/0234</a></td><td>7/05/2026</td><td>Alterations and additions to existing building and hard stand to accommodate a bus depot</td><td>Development Assessment</td><td>Industrial Construction</td><td>31 Bay Road TAREN POINT NSW 2229</td><td> U-Go Mobility Pty Ltd</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="alternateRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl13$ctl01','')">DA26/0235</a></td><td>5/05/2026</td><td>Alterations and additions to existing garage</td><td>Development Assessment</td><td>Other Freestanding Ancillary Residential Structure</td><td>45 Bandain Avenue KAREELA NSW 2232</td><td> Contractors United Pty Ltd</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="normalRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl14$ctl01','')">DA26/0236</a></td><td>4/05/2026</td><td>Alterations and additions to unit 4 in existing multi dwelling</td><td>Development Assessment</td><td>Dwelling Construction</td><td>5 Anzac Avenue ENGADINE NSW 2233</td><td>Andrei Maksimov</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="alternateRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl15$ctl01','')">DA26/0237</a></td><td>14/05/2026</td><td>Strata title subdivision of an existing dual occupancy development into 2 lots</td><td>Development Assessment</td><td>Subdivision</td><td>129 President Avenue MIRANDA NSW 2228</td><td>Stuart Dixon</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="normalRow">
+				<td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView$ctl16$ctl01','')">DA26/0238</a></td><td>1/05/2026</td><td>Demolition of existing dwelling and construction of a multi dwelling and associated landscaping works and strata subdivision</td><td>Development Assessment</td><td>Town House and Villa Construction</td><td>16 Chipilly Avenue ENGADINE NSW 2233</td><td> Meraki Design Co Pty Ltd</td><td>Pending</td><td>&nbsp;</td>
+			</tr><tr class="pagerRow">
+				<td colspan="9"><table border="0">
+					<tr>
+						<td><span>1</span></td><td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Page$2')">2</a></td><td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Page$3')">3</a></td><td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Page$4')">4</a></td><td><a href="javascript:__doPostBack('ctl00$Content$cusResultsGrid$repWebGrid$ctl00$grdWebGridTabularView','Page$5')">5</a></td>
+					</tr>
+				</table></td>
+			</tr>
+		</table>
+	</div>
+            
+            <br />
+            
+            
+            
+        
+
+</div>
+
+
+
+
+
+    
+    <div class="actionButtonsLeft">
+        <input type="submit" name="ctl00$Content$btnPrevious" value="&lt; Previous" id="ctl00_Content_btnPrevious" accesskey="P" title="Access Key: P" class="button" />
+    </div>
+
+
+                    <div class="clear"></div>
+                    <br />
+                    <br />
+                    <br />
+                </div>
+                </div>
+            </div>
+            <p></p>
+            <p class="invisible"></p>
+            <div id="cssBottomBar" class="cssNoPrint">
+                <div id="cssBottomBarLegal">                 
+                    <a id="ctl00_hplCustomFooterLink1" accesskey="V" title="Access Key: V" href="http://sutherlandshire.nsw.gov.au">Council Home</a>
+                    <img id="ctl00_imgFooterSeparator1" class="verticalBar" src="../../App_Themes/Sutherland/Images/VerticalBarBlack.gif" alt="" style="height:10px;width:1px;border-width:0px;" />
+                    <a id="ctl00_hplCustomFooterLink2" accesskey="T" title="Access Key: T" href="http://sutherlandshire.nsw.gov.au/Building_Development/Certificates/Applications_Payments_Conditions_of_Use">Terms of Use</a>
+                    <img id="ctl00_imgFooterSeparator2" class="verticalBar" src="../../App_Themes/Sutherland/Images/VerticalBarBlack.gif" alt="" style="height:10px;width:1px;border-width:0px;" />
+                    <a id="ctl00_hplCustomFooterLink3" accesskey="U" title="Access Key: U" href="http://sutherlandshire.nsw.gov.au/Council_The_Shire/Contacts_and_Opening_Hours">Contact Us</a>                       
+                    
+                </div>
+                <div id="cssBottomBarCopyright">&copy; Technology One Limited 2026</div>
+            </div>
+            
+        </div>
+    
+
+<script type="text/javascript">
+//<![CDATA[
+$(document).ready(function () {if ($('#ctl00_valErrors').is(':visible') == true) {$('#__SCROLLPOSITIONX').val('0');$('#__SCROLLPOSITIONY').val('0');}});//]]>
+</script>
+</form>
+</body>
+</html>

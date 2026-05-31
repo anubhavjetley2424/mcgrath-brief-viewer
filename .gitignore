@@ -13,3 +13,12 @@ web/dist/
 web/.env
 workflow-jsons/
 
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Editor / OS junk
+.DS_Store
+Thumbs.db
+

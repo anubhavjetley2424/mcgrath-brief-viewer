@@ -1,4 +1,5 @@
 """Dashboard Data Router — serves the unified MapDashboardData JSON for UI parity with n8n."""
+import os
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Any
@@ -9,6 +10,8 @@ from supabase import Client
 from ..database import get_supabase
 
 router = APIRouter(prefix="/api/dashboard-data", tags=["dashboard"])
+
+AIRTABLE_TOKEN = os.getenv("AIRTABLE_TOKEN")
 
 
 @router.get("")
@@ -31,12 +34,15 @@ async def get_dashboard_data(
     target_beds = beds
 
     if deal:
+        if not AIRTABLE_TOKEN:
+            raise HTTPException(
+                status_code=500,
+                detail="AIRTABLE_TOKEN env var is not set on the server."
+            )
         try:
             airtable_url = f"https://api.airtable.com/v0/appvTX5GSGGSRHV1c/Deals/{deal}"
-            part1 = "patU8m3uYhI5vGg5x"
-            part2 = "4c979df89965d836ea449d01b1b0451fcefe0f7a01691a329d270387b3225895"
             airtable_headers = {
-                "Authorization": f"Bearer {part1}.{part2}"
+                "Authorization": f"Bearer {AIRTABLE_TOKEN}"
             }
             async with httpx.AsyncClient(timeout=10.0) as client:
                 resp = await client.get(airtable_url, headers=airtable_headers)
