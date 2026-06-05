@@ -59,6 +59,31 @@ def _id_lga():
     return ["python", "scripts/id_scraper.py", "sutherland"]
 
 
+def _vg_weekly_latest():
+    """NSW Valuer General weekly delta — most recent published Sunday.
+
+    Idempotent: scraper upserts on (source, dealing_number) so re-running
+    against the same week harmlessly refreshes rows in place. Catches
+    everything ≥6-8 weeks old; PriceFinder ingestion will later fill the
+    recency gap.
+    """
+    return ["python", "scripts/vg_scraper.py", "weekly-latest"]
+
+
+def _vg_annual_backfill_3y():
+    """One-off: pull the last three annual bulks (today's year-3 ... year-1).
+
+    ~15 MB per year, ~40-50 MB transferred total. The scraper filters
+    Sutherland Shire only — DB load stays small. Run once after the table
+    is created in Supabase.
+    """
+    today_year = date.today().year
+    return [
+        "python", "scripts/vg_scraper.py",
+        "annual-backfill", str(today_year - 3), str(today_year - 1),
+    ]
+
+
 def _keepalive():
     """Tiny no-op that touches Supabase so the project never falls into
     7-day-inactivity pause. Belt-and-braces — the real scrapers should
@@ -76,13 +101,15 @@ def _keepalive():
 
 JOBS = {
     # Live, scheduled
-    "auction-current":   _auction_current,
-    "da-delta":          _da_delta,
-    "id-lga":            _id_lga,
-    "keepalive":         _keepalive,
+    "auction-current":        _auction_current,
+    "da-delta":               _da_delta,
+    "id-lga":                 _id_lga,
+    "vg-weekly-latest":       _vg_weekly_latest,
+    "keepalive":              _keepalive,
     # One-off, manual trigger
-    "auction-backfill":  _auction_backfill,
-    "da-backfill-180d":  _da_backfill_180d,
+    "auction-backfill":       _auction_backfill,
+    "da-backfill-180d":       _da_backfill_180d,
+    "vg-annual-backfill-3y":  _vg_annual_backfill_3y,
 }
 
 

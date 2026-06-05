@@ -76,12 +76,14 @@ gcloud secrets add-iam-policy-binding supabase-service-role-key \
 # 4. Create / update Cloud Run Jobs
 # ─────────────────────────────────────────────────────────────────────────────
 JOBS=(
-  "auction-current"     # weekly Sun 02:30 AEDT
-  "da-delta"            # fortnightly (1st & 15th) 03:00 AEDT
-  "id-lga"              # weekly Sun 04:00 AEDT
-  "keepalive"           # weekly Wed 06:00 AEDT — guarantees Supabase no-pause
-  "auction-backfill"    # one-off, manual trigger
-  "da-backfill-180d"    # one-off, manual trigger
+  "auction-current"        # weekly Sun 02:30 AEDT
+  "da-delta"               # fortnightly (1st & 15th) 03:00 AEDT
+  "id-lga"                 # weekly Sun 04:00 AEDT
+  "vg-weekly-latest"       # weekly Mon 05:00 AEDT (after VG publishes Sun)
+  "keepalive"              # weekly Wed 06:00 AEDT — Supabase no-pause guard
+  "auction-backfill"       # one-off, manual trigger
+  "da-backfill-180d"       # one-off, manual trigger
+  "vg-annual-backfill-3y"  # one-off, manual trigger
 )
 
 for J in "${JOBS[@]}"; do
@@ -136,12 +138,17 @@ create_cron "cron-da-delta"        "0 3 1,15 * *"   "da-delta"
 # Weekly Sunday 04:00 AEDT — LGA demographics refresh
 create_cron "cron-id-lga"          "0 4 * * 0"      "id-lga"
 
+# Weekly Monday 05:00 AEDT — VG bulk Property Sales Information delta
+# (VG publishes new weekly bulks on Sundays, so Monday morning catches it)
+create_cron "cron-vg-weekly"       "0 5 * * 1"      "vg-weekly-latest"
+
 # Weekly Wednesday 06:00 AEDT — Supabase keepalive (no-op SELECT)
 create_cron "cron-keepalive"       "0 6 * * 3"      "keepalive"
 
 # Backfills are NOT scheduled — trigger manually after first deploy:
-#   gcloud run jobs execute da-backfill-180d --region=australia-southeast1 --wait
-#   gcloud run jobs execute auction-backfill --region=australia-southeast1 --wait
+#   gcloud run jobs execute da-backfill-180d      --region=australia-southeast1 --wait
+#   gcloud run jobs execute auction-backfill      --region=australia-southeast1 --wait
+#   gcloud run jobs execute vg-annual-backfill-3y --region=australia-southeast1 --wait
 
 echo
 echo "✅ Deploy complete."

@@ -128,7 +128,10 @@ not hyphen). They write to Submissions table `tblOhSlZkzSIwSmvU`.
 
 ## 8. Outstanding (pre-handoff)
 
-- [x] GCP Cloud Run scraper scaffolded — see `scraper/`. Ships **3 live jobs** (auction-current, da-delta, id-lga) + keepalive + 2 manual backfills. Deploy with `bash scraper/deploy.sh` after running `gcloud auth login` and adding `supabase-service-role-key` to Secret Manager.
+- [x] GCP Cloud Run scraper scaffolded — see `scraper/`. Ships **4 live jobs** (auction-current, da-delta, id-lga, vg-weekly-latest) + keepalive + 3 manual backfills. Deploy with `bash scraper/deploy.sh` after running `gcloud auth login` and adding `supabase-service-role-key` to Secret Manager.
+- [ ] **Run the SQL migration** `supabase/migrations/002_vg_sales.sql` in the Supabase SQL editor before first VG scrape (creates `vg_sales` table + RLS policies). One-time.
+- [ ] After first deploy, run `gcloud run jobs execute vg-annual-backfill-3y --region=australia-southeast1 --wait` to pull the last 3 years of NSW VG sales for Sutherland Shire. ~3-5 min.
+- [ ] **VG licence note**: CC BY-NC-ND 4.0. Dashboard attribution credit added in footer. McGrath may want commercial licence; ask `valuergeneral@property.nsw.gov.au` pre-handoff.
 - [ ] **Domain sale + sold scraping is BLOCKED** by Akamai Bot Manager — `/sale/` and `/sold-listings/` paths only (`/auction-results/` still works via curl_cffi chrome124). Both curl_cffi impersonation and Playwright headless return 403 on those two paths. Unblocks when McGrath secures official Domain API access — ask `developer@domain.com.au` or whether McGrath corporate already has a data licence. Until then, dashboard's sales + active-listings cards stay blank.
 - [ ] **Supabase service-role key:** scrapers now read `SUPABASE_SERVICE_ROLE_KEY` from env (anon fallback for local read-only). Cloud Run jobs read it from Secret Manager. Add the secret version once before first deploy: `echo -n "<service-role JWT>" | gcloud secrets versions add supabase-service-role-key --data-file=-`.
 - [ ] **Upgrade Supabase to Pro ($25/mo) before McGrath handoff** — Free auto-pauses after 7 inactive days. The keepalive job mitigates but Pro removes the pause behaviour entirely + adds proper backups.

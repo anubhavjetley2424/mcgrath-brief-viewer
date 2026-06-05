@@ -11,9 +11,11 @@ Simon's laptop (manual runs).
 | Domain weekly auction clearance | `auction-current` | Sun 02:30 | ✅ working (curl_cffi chrome124) |
 | SSC DA portal — 14-day delta | `da-delta` | 1st & 15th 03:00 | ✅ working |
 | profile.id.com.au LGA demographics | `id-lga` | Sun 04:00 | ✅ working |
+| **NSW Valuer General sales — weekly delta** | `vg-weekly-latest` | **Mon 05:00** | ✅ working — 78 SSC rows from 25 May 2026 weekly |
 | Supabase keepalive ping | `keepalive` | Wed 06:00 | ✅ working — guards against 7-day inactivity pause |
 | SSC DA 180-day backfill | `da-backfill-180d` | one-off, manual | ✅ working |
 | Auction clearance 24-week backfill | `auction-backfill` | one-off, manual | ✅ working |
+| **VG annual 3-year backfill** | `vg-annual-backfill-3y` | one-off, manual | ✅ working |
 
 ## Not deployed (blocked)
 
@@ -53,6 +55,16 @@ bash scraper/deploy.sh
 
 That builds the image, creates 6 Cloud Run Jobs, and wires 4 Cloud Scheduler crons. Re-runnable.
 
+## Database schema — apply once before first scrape
+
+```bash
+# Apply the vg_sales migration via Supabase SQL editor or psql:
+cat supabase/migrations/002_vg_sales.sql | pbcopy
+# Paste into Supabase Dashboard → SQL Editor → Run
+```
+
+Idempotent — `create table if not exists` and `create policy` wrapped in `drop if exists` so re-runs are safe.
+
 ## First-deploy backfills
 
 After the schedule is live, run the one-off bootstraps:
@@ -63,9 +75,12 @@ gcloud run jobs execute da-backfill-180d \
 
 gcloud run jobs execute auction-backfill \
   --region=australia-southeast1 --wait
+
+gcloud run jobs execute vg-annual-backfill-3y \
+  --region=australia-southeast1 --wait
 ```
 
-Each takes 3–8 minutes.
+DA + auction backfills take 3–8 minutes each. VG annual backfill: ~3-5 min for 3 years of Sutherland Shire (filter is aggressive — annual ZIP is ~15 MB but only a few thousand SSC rows survive).
 
 ## Run a job locally (debugging)
 
