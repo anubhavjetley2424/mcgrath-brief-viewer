@@ -66,23 +66,24 @@ UPSERT_BATCH = 500
 INTER_BATCH_DELAY = 0.2
 
 # Primary filter: NSW VG district code 144 = Sutherland Shire LGA.
-# (Stronger than suburb-name matching because it survives any spelling drift
-# in the VG dataset — district codes are canonical.)
+# Files in the ZIP are named NNN_SALES_DATA_NNME_DDMMYYYY.DAT — we skip any
+# whose prefix isn't 144 before parsing a single line.
 SSC_DISTRICT_CODE = "144"
 
-# Defensive secondary filter — covers the rare case where a property in the
-# LGA is filed under a neighbouring district code due to boundary edge cases.
-# Lowercased for case-insensitive match.
-SSC_SUBURBS = {s.lower() for s in [
-    "Alfords Point", "Bangor", "Barden Ridge", "Bonnet Bay", "Bundeena", "Burraneer",
-    "Caringbah", "Caringbah South", "Como", "Cronulla", "Dolans Bay", "Engadine",
-    "Grays Point", "Greenhills Beach", "Gymea", "Gymea Bay", "Heathcote", "Illawong",
-    "Jannali", "Kangaroo Point", "Kareela", "Kirrawee", "Kurnell", "Lilli Pilli",
-    "Loftus", "Lucas Heights", "Maianbar", "Menai", "Miranda", "Oyster Bay",
-    "Port Hacking", "Sandy Point", "Sutherland", "Sylvania", "Sylvania Waters",
-    "Taren Point", "Waterfall", "Woolooware", "Woronora", "Woronora Heights",
-    "Yarrawarrah", "Yowie Bay",
-]}
+# Secondary (narrower) filter: only Simon's 8 farm suburbs.
+# Matches scripts/domain_scraper.py SIMON_FARM_SUBURBS — single source of
+# truth for "what's in Simon's working area". Suburb values from VG come
+# UPPERCASE; we compare against UPPERCASE.
+SIMON_FARM_SUBURBS = {
+    "CRONULLA",
+    "CARINGBAH",
+    "CARINGBAH SOUTH",
+    "GYMEA BAY",
+    "SYLVANIA WATERS",
+    "WOOLOOWARE",
+    "MIRANDA",
+    "JANNALI",
+}
 
 
 # ----------------------------------------------------------------------------
@@ -213,10 +214,11 @@ def parse_b_record(line: str, dat_filename: str, source_tag: str) -> dict | None
         return None
 
     district_code = (parts[1] or "").strip()
-    suburb = (parts[9] or "").strip()
-    # Belt-and-braces — file-name filter already restricted us to district 144,
-    # but a stray non-SSC suburb in the LGA file would be an upstream surprise.
-    if district_code != SSC_DISTRICT_CODE and suburb.lower() not in SSC_SUBURBS:
+    suburb_upper = (parts[9] or "").strip().upper()
+    # Two-stage filter: must be in district 144 AND in Simon's 8-suburb farm.
+    # The DAT-filename pre-filter already restricted us to district 144 files,
+    # so this suburb check is the narrowing step.
+    if suburb_upper not in SIMON_FARM_SUBURBS:
         return None
 
     contract_date = _to_date(parts[13])
@@ -239,10 +241,9 @@ def parse_b_record(line: str, dat_filename: str, source_tag: str) -> dict | None
         "house_number":    (parts[7] or "").strip() or None,
         # Street name kept as-is from VG (already uppercase like "ARMIDALE ST")
         "street_name":     (parts[8] or "").strip() or None,
-        # Suburb stored UPPERCASE to match the 1.8k existing rows already in
-        # the table — keeps "where suburb = 'CRONULLA'" working uniformly.
-        # Dashboard formats to title case at display time.
-        "suburb":          suburb.upper(),
+        # Suburb stored UPPERCASE matching the table's existing convention;
+        # dashboard formats to title case at display time.
+        "suburb":          suburb_upper,
         "postcode":        (parts[10] or "").strip() or None,
         "contract_date":   contract_date,
         "settlement_date": _to_date(parts[14]),
