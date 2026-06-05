@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Open SMS in Messages</title>
+  <!--
+    Bridge page for the McGrath Airtable workflow.
+
+    Airtable Interface buttons refuse to navigate to non-http(s) URLs
+    (sms:, mailto:, tel:, etc.), so they point here instead. This page
+    reads two query params (?to= and ?body=), builds the sms: URL,
+    and immediately navigates the browser to it. The OS hands off to
+    the native Messages app on iOS and Android.
+
+    Falls back to a copyable preview if the redirect doesn't fire
+    (desktop, or a browser without an sms: handler).
+  -->
+  <style>
+    :root {
+      --bg: #f7f7f6;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --text-secondary: #6b7280;
+      --accent: #111827;
+      --border: #e5e7eb;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      max-width: 480px;
+      width: 100%;
+      padding: 28px 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+    .sub {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-bottom: 22px;
+    }
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .field-value {
+      font-size: 14px;
+      padding: 10px 12px;
+      background: #f3f4f6;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      word-break: break-word;
+      white-space: pre-wrap;
+      margin-bottom: 16px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    button, a.btn {
+      flex: 1;
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    button:hover, a.btn:hover { background: #f3f4f6; }
+    a.btn.primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    a.btn.primary:hover { background: #000; }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--accent);
+      color: white;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s;
+    }
+    .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .footer-note {
+      margin-top: 18px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+    .footer-note code {
+      background: #eef2f7;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+    <h1 id="title">Opening Messages…</h1>
+    <p class="sub" id="subtitle">If your phone doesn't ask which app to use, just tap the button below.</p>
+
+    <div id="preview" style="display:none;">
+      <div class="field-label">To</div>
+      <div class="field-value" id="previewTo">—</div>
+
+      <div class="field-label">Message</div>
+      <div class="field-value" id="previewBody">—</div>
+    </div>
+
+    <div class="btn-row">
+      <a class="btn primary" id="smsLink" href="#">📱 Open Messages</a>
+      <button id="copyBody">📋 Copy</button>
+    </div>
+
+    <div class="footer-note">
+      Bridge page · McGrath workflow ·
+      <span id="diagPlatform"></span>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied to clipboard</div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      function readParams() {
+        const url = new URL(window.location.href);
+        // Accept both "to" and "phone" / "number" for flexibility
+        const to =
+          url.searchParams.get("to") ||
+          url.searchParams.get("phone") ||
+          url.searchParams.get("number") ||
+          "";
+        const body = url.searchParams.get("body") || "";
+        return { to: to.trim(), body };
+      }
+
+      function buildSmsUrl(to, body) {
+        // Both iOS and modern Android accept: sms:<number>?body=<encoded>
+        // We re-encode the body to be safe even if the caller didn't.
+        // The number can contain "+" — that's fine in the sms: URI scheme.
+        const encodedBody = encodeURIComponent(body);
+        return `sms:${to}?body=${encodedBody}`;
+      }
+
+      function showToast(text) {
+        const t = document.getElementById("toast");
+        t.textContent = text;
+        t.classList.add("visible");
+        setTimeout(() => t.classList.remove("visible"), 1800);
+      }
+
+      function platformLabel() {
+        const ua = navigator.userAgent || "";
+        if (/iPhone|iPad|iPod/i.test(ua)) return "iOS";
+        if (/Android/i.test(ua)) return "Android";
+        return "Desktop";
+      }
+
+      const { to, body } = readParams();
+
+      // Always update the preview so Simon can read and copy if needed
+      document.getElementById("previewTo").textContent = to || "(missing)";
+      document.getElementById("previewBody").textContent = body || "(missing)";
+      document.getElementById("preview").style.display = "block";
+      document.getElementById("diagPlatform").textContent = platformLabel();
+
+      if (!to) {
+        document.getElementById("title").textContent = "Missing recipient";
+        document.getElementById("subtitle").textContent =
+          "This bridge page expected a ?to= parameter with the vendor's phone number.";
+        document.getElementById("smsLink").style.opacity = "0.5";
+        document.getElementById("smsLink").removeAttribute("href");
+      } else {
+        const smsUrl = buildSmsUrl(to, body);
+        document.getElementById("smsLink").href = smsUrl;
+
+        // Auto-trigger the handoff on the next tick so the visible
+        // fallback button still renders if the OS pops a chooser
+        setTimeout(() => {
+          try {
+            window.location.href = smsUrl;
+          } catch (_) {
+            /* Desktop without an sms handler — leave the UI for manual tap */
+          }
+        }, 50);
+      }
+
+      document.getElementById("copyBody").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(body);
+          showToast("Message copied — paste into Messages");
+        } catch (_) {
+          // Older browsers
+          const ta = document.createElement("textarea");
+          ta.value = body;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+          showToast("Message copied");
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
