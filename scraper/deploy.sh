@@ -47,15 +47,9 @@ gcloud artifacts repositories create "${REPO}" \
 # ─────────────────────────────────────────────────────────────────────────────
 echo "▶ Building image with Cloud Build → ${IMAGE}"
 gcloud builds submit \
-  --config=- \
+  --config=scraper/cloudbuild.yaml \
   --substitutions=_IMAGE="${IMAGE}" \
-  . <<'YAML'
-steps:
-  - name: gcr.io/cloud-builders/docker
-    args: ['build', '-t', '${_IMAGE}', '-f', 'scraper/Dockerfile', '.']
-images:
-  - '${_IMAGE}'
-YAML
+  .
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. Secret Manager — Supabase service-role key

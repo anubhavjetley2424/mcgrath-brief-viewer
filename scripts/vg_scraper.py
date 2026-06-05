@@ -102,20 +102,33 @@ def download_zip(url: str) -> bytes:
 def iter_dat_lines(zip_bytes: bytes):
     """Yield (dat_filename, line) for every .DAT line in a VG ZIP.
 
-    Skips any non-Sutherland district file by filename — VG names files
-    `NNN_SALES_DATA_NNME_DDMMYYYY.DAT` where NNN is the district code, so
-    we can short-circuit before parsing for the ~250 non-SSC districts.
+    Handles two layouts:
+      - Weekly ZIP  → directly contains .DAT files (one per district)
+      - Annual ZIP  → contains 52 nested weekly .zip files (one per Monday)
+
+    Either way we want to short-circuit non-Sutherland files. VG names
+    files `NNN_SALES_DATA_NNME_DDMMYYYY.DAT` where NNN is the district
+    code, so for direct .DAT entries we filter by filename prefix and
+    avoid parsing the ~250 non-SSC districts.
     """
-    zf = zipfile.ZipFile(io.BytesIO(zip_bytes))
-    for info in zf.infolist():
+    outer = zipfile.ZipFile(io.BytesIO(zip_bytes))
+    for info in outer.infolist():
         upper = info.filename.upper()
+
+        # Nested weekly ZIP inside an annual bundle — recurse into it.
+        if upper.endswith(".ZIP"):
+            inner_bytes = outer.read(info.filename)
+            for dat_filename, line in iter_dat_lines(inner_bytes):
+                yield dat_filename, line
+            continue
+
         if not upper.endswith(".DAT"):
             continue
         # Filename starts with the 3-digit district code
         if not upper.startswith(f"{SSC_DISTRICT_CODE}_"):
             continue
         # Latin-1 to be safe — VG files occasionally contain non-ASCII bytes
-        text = zf.read(info.filename).decode("latin-1", errors="replace")
+        text = outer.read(info.filename).decode("latin-1", errors="replace")
         for line in text.split("\n"):
             line = line.rstrip("\r")
             if line:
