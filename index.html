@@ -193,6 +193,38 @@ body {
   transition: box-shadow 0.2s;
 }
 .kpi-card:hover { box-shadow: var(--shadow); }
+
+/* ── PENDING DATA STATE ──────────────────────────────────────
+   Used for sections that depend on Domain /sale/ + /sold-listings/,
+   which Akamai Bot Manager now blocks. Unblocks when McGrath
+   secures official Domain API access. Greyed-out, non-interactive,
+   labelled so Simon understands these aren't missing — they're
+   pending a data licence, not a bug.                          */
+.data-pending {
+  position: relative;
+  opacity: 0.42;
+  filter: grayscale(0.7);
+  pointer-events: none;
+  user-select: none;
+}
+.data-pending::after {
+  content: "Domain API pending";
+  position: absolute;
+  top: 8px; right: 8px;
+  background: #1f2937;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  opacity: 1;
+  filter: grayscale(0);
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
 .kpi-label {
   font-size: 11px; font-weight: 600;
   text-transform: uppercase; letter-spacing: 0.06em;
@@ -733,12 +765,12 @@ body {
       <div class="kpi-value" id="kpiSalesCount">—</div>
       <div class="kpi-change" id="kpiSalesSub">—</div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card data-pending" title="Requires Domain active-listings feed">
       <div class="kpi-label">Active Listings</div>
       <div class="kpi-value" id="kpiActive">—</div>
       <div class="kpi-change" id="kpiActiveSub">Current competition</div>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card data-pending" title="Requires Domain listing-duration data">
       <div class="kpi-label">Avg Days on Market</div>
       <div class="kpi-value" id="kpiDOM">—</div>
       <div class="kpi-change" id="kpiDOMSub">—</div>
@@ -785,7 +817,7 @@ body {
   </div>
 
   <!-- ── PROPERTY INDEX ───────────────────────────────── -->
-  <div class="section">
+  <div class="section data-pending" title="Property Index ranks vs. active listings — pending Domain feed">
     <div class="section-title">
       Property Index
       <span class="label">Percentile vs. suburb cohort</span>
@@ -887,11 +919,11 @@ body {
 
         <div class="chart-wrap"><canvas id="demandVolumeChart"></canvas></div>
       </div>
-      <div class="chart-card">
+      <div class="chart-card data-pending" title="Historical DOM requires Domain listing-duration data">
         <h4 id="historicalDomChartTitle">Historical Days on Market (DOM) for Similar Properties</h4>
         <div class="chart-wrap"><canvas id="historicalDomChart"></canvas></div>
       </div>
-      <div class="chart-card">
+      <div class="chart-card data-pending" title="Buyer engagement requires Domain enquiry-volume data">
         <h4 id="buyerEngagementChartTitle">Active Buyer Engagement Metrics</h4>
         <div class="chart-wrap"><canvas id="buyerEngagementChart"></canvas></div>
       </div>
@@ -1074,7 +1106,9 @@ body {
   </div>
 
   <!-- ── FAILED / WITHDRAWN LISTINGS ──────────────────── -->
-  <div class="section" id="failedListingsSection" style="display:none;">
+  <!-- Was hidden via display:none when empty; now always shown but
+       greyed because the underlying Domain feed is the blocker.    -->
+  <div class="section data-pending" id="failedListingsSection" title="Withdrawn listings come from Domain — pending API access">
     <div class="section-title">
       Withdrawn Listings
       <span class="label">Price ceiling evidence · Domain</span>
@@ -1788,6 +1822,15 @@ function renderWithdrawnListings(d) {
   const section = document.getElementById('failedListingsSection');
   const tbody = document.getElementById('withdrawnTbody');
   if (!section || !tbody) return;
+
+  // When the section is greyed out via .data-pending (Domain feed offline),
+  // skip the empty-data hide. Stub a single placeholder row so the structure
+  // is visible behind the "Domain API pending" badge.
+  if (section.classList.contains('data-pending')) {
+    section.style.display = '';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:18px; color:var(--text-tertiary); font-style:italic;">Waiting for Domain feed</td></tr>';
+    return;
+  }
 
   const subjSuburb = (getSubjectSuburb(d) || '').toLowerCase();
   const items = (d.active_listings || []).filter(l => {
