@@ -15,6 +15,7 @@ Usage:
 
 import html
 import json
+import os
 import re
 import sys
 import time
@@ -24,11 +25,14 @@ import urllib.request
 ID_BASE = "https://profile.id.com.au"
 
 SUPABASE_URL = "https://xzazkrudrgkcfcznkehb.supabase.co"
-SUPABASE_ANON_KEY = (
+# Public anon key — RLS blocks writes, so production uses the service-role
+# key from env. Anon stays as a read-only fallback for local smoke tests.
+_SUPABASE_ANON_KEY = (
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6"
     "Inh6YXprcnVkcmdrY2Zjem5rZWhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NTg0Nz"
     "ksImV4cCI6MjA5NDIzNDQ3OX0.VN3bJoTI2nXJ4QJh-aBQaIWCPVMQJ7_PdICaetmxawo"
 )
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", _SUPABASE_ANON_KEY)
 UPSERT_URL = (
     f"{SUPABASE_URL}/rest/v1/id_metric_rows"
     "?on_conflict=lga,source_page,table_index,row_label,column_label"

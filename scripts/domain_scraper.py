@@ -15,6 +15,7 @@ Usage:
 
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -26,11 +27,15 @@ from datetime import date
 DOMAIN_BASE = "https://www.domain.com.au"
 
 SUPABASE_URL = "https://xzazkrudrgkcfcznkehb.supabase.co"
-SUPABASE_ANON_KEY = (
+# Public anon key — RLS blocks writes to the scraper tables, so the runtime
+# uses the service-role key from env. The anon key stays here only as a
+# read-only fallback for local smoke tests.
+_SUPABASE_ANON_KEY = (
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6"
     "Inh6YXprcnVkcmdrY2Zjem5rZWhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NTg0Nz"
     "ksImV4cCI6MjA5NDIzNDQ3OX0.VN3bJoTI2nXJ4QJh-aBQaIWCPVMQJ7_PdICaetmxawo"
 )
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", _SUPABASE_ANON_KEY)
 
 HTTP_TIMEOUT = 60
 PAGE_DELAY_SEC = 1.5
@@ -338,12 +343,69 @@ def scrape_sale(suburb: str, postcode: str, max_pages: int | None = None) -> dic
 
 
 # ----------------------------------------------------------------------------
+# Mode: sold (full sold-listings history, paginated)
+# ----------------------------------------------------------------------------
+
+def scrape_sold(suburb: str, postcode: str, max_pages: int | None = None) -> dict:
+    """
+    Scrape /sold-listings/<suburb>-nsw-<postcode>/ — Domain's full sold-history page.
+
+    Sale mode already grabs a "UPVSoldListings" bonus of ~10 recent solds for free,
+    but this dedicated endpoint paginates the full multi-year history.
+    Upserts on domain_listing_id so daily re-runs only add NEW solds; older ones
+    that are already in Supabase get harmlessly updated in place.
+    """
+    source_search = f"sold:{suburb}-{postcode}"
+    base = f"{DOMAIN_BASE}/sold-listings/{suburb}-nsw-{postcode}/"
+    total = {"sold": 0, "pages": 0, "total_results": None}
+
+    page = 1
+    while True:
+        url = base if page == 1 else f"{base}?page={page}"
+        html_text = fetch_html(url)
+        nd = extract_next_data(html_text)
+        if not nd:
+            print(f"  page {page}: no NEXT_DATA, stopping", flush=True)
+            break
+        cp = nd.get("props", {}).get("pageProps", {}).get("componentProps", {})
+
+        if page == 1:
+            total["total_results"] = total_results_from_title(html_text)
+
+        # Sold listings on /sold-listings/ live in listingsMap, same shape
+        lm = cp.get("listingsMap") or {}
+        sold_rows = []
+        for item in lm.values():
+            r = map_sold_listing(item, source_search)
+            if r:
+                sold_rows.append(r)
+
+        ok, msg = upsert("domain_listings_sold", sold_rows, "domain_listing_id")
+        print(f"  page {page} sold: {len(sold_rows)} rows  {msg}", flush=True)
+        if ok:
+            total["sold"] += len(sold_rows)
+        total["pages"] = page
+
+        # Stop when a page returns no rows (end of pagination)
+        if not sold_rows:
+            break
+        if max_pages and page >= max_pages:
+            break
+        if total["total_results"] and total["sold"] >= total["total_results"]:
+            break
+        page += 1
+        time.sleep(PAGE_DELAY_SEC)
+
+    return total
+
+
+# ----------------------------------------------------------------------------
 # CLI
 # ----------------------------------------------------------------------------
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("mode", choices=("sale", "sold", "rent", "farm"))
+    p.add_argument("mode", choices=("sale", "sold", "rent", "farm", "sold-farm"))
     p.add_argument("suburb", nargs="?", help="suburb slug e.g. cronulla")
     p.add_argument("postcode", nargs="?", help="postcode e.g. 2230")
     p.add_argument("--max-pages", type=int, default=None)
@@ -353,6 +415,13 @@ def main():
         if not args.suburb or not args.postcode:
             p.error("sale mode requires suburb and postcode")
         r = scrape_sale(args.suburb, args.postcode, args.max_pages)
+        print(json.dumps(r, indent=2))
+        sys.exit(0)
+
+    if args.mode == "sold":
+        if not args.suburb or not args.postcode:
+            p.error("sold mode requires suburb and postcode")
+        r = scrape_sold(args.suburb, args.postcode, args.max_pages)
         print(json.dumps(r, indent=2))
         sys.exit(0)
 
@@ -373,8 +442,27 @@ def main():
         }, indent=2))
         sys.exit(0)
 
-    if args.mode in ("sold", "rent"):
-        print(f"NOT YET IMPLEMENTED: {args.mode} (V1 ships sale mode only)")
+    if args.mode == "sold-farm":
+        # All 8 Simon farm suburbs, full sold-history scrape.
+        # Daily cron is idempotent (upsert on domain_listing_id) so re-runs
+        # just keep the table fresh without duplicating.
+        results = []
+        for sb, pc in SIMON_FARM_SUBURBS:
+            print(f"=== {sb} {pc} (sold) ===", flush=True)
+            r = scrape_sold(sb, pc, args.max_pages)
+            r["suburb"] = sb
+            results.append(r)
+            time.sleep(2.0)
+        print("---")
+        print(json.dumps({
+            "total_sold": sum(r["sold"] for r in results),
+            "total_pages": sum(r["pages"] for r in results),
+            "per_suburb": results,
+        }, indent=2))
+        sys.exit(0)
+
+    if args.mode == "rent":
+        print(f"NOT YET IMPLEMENTED: {args.mode} (sale, sold, farm, sold-farm only)")
         sys.exit(2)
 
 

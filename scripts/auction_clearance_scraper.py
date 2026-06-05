@@ -15,6 +15,7 @@ Usage:
 
 import gzip
 import json
+import os
 import re
 import sys
 import time
@@ -22,16 +23,34 @@ import urllib.error
 import urllib.request
 from statistics import median as stats_median
 
+# Defensive: some Windows machines have a stale CURL_CA_BUNDLE env var pointing
+# at a Postgres install path that no longer exists. curl (via curl_cffi) honours
+# it and fails to load certs. The container won't have these set, but local
+# runs need them stripped before any curl_cffi call happens.
+for _e in ("CURL_CA_BUNDLE", "REQUESTS_CA_BUNDLE", "SSL_CERT_FILE"):
+    os.environ.pop(_e, None)
+
+# Domain's /auction-results/ endpoint isn't behind Akamai's tight ruleset,
+# but plain urllib started hitting 403 along with the rest of the site.
+# curl_cffi with chrome124 impersonation passes whatever fingerprint check
+# they added — same trick that didn't work for /sale/ and /sold-listings/.
+from curl_cffi import requests as cc_requests  # type: ignore
+
 DOMAIN_BASE = "https://www.domain.com.au"
 
 SUPABASE_URL = "https://xzazkrudrgkcfcznkehb.supabase.co"
-SUPABASE_ANON_KEY = (
+# Public anon key — RLS blocks writes, so production uses the service-role
+# key from env. Anon stays as a read-only fallback for local smoke tests.
+_SUPABASE_ANON_KEY = (
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6"
     "Inh6YXprcnVkcmdrY2Zjem5rZWhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NTg0Nz"
     "ksImV4cCI6MjA5NDIzNDQ3OX0.VN3bJoTI2nXJ4QJh-aBQaIWCPVMQJ7_PdICaetmxawo"
 )
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", _SUPABASE_ANON_KEY)
 UPSERT_URL = f"{SUPABASE_URL}/rest/v1/auction_clearance?on_conflict=auction_week,region"
 
+# Headers retained for the urllib path (Supabase REST) — Domain fetch now
+# goes through curl_cffi and uses its impersonation profile instead.
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0",
     "Accept": "text/html,application/xhtml+xml",
@@ -67,12 +86,13 @@ NEXT_DATA_RE = re.compile(
 
 
 def fetch_html(url: str) -> str:
-    req = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as resp:
-        raw = resp.read()
-        if resp.headers.get("Content-Encoding") == "gzip":
-            raw = gzip.decompress(raw)
-        return raw.decode("utf-8", errors="replace")
+    # curl_cffi impersonation passes Domain's TLS-fingerprint check.
+    # No cookie warm-up needed for /auction-results/ specifically — that path
+    # isn't behind the JS challenge that gates /sale/ and /sold-listings/.
+    r = cc_requests.get(url, impersonate="chrome124", timeout=HTTP_TIMEOUT)
+    if r.status_code != 200:
+        raise RuntimeError(f"GET {url} -> {r.status_code} (len={len(r.text)})")
+    return r.text
 
 
 def parse_next_data(html_text: str) -> dict:

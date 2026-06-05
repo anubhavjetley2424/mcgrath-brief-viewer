@@ -1,0 +1,3 @@
+# curl_cffi: impersonates Chrome's TLS fingerprint so Domain's auction-results
+# endpoint returns the real page instead of a 403. ~5 MB. No Chromium needed.
+curl_cffi>=0.6.0

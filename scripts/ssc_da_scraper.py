@@ -16,6 +16,7 @@ Usage:
 import calendar
 import html
 import json
+import os
 import re
 import sys
 import time
@@ -33,11 +34,14 @@ QS = "?Group=DA&ResultsFunction=SSC.P1.ETR.RESULT.DA&r=SSC.P1.WEBGUEST&f=SSC.P1.
 START_URL = BASE + QS
 
 SUPABASE_URL = "https://xzazkrudrgkcfcznkehb.supabase.co"
-SUPABASE_ANON_KEY = (
+# Public anon key — RLS blocks writes, so production uses the service-role
+# key from env. Anon stays as a read-only fallback for local smoke tests.
+_SUPABASE_ANON_KEY = (
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6"
     "Inh6YXprcnVkcmdrY2Zjem5rZWhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NTg0Nz"
     "ksImV4cCI6MjA5NDIzNDQ3OX0.VN3bJoTI2nXJ4QJh-aBQaIWCPVMQJ7_PdICaetmxawo"
 )
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", _SUPABASE_ANON_KEY)
 UPSERT_URL = f"{SUPABASE_URL}/rest/v1/da_applications?on_conflict=da_id"
 
 HTTP_TIMEOUT = 60
