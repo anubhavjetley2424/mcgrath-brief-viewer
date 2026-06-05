@@ -110,7 +110,20 @@ body {
 /* ── VENDOR HEADER ──────────────────────────────────────── */
 .vendor-header {
   padding: 28px 0 8px;
+  transition: opacity 0.2s ease;
 }
+.vendor-header[data-loading="true"] {
+  opacity: 0.45;
+}
+.vendor-header[data-loading="true"] h2::after {
+  content: ""; display: inline-block; width: 14px; height: 14px;
+  margin-left: 10px; vertical-align: middle;
+  border: 2px solid rgba(0,0,0,0.12);
+  border-top-color: rgba(0,0,0,0.55);
+  border-radius: 50%; animation: vhSpin 0.8s linear infinite;
+}
+.vendor-header[data-loading="error"] h2 { color: var(--accent-red, #c0392b); }
+@keyframes vhSpin { to { transform: rotate(360deg); } }
 .vendor-header h2 {
   font-family: var(--font-display);
   font-size: 26px; font-weight: 700;
@@ -691,11 +704,11 @@ body {
 <div class="app">
 
   <!-- ── VENDOR HEADER ────────────────────────────────── -->
-  <div class="vendor-header">
-    <h2 id="vendorAddress">45 Burraneer Bay Road, Burraneer</h2>
+  <div class="vendor-header" id="vendorHeader" data-loading="true">
+    <h2 id="vendorAddress">Loading property…</h2>
     <div class="vh-meta">
-      <span id="vendorMeta">4 Bed · 3 Bath · 2 Car · 860 sqm</span>
-      <span class="vh-deal" id="vendorDeal">Appraisal Prep</span>
+      <span id="vendorMeta">—</span>
+      <span class="vh-deal" id="vendorDeal">—</span>
     </div>
   </div>
 
@@ -1606,14 +1619,26 @@ function renderAll() {
 
 // ── VENDOR HEADER ───────────────────────────────────────────
 function renderVendor(d) {
-  if (d.subject) {
-    document.getElementById('vendorAddress').textContent = d.subject.address || '45 Burraneer Bay Road, Burraneer';
-    const beds = d.subject.beds || 4;
-    const baths = d.subject.baths || 3;
-    document.getElementById('vendorMeta').textContent = `${beds} Bed · ${baths} Bath · 2 Car · 860 sqm`;
+  const header = document.getElementById('vendorHeader');
+  if (d && d.subject && d.subject.address) {
+    document.getElementById('vendorAddress').textContent = d.subject.address;
+    const parts = [];
+    if (d.subject.beds)  parts.push(`${d.subject.beds} Bed`);
+    if (d.subject.baths) parts.push(`${d.subject.baths} Bath`);
+    if (d.subject.cars)  parts.push(`${d.subject.cars} Car`);
+    if (d.subject.land_size) parts.push(`${d.subject.land_size} sqm`);
+    document.getElementById('vendorMeta').textContent = parts.length ? parts.join(' · ') : '—';
+    document.getElementById('vendorDeal').textContent = d.subject.stage || d.subject.deal_stage || '—';
+    if (header) header.removeAttribute('data-loading');
+  } else {
+    // No subject data — surface it clearly instead of silently showing a wrong address
+    document.getElementById('vendorAddress').textContent = 'Property data unavailable';
+    document.getElementById('vendorMeta').textContent = 'Refresh the page or check the dashboard link';
+    document.getElementById('vendorDeal').textContent = '—';
+    if (header) header.setAttribute('data-loading', 'error');
   }
   document.getElementById('suburbChip').textContent =
-    d.subject?.address?.match(/,\s*(\w+)/)?.[1] || 'Cronulla';
+    d?.subject?.address?.match(/,\s*(\w+)/)?.[1] || '—';
 }
 
 // ── KPIs ────────────────────────────────────────────────────
