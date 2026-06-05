@@ -1219,6 +1219,14 @@ body {
 
   <div class="footer">
     McGrath Appraisal Intelligence Console · Airtable · ABS · Mapbox · n8n
+    <div style="margin-top: 6px; font-size: 11px; color: var(--text-tertiary);">
+      Sales data: <strong>NSW Valuer General</strong>
+      (CC BY-NC-ND 4.0, ~6-week lag) ·
+      Auction results: Domain ·
+      Demographics: profile.id.com.au ·
+      DA register: Sutherland Shire Council
+      <span id="vgFreshness" style="margin-left: 8px;"></span>
+    </div>
   </div>
 </div>
 
@@ -1252,7 +1260,18 @@ const CONFIG = {
   defaultSuburb: 'CRONULLA',
   center: [151.1522, -34.0574],
   absSuburbUrl: 'https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/SAL/MapServer/0/query',
-  absSA1Url: 'https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/SA1/MapServer/0/query'
+  absSA1Url: 'https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/SA1/MapServer/0/query',
+
+  // ── Supabase REST endpoint for vg_sales ────────────────────────────
+  // The anon key is public-safe: RLS policy on vg_sales grants SELECT
+  // only to the anon role. Writes are service-role only (Cloud Run).
+  // When PriceFinder ingestion lands in phase 2 it will write rows
+  // with source = 'pricefinder' into the same table — the dashboard
+  // already prefers per-property newest source via the merge below.
+  supabaseUrl: 'https://xzazkrudrgkcfcznkehb.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh6YXprcnVkcmdrY2Zjem5rZWhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NTg0NzksImV4cCI6MjA5NDIzNDQ3OX0.VN3bJoTI2nXJ4QJh-aBQaIWCPVMQJ7_PdICaetmxawo',
+  vgSalesLookbackYears: 3,
+  vgSalesLimit: 5000,
 };
 
 // Warn if token is missing
@@ -1527,6 +1546,166 @@ function ensureWithdrawnListings(d) {
   setTimeout(() => { bar.style.width = '0%'; }, 400);
   ensureWithdrawnListings(STATE.data);
   renderAll();
+
+  // Augment with NSW Valuer General sales for the subject's suburb.
+  // Runs after the first render so the dashboard is usable immediately;
+  // the second render swaps in real comp data when VG responds (~1s).
+  augmentWithVgSales().catch(err =>
+    console.warn('[VG] augmentation failed:', err && err.message));
+}
+
+
+// ── SUPABASE / VG SALES INTEGRATION ─────────────────────────────────
+// Hits the public PostgREST endpoint on the vg_sales table with the
+// anon key. Returns rows from NSW Valuer General PSI (loaded weekly
+// by the Cloud Run scraper). When PriceFinder ingestion is wired up
+// in phase 2 it will write into the same table with source = 'pricefinder'
+// and the merge below prefers the freshest row per property — no
+// dashboard change needed at that point.
+
+async function fetchVgSales({ suburb, fromDate, toDate, limit }) {
+  const u = new URL(`${CONFIG.supabaseUrl}/rest/v1/vg_sales`);
+  u.searchParams.set(
+    'select',
+    'suburb,contract_date,settlement_date,purchase_price,land_area_sqm,' +
+    'area_type,property_type,zone_code,district_code,unit_number,' +
+    'house_number,street_name,postcode,latitude,longitude,sale_counter,' +
+    'source_file,loaded_at'
+  );
+  if (suburb)   u.searchParams.set('suburb', `eq.${suburb}`);
+  if (fromDate) u.searchParams.set('contract_date', `gte.${fromDate}`);
+  if (toDate)   u.searchParams.append('contract_date', `lte.${toDate}`);
+  u.searchParams.set('order', 'contract_date.desc');
+  u.searchParams.set('limit', String(limit || CONFIG.vgSalesLimit));
+
+  const r = await fetch(u.toString(), {
+    headers: {
+      apikey: CONFIG.supabaseAnonKey,
+      Authorization: `Bearer ${CONFIG.supabaseAnonKey}`,
+    },
+  });
+  if (!r.ok) throw new Error(`Supabase ${r.status}: ${(await r.text()).slice(0,200)}`);
+  return r.json();
+}
+
+// VG → existing sales-object shape. Keeps the dashboard's filters,
+// charts, and similar-property logic working without any rewrites:
+// they read sold_date, purchase_price, land_size_sqm, property_type
+// — all of which we can map cleanly. beds/baths/parking are LEFT
+// UNDEFINED so the similar filter skips those checks (it only enforces
+// them when a value is present). PriceFinder will populate them later.
+function vgRowToSaleShape(row) {
+  const addrBits = [row.unit_number, row.house_number, row.street_name]
+    .filter(Boolean).join(' ');
+  const full = `${addrBits || ''}${addrBits ? ', ' : ''}${(row.suburb || '').toString()}${row.postcode ? ' NSW ' + row.postcode : ''}`;
+  return {
+    // identity / display
+    full_address:   full,
+    address:        full,
+    street:         addrBits || null,
+    suburb:         row.suburb || null,
+    postcode:       row.postcode || null,
+    // sale facts
+    sold_date:      row.contract_date,
+    settlement_date: row.settlement_date,
+    purchase_price: Number(row.purchase_price) || 0,
+    price:          Number(row.purchase_price) || 0,
+    // property facts
+    land_area_sqm:  row.land_area_sqm ? Number(row.land_area_sqm) : null,
+    land_size_sqm:  row.land_area_sqm ? Number(row.land_area_sqm) : null,
+    property_type:  row.property_type || null,
+    zone_code:      row.zone_code || null,
+    // geo (currently null on VG; PriceFinder will populate)
+    latitude:       row.latitude  != null ? Number(row.latitude)  : null,
+    longitude:      row.longitude != null ? Number(row.longitude) : null,
+    // provenance — surfaced in the Source column when rendered
+    data_source:    row.source_file && row.source_file.startsWith('pricefinder') ? 'PriceFinder' : 'NSW VG',
+    _source_file:   row.source_file,
+  };
+}
+
+async function augmentWithVgSales() {
+  const d = STATE.data;
+  if (!d) return;
+  const subj = d.subject || {};
+  const subjSuburb = (getSubjectSuburb(d) || CONFIG.defaultSuburb).toUpperCase();
+  if (!subjSuburb) return;
+
+  const fromDate = (() => {
+    const dt = new Date();
+    dt.setFullYear(dt.getFullYear() - CONFIG.vgSalesLookbackYears);
+    return dt.toISOString().slice(0, 10);
+  })();
+
+  let rows;
+  try {
+    rows = await fetchVgSales({ suburb: subjSuburb, fromDate });
+  } catch (err) {
+    console.warn(`[VG] no rows for ${subjSuburb}:`, err.message);
+    return;
+  }
+  console.log(`[VG] ${rows.length} sales for ${subjSuburb}, last ${CONFIG.vgSalesLookbackYears}y`);
+
+  const vgSales = rows.map(vgRowToSaleShape);
+
+  // For the subject's suburb we replace any prior sales-array entries
+  // entirely (VG is canonical). For other suburbs we keep whatever the
+  // webhook returned — useful when PriceFinder data lands later for
+  // out-of-farm comps without re-hitting Supabase.
+  const otherSuburbSales = (d.sales || []).filter(
+    s => (s.suburb || '').toString().toUpperCase() !== subjSuburb
+  );
+  d.sales = otherSuburbSales.concat(vgSales);
+  d._vg_loaded_count = vgSales.length;
+  d._vg_subject_suburb = subjSuburb;
+
+  // Freshness indicator in the footer — tells Simon at a glance how
+  // far back the data goes and how recent the most recent sale is.
+  const latest = vgSales.reduce(
+    (acc, s) => (s.sold_date && s.sold_date > acc ? s.sold_date : acc),
+    ''
+  );
+  const fresh = document.getElementById('vgFreshness');
+  if (fresh) {
+    const subjPretty = subjSuburb.replace(/\b(\w)(\w*)/g, (_, h, t) => h + t.toLowerCase());
+    fresh.textContent = `· ${vgSales.length} sales in ${subjPretty} ${latest ? `(latest ${latest})` : ''}`;
+  }
+
+  // 12-month growth: median price now vs 12-24 months ago (same suburb).
+  // Computed once so renderKPIs can read it from d.kpis.
+  d.kpis = d.kpis || {};
+  d.kpis.median = vgMedian(vgSales.filter(s => isWithinDays(s.sold_date, 365)));
+  d.kpis.growth_12mo_pct = vgGrowthPct(vgSales);
+
+  renderAll();
+}
+
+function isWithinDays(dateStr, days) {
+  if (!dateStr) return false;
+  const t = new Date(dateStr).getTime();
+  if (!t) return false;
+  return (Date.now() - t) / 86400000 <= days;
+}
+
+function vgMedian(sales) {
+  const prices = sales.map(s => Number(s.purchase_price)).filter(Boolean).sort((a,b) => a-b);
+  if (!prices.length) return null;
+  const mid = Math.floor(prices.length / 2);
+  return prices.length % 2 ? prices[mid] : Math.round((prices[mid-1] + prices[mid]) / 2);
+}
+
+function vgGrowthPct(allSales) {
+  const recent = allSales.filter(s => isWithinDays(s.sold_date, 365));
+  const prior  = allSales.filter(s => {
+    const t = new Date(s.sold_date).getTime();
+    if (!t) return false;
+    const ageDays = (Date.now() - t) / 86400000;
+    return ageDays > 365 && ageDays <= 730;
+  });
+  const mNow   = vgMedian(recent);
+  const mPrior = vgMedian(prior);
+  if (!mNow || !mPrior) return null;
+  return Math.round(((mNow - mPrior) / mPrior) * 1000) / 10;
 }
 
 const getSubjectSuburb = (d) => {
