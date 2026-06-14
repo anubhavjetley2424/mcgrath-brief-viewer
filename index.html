@@ -2671,7 +2671,19 @@ function renderAccessSection(d) {
     zoom: 13, accessToken: CONFIG.mapboxToken
   });
   accessMap.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-  accessMap.on('load', () => refreshAccessLayer());
+  accessMap.on('load', () => {
+    // Distinct property pin so Simon can see the home relative to each amenity.
+    const s = d.subject || {};
+    const lng = s.longitude || CONFIG.center[0];
+    const lat = s.latitude || CONFIG.center[1];
+    const el = document.createElement('div');
+    el.style.cssText = 'width:20px;height:20px;border-radius:50% 50% 50% 0;background:#111;border:3px solid #fff;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,0.45);cursor:pointer;';
+    new mapboxgl.Marker({ element: el })
+      .setLngLat([lng, lat])
+      .setPopup(new mapboxgl.Popup({ offset: 16 }).setHTML(`<strong style="font-family:Inter;font-size:13px;">${s.address || 'Subject property'}</strong>`))
+      .addTo(accessMap);
+    refreshAccessLayer();
+  });
   refreshAccessList();
 }
 
@@ -2738,6 +2750,21 @@ function refreshAccessLayer() {
 
   // Dynamic zoom/fitting boundaries for CBD and Airport to show both starting point and end point
   const subject = d.subject || { latitude: -34.0574, longitude: 151.1170 };
+
+  // Dashed connector lines from the property to each amenity point.
+  if (accessMap.getLayer('access-lines')) accessMap.removeLayer('access-lines');
+  if (accessMap.getSource('access-lines')) accessMap.removeSource('access-lines');
+  const linesGj = { type: 'FeatureCollection', features: gj.features.map(f => ({
+    type: 'Feature',
+    geometry: { type: 'LineString', coordinates: [[subject.longitude, subject.latitude], f.geometry.coordinates] },
+    properties: {}
+  }))};
+  accessMap.addSource('access-lines', { type: 'geojson', data: linesGj });
+  accessMap.addLayer({
+    id: 'access-lines', type: 'line', source: 'access-lines',
+    layout: { 'line-cap': 'round' },
+    paint: { 'line-color': colors[tab] || '#6b7280', 'line-width': 1.5, 'line-dasharray': [2, 2], 'line-opacity': 0.55 }
+  }, 'access-pts');
   if (items.length && (tab === 'cbd' || tab === 'airport')) {
     const bounds = new mapboxgl.LngLatBounds();
     bounds.extend([subject.longitude, subject.latitude]);
@@ -5358,24 +5385,41 @@ function renderAIAgentNotes(d) {
   const notesText = (d && d.subject && d.subject.agent_notes) ? d.subject.agent_notes : '';
   
   if (notesText) {
-    // Parse lines/bullet points from the agent notes string (either markdown bullets * or - or newlines)
+    // Convert **bold** FIRST, THEN strip the leading bullet markers — otherwise the
+    // bullet-stripper eats the opening ** and the bold pair never renders.
     const lines = notesText.split('\n')
-      .map(line => line.replace(/^[\*\-\s•\s]+/, '').trim())
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => line
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^[•\-\*\s]+/, '')
+        .trim())
       .filter(line => line.length > 0);
-      
+
     if (lines.length > 0) {
+      // High-importance dark card so Simon's AI brief stands out from the rest.
+      const card = container.closest('.card');
+      if (card) {
+        card.style.background = '#111';
+        card.style.color = '#fff';
+        card.style.border = 'none';
+        card.style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)';
+      }
+      container.style.color = '#fff';
+
       const ul = document.createElement('ul');
       ul.style.margin = '0';
       ul.style.paddingLeft = '20px';
       ul.style.display = 'flex';
       ul.style.flexDirection = 'column';
       ul.style.gap = '10px';
-      
+
       lines.forEach(line => {
         const li = document.createElement('li');
         li.style.fontSize = '14px';
         li.style.lineHeight = '1.5';
-        li.innerHTML = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        li.style.color = '#fff';
+        li.innerHTML = line;  // already contains <strong> from the bold conversion above
         ul.appendChild(li);
       });
       container.appendChild(ul);
