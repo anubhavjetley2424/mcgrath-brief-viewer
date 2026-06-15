@@ -172,7 +172,21 @@
           url.searchParams.get("number") ||
           "";
         const body = url.searchParams.get("body") || "";
-        return { to: to.trim(), body };
+        const deal = (url.searchParams.get("deal") || "").trim();
+        return { to: to.trim(), body, deal };
+      }
+
+      // Fire-and-forget: tell n8n the SMS was sent so SMS Status flips to "Sent"
+      // and the next stage's draft can write without being blocked.
+      function markSmsSent(dealId) {
+        if (!dealId) return;
+        try {
+          fetch("https://152-67-124-32.sslip.io/webhook/mobile-api?action=smsSent&id=" + encodeURIComponent(dealId), {
+            method: "GET",
+            keepalive: true,  // survive the imminent sms: redirect
+            mode: "no-cors"
+          }).catch(() => {});
+        } catch (_) { /* ignore */ }
       }
 
       function buildSmsUrl(to, body) {
@@ -197,7 +211,7 @@
         return "Desktop";
       }
 
-      const { to, body } = readParams();
+      const { to, body, deal } = readParams();
 
       // Always update the preview so Simon can read and copy if needed
       document.getElementById("previewTo").textContent = to || "(missing)";
@@ -214,6 +228,14 @@
       } else {
         const smsUrl = buildSmsUrl(to, body);
         document.getElementById("smsLink").href = smsUrl;
+
+        // Mark sent on the deal BEFORE we hand off to Messages, so the
+        // status flip happens regardless of whether the user actually taps Send.
+        markSmsSent(deal);
+
+        // Also re-fire when the user taps the visible "Open Messages" link
+        // (covers desktop fallback path).
+        document.getElementById("smsLink").addEventListener("click", () => markSmsSent(deal));
 
         // Auto-trigger the handoff on the next tick so the visible
         // fallback button still renders if the OS pops a chooser
