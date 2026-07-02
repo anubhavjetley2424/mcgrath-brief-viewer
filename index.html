@@ -1864,7 +1864,7 @@ function renderVendor(d) {
     const parts = [];
     if (d.subject.beds)  parts.push(`${d.subject.beds} Bed`);
     if (d.subject.baths) parts.push(`${d.subject.baths} Bath`);
-    if (d.subject.cars)  parts.push(`${d.subject.cars} Car`);
+    if (d.subject.parking)  parts.push(`${d.subject.parking} Car`);
     if (d.subject.land_size) parts.push(`${d.subject.land_size} sqm`);
     document.getElementById('vendorMeta').textContent = parts.length ? parts.join(' · ') : '—';
     document.getElementById('vendorDeal').textContent = d.subject.stage || d.subject.deal_stage || '—';
@@ -1887,16 +1887,16 @@ function getSimilarSales(salesList, s) {
   if (!salesList || !s) return salesList || [];
   const targetBeds = s.beds || 4;
   const targetBaths = s.baths || 3;
-  const targetCars = s.cars || 2;
+  const targetCars = s.parking || 2; // was s.cars, which doesn't exist — see getFilteredProperties
   const targetLand = s.land_size || 860;
-  
+
   return salesList.filter(p => {
     const itemBeds = p.beds || p.bedrooms || 0;
     const itemBaths = p.baths || p.bathrooms || 0;
     const itemCars = p.parking || 0;
     if (itemBeds && Math.abs(itemBeds - targetBeds) > 1) return false;
     if (itemBaths && Math.abs(itemBaths - targetBaths) > 1) return false;
-    if (itemCars && Math.abs(itemCars - targetCars) > 1) return false;
+    if (itemCars && Math.abs(itemCars - targetCars) > 2) return false;
     const landVal = p.land_size_sqm || p.land_area_sqm || p.land_size || 0;
     if (landVal && targetLand && (landVal < targetLand * 0.65 || landVal > targetLand * 1.35)) return false;
     return true;
@@ -2005,13 +2005,18 @@ function getFilteredProperties(d) {
     const s = d.subject;
     const targetBeds = s.beds || 4;
     const targetBaths = s.baths || 3;
-    const targetCars = s.cars || 2;
+    // Was s.cars, which doesn't exist on the subject object (it's
+    // s.parking) — always silently fell back to a hardcoded 2 regardless of
+    // the vendor's actual car spaces. Also loosened tolerance to ±2 since
+    // parking is the least defining comp criterion (a 1-car vs 3-car garage
+    // shouldn't disqualify an otherwise well-matched bed/bath/land comp).
+    const targetCars = s.parking || 2;
     const targetLand = s.land_size || 860;
-    
+
     items = items.filter(p => {
       if (p.beds && Math.abs(p.beds - targetBeds) > 1) return false;
       if (p.baths && Math.abs(p.baths - targetBaths) > 1) return false;
-      if (p.parking && Math.abs(p.parking - targetCars) > 1) return false;
+      if (p.parking && Math.abs(p.parking - targetCars) > 2) return false;
       const landVal = p.land_size_sqm || p.land_area_sqm || p.land_size || 0;
       if (landVal && targetLand && (landVal < targetLand * 0.65 || landVal > targetLand * 1.35)) return false;
       return true;
@@ -2573,7 +2578,7 @@ function refreshMainMapLayers(d) {
       filtered = filtered.filter(p => {
         if (p.beds && Math.abs(p.beds - (s.beds || 4)) > 1) return false;
         if (p.baths && Math.abs(p.baths - (s.baths || 3)) > 1) return false;
-        if (p.parking && Math.abs(p.parking - (s.cars || 2)) > 1) return false;
+        if (p.parking && Math.abs(p.parking - (s.parking || 2)) > 2) return false;
         const landVal = p.land_size_sqm || p.land_area_sqm || p.land_size || 0;
         if (landVal && s.land_size && (landVal < s.land_size * 0.65 || landVal > s.land_size * 1.35)) return false;
         return true;
@@ -2600,7 +2605,7 @@ function refreshMainMapLayers(d) {
       listings = listings.filter(p => {
         if (p.beds && Math.abs(p.beds - (s.beds || 4)) > 1) return false;
         if (p.baths && Math.abs(p.baths - (s.baths || 3)) > 1) return false;
-        if (p.parking && Math.abs(p.parking - (s.cars || 2)) > 1) return false;
+        if (p.parking && Math.abs(p.parking - (s.parking || 2)) > 2) return false;
         const landVal = p.land_size_sqm || p.land_area_sqm || p.land_size || 0;
         if (landVal && s.land_size && (landVal < s.land_size * 0.65 || landVal > s.land_size * 1.35)) return false;
         return true;
@@ -5380,6 +5385,60 @@ document.querySelectorAll('.sidebar-tab').forEach(tab => {
   });
 });
 
+// Gemini's output occasionally round-trips through Teable mis-decoded as
+// Windows-1252 (UTF-8 bytes for "•"/"–"/smart-quotes land as literal
+// "â€¢"/"â€"" etc.). Safety net: if every character in the string maps
+// cleanly back through the CP1252 byte table to valid UTF-8, un-mangle it;
+// otherwise leave the string untouched (real non-Latin text bails out safely).
+const CP1252_HIGH = {0x80:0x20AC,0x82:0x201A,0x83:0x0192,0x84:0x201E,0x85:0x2026,0x86:0x2020,0x87:0x2021,0x88:0x02C6,0x89:0x2030,0x8A:0x0160,0x8B:0x2039,0x8C:0x0152,0x8E:0x017D,0x91:0x2018,0x92:0x2019,0x93:0x201C,0x94:0x201D,0x95:0x2022,0x96:0x2013,0x97:0x2014,0x98:0x02DC,0x99:0x2122,0x9A:0x0161,0x9B:0x203A,0x9C:0x0153,0x9E:0x017E,0x9F:0x0178};
+const CP1252_HIGH_REV = Object.fromEntries(Object.entries(CP1252_HIGH).map(([k, v]) => [v, parseInt(k)]));
+const fixMojibake = (s) => {
+  if (!s || !/[-ɏ]/.test(s)) return s;
+  try {
+    const bytes = [];
+    for (const ch of s) {
+      const cp = ch.codePointAt(0);
+      if (cp <= 0xFF) bytes.push(cp);
+      else if (CP1252_HIGH_REV[cp] !== undefined) bytes.push(CP1252_HIGH_REV[cp]);
+      else return s; // a genuine non-Latin character — not mojibake, leave alone
+    }
+    return new TextDecoder('utf-8', { fatal: true }).decode(new Uint8Array(bytes));
+  } catch (e) {
+    return s;
+  }
+};
+
+// Route each "**Label**: content" line from Gemini's output into a section
+// by label, rather than rendering one flat bullet list.
+const AGENT_NOTES_SECTIONS = [
+  { key: 'price', match: /appraisal price range/i },
+  { key: 'commute', match: /commute/i },
+  { key: 'talking', match: /talking point/i },
+  { key: 'hazards', match: /geographic hazards/i },
+  { key: 'market', match: /market profile/i },
+];
+
+function parseAgentNotes(notesText) {
+  const lines = fixMojibake(notesText).split('\n').map(l => l.trim()).filter(Boolean);
+
+  const buckets = { price: [], commute: [], talking: [], hazards: [], market: [], other: [] };
+  lines.forEach(line => {
+    // Match the "**Label**: body" shape on the RAW line first — stripping
+    // leading bullet markers (which include "*") before this would eat the
+    // opening ** and the label would never match (same trap the old bold-
+    // vs-bullet-order comment on this function used to warn about).
+    const m = line.match(/^[•\-\*\s]*\*\*(.+?)\*\*:?\s*(.*)$/);
+    const label = m ? m[1] : '';
+    const body = (m ? m[2] : line.replace(/^[•\-\*\s]+/, '')).trim();
+    if (!label && !body) return;
+    const section = AGENT_NOTES_SECTIONS.find(s => s.match.test(label));
+    buckets[section ? section.key : 'other'].push({ label, body });
+  });
+  return buckets;
+}
+
+const mdBold = (s) => (s || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
 function renderAIAgentNotes(d) {
   const section = document.getElementById('aiAgentNotesSection');
   const container = document.getElementById('aiAgentNotesContent');
@@ -5387,23 +5446,14 @@ function renderAIAgentNotes(d) {
   // Always show the section so Simon sees either the notes or how to generate them.
   section.style.display = 'block';
   container.innerHTML = '';
-  
-  const notesText = (d && d.subject && d.subject.agent_notes) ? d.subject.agent_notes : '';
-  
-  if (notesText) {
-    // Convert **bold** FIRST, THEN strip the leading bullet markers — otherwise the
-    // bullet-stripper eats the opening ** and the bold pair never renders.
-    const lines = notesText.split('\n')
-      .map(line => line.trim())
-      .filter(line => line.length > 0)
-      .map(line => line
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/^[•\-\*\s]+/, '')
-        .trim())
-      .filter(line => line.length > 0);
 
-    if (lines.length > 0) {
-      // High-importance dark card so Simon's AI brief stands out from the rest.
+  const notesText = (d && d.subject && d.subject.agent_notes) ? d.subject.agent_notes : '';
+
+  if (notesText) {
+    const b = parseAgentNotes(notesText);
+    const hasAny = Object.values(b).some(arr => arr.length);
+
+    if (hasAny) {
       const card = container.closest('.card');
       if (card) {
         card.style.background = '#111';
@@ -5413,26 +5463,68 @@ function renderAIAgentNotes(d) {
       }
       container.style.color = '#fff';
 
-      const ul = document.createElement('ul');
-      ul.style.margin = '0';
-      ul.style.paddingLeft = '20px';
-      ul.style.display = 'flex';
-      ul.style.flexDirection = 'column';
-      ul.style.gap = '10px';
+      const parts = [];
 
-      lines.forEach(line => {
-        const li = document.createElement('li');
-        li.style.fontSize = '14px';
-        li.style.lineHeight = '1.5';
-        li.style.color = '#fff';
-        li.innerHTML = line;  // already contains <strong> from the bold conversion above
-        ul.appendChild(li);
-      });
-      container.appendChild(ul);
+      if (b.price.length) {
+        parts.push(`
+          <div style="padding-bottom:16px; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.15);">
+            <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.55); margin-bottom:6px;">Appraisal Price Range</div>
+            <div style="font-family:var(--font-display); font-size:24px; font-weight:800; line-height:1.2;">${mdBold(b.price[0].body.split('(')[0].trim())}</div>
+            ${b.price[0].body.includes('(') ? `<div style="font-size:12.5px; color:rgba(255,255,255,0.7); margin-top:6px; line-height:1.5;">${mdBold(b.price[0].body.slice(b.price[0].body.indexOf('(')))}</div>` : ''}
+          </div>`);
+      }
+
+      if (b.commute.length) {
+        parts.push(`
+          <div style="display:flex; gap:24px; padding-bottom:16px; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.15); flex-wrap:wrap;">
+            ${b.commute.map(c => `
+              <div>
+                <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.55); margin-bottom:4px;">${mdBold(c.label.replace(/sydney cbd commute\s*/i, ''))}</div>
+                <div style="font-size:14px; font-weight:600;">${mdBold(c.body)}</div>
+              </div>`).join('')}
+          </div>`);
+      }
+
+      if (b.talking.length) {
+        parts.push(`
+          <div style="padding-bottom:16px; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.15);">
+            <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.55); margin-bottom:10px;">Key Talking Points</div>
+            <ul style="margin:0; padding-left:18px; display:flex; flex-direction:column; gap:8px;">
+              ${b.talking.map(t => `<li style="font-size:14px; line-height:1.5;">${mdBold(t.body)}</li>`).join('')}
+            </ul>
+          </div>`);
+      }
+
+      if (b.hazards.length) {
+        const clear = /not (identified|located)|no (identified|known)/i.test(b.hazards[0].body);
+        parts.push(`
+          <div style="padding-bottom:16px; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.15);">
+            <span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; padding:4px 10px; border-radius:20px; background:${clear ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color:${clear ? '#34d399' : '#f87171'};">
+              ${clear ? '✓ No Hazards Identified' : '⚠ Hazard Flagged'}
+            </span>
+            <div style="font-size:13px; line-height:1.5; color:rgba(255,255,255,0.75); margin-top:8px;">${mdBold(b.hazards[0].body)}</div>
+          </div>`);
+      }
+
+      if (b.market.length) {
+        parts.push(`
+          <div>
+            <div style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.55); margin-bottom:6px;">Market Profile</div>
+            <div style="font-size:13.5px; line-height:1.6; color:rgba(255,255,255,0.85);">${mdBold(b.market[0].body)}</div>
+          </div>`);
+      }
+
+      if (b.other.length) {
+        parts.push(`<ul style="margin:0; padding-left:18px; display:flex; flex-direction:column; gap:8px;">
+          ${b.other.map(o => `<li style="font-size:14px; line-height:1.5;">${o.label ? `<strong>${o.label}:</strong> ` : ''}${mdBold(o.body)}</li>`).join('')}
+        </ul>`);
+      }
+
+      container.innerHTML = parts.join('');
       return;
     }
   }
-  
+
   // No notes yet — plain-white card matching the rest of the dashboard (dark text).
   container.innerHTML = `
     <div style="display:flex; flex-direction:column; gap:12px;">
