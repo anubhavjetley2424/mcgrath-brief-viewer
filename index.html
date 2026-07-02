@@ -744,6 +744,23 @@ body {
     </div>
   </div>
 
+  <!-- ── AI AGENT NOTES SUMMARY ── moved to top 2026-07-02: the single most
+       important thing Simon reads before an appointment, so it should be the
+       first thing on the page, not buried above the footer. ── -->
+  <div class="section" id="aiAgentNotesSection" style="display:none; margin-bottom: 32px;">
+    <div class="section-title">
+      Agent Notes
+      <span class="label">AI summary for Simon</span>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div id="aiAgentNotesContent" style="font-size: 13.5px; line-height: 1.55; display: flex; flex-direction: column; gap: 10px; color: var(--text);">
+          <!-- Dynamically rendered 6-8 bullet points -->
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── KPI FOCUS TOGGLE ── -->
   <div style="display: flex; justify-content: flex-end; margin-bottom: 16px; font-family: 'Inter', sans-serif;">
     <div class="toggle-group" id="kpiFocusFilters" style="display: flex; background: #f3f4f6; padding: 2px; border-radius: 6px; border: 1px solid var(--border-light);">
@@ -765,7 +782,7 @@ body {
       <div class="kpi-value" id="kpiSalesCount">—</div>
       <div class="kpi-change" id="kpiSalesSub">—</div>
     </div>
-    <div class="kpi-card data-pending" title="Requires Domain active-listings feed">
+    <div class="kpi-card">
       <div class="kpi-label">Active Listings</div>
       <div class="kpi-value" id="kpiActive">—</div>
       <div class="kpi-change" id="kpiActiveSub">Current competition</div>
@@ -817,7 +834,7 @@ body {
   </div>
 
   <!-- ── PROPERTY INDEX ───────────────────────────────── -->
-  <div class="section data-pending" title="Property Index ranks vs. active listings — pending Domain feed">
+  <div class="section">
     <div class="section-title">
       Property Index
       <span class="label">Percentile vs. suburb cohort</span>
@@ -863,10 +880,6 @@ body {
       </div>
       <div class="map-section-inner">
         <div class="map-container">
-          <div class="map-layer-toggles">
-            <button class="map-toggle-btn active" data-layer="sales">Sales</button>
-            <button class="map-toggle-btn" data-layer="listings">Listings</button>
-          </div>
           <div id="mainMap"></div>
           <div class="map-legend">
             <strong style="font-size:12px;color:#111;">Sale Price</strong>
@@ -1202,21 +1215,6 @@ body {
     </div>
   </div>
 
-    <!-- ── AI AGENT NOTES SUMMARY ────────────────────────── -->
-  <div class="section" id="aiAgentNotesSection" style="display:none; margin-top: 32px; margin-bottom: 48px;">
-    <div class="section-title">
-      Agent Notes
-      <span class="label">AI summary for Simon</span>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <div id="aiAgentNotesContent" style="font-size: 13.5px; line-height: 1.55; display: flex; flex-direction: column; gap: 10px; color: var(--text);">
-          <!-- Dynamically rendered 6-8 bullet points -->
-        </div>
-      </div>
-    </div>
-  </div>
-
   <div class="footer">
     McGrath Appraisal Intelligence Console · Airtable · ABS · Mapbox · n8n
     <div style="margin-top: 6px; font-size: 11px; color: var(--text-tertiary);">
@@ -1287,7 +1285,7 @@ let STATE = {
   periodDays: 365,
   activeTab: 'active',
   accessTab: 'schools',
-  mapLayers: { sales: true, listings: false },
+  mapLayers: { sales: false, listings: true }, // matches default "On Market" sidebar tab
   similarFilter: false,
   charts: {},
   modalPhotos: [],
@@ -1831,10 +1829,19 @@ function renderAll() {
 }
 
 // ── VENDOR HEADER ───────────────────────────────────────────
+const titleCase = (s) => (s || '').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+
 function renderVendor(d) {
   const header = document.getElementById('vendorHeader');
   if (d && d.subject && d.subject.address) {
-    document.getElementById('vendorAddress').textContent = d.subject.address;
+    // Append suburb/postcode when the address itself doesn't already carry
+    // them (Teable's "Property Address" field is usually just the street).
+    let displayAddress = d.subject.address;
+    const hasSuburbAlready = /,\s*[\w\s]+\s+NSW\s+\d{4}/i.test(displayAddress);
+    if (!hasSuburbAlready && d.subject.suburb) {
+      displayAddress += `, ${titleCase(d.subject.suburb)} NSW ${d.subject.postcode || ''}`.trimEnd();
+    }
+    document.getElementById('vendorAddress').textContent = displayAddress;
     const parts = [];
     if (d.subject.beds)  parts.push(`${d.subject.beds} Bed`);
     if (d.subject.baths) parts.push(`${d.subject.baths} Bath`);
@@ -1851,6 +1858,7 @@ function renderVendor(d) {
     if (header) header.setAttribute('data-loading', 'error');
   }
   document.getElementById('suburbChip').textContent =
+    (d?.subject?.suburb && titleCase(d.subject.suburb)) ||
     d?.subject?.address?.match(/,\s*(\w+)/)?.[1] || '—';
 }
 
@@ -5337,41 +5345,15 @@ document.querySelectorAll('.sidebar-tab').forEach(tab => {
     document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     STATE.activeTab = tab.dataset.tab;
+    // Map layer follows the sidebar tab directly (the separate Sales/Listings
+    // map toggle was removed 2026-07-02 — redundant with this tab).
     STATE.mapLayers.sales = tab.dataset.tab === 'sold';
     STATE.mapLayers.listings = tab.dataset.tab === 'active';
-    document.querySelectorAll('.map-toggle-btn').forEach(b => b.classList.toggle('active', STATE.mapLayers[b.dataset.layer]));
     if (STATE.data) {
       renderPropertySidebar(STATE.data);
       if (mainMap?.isStyleLoaded()) refreshMainMapLayers(STATE.data);
     }
   });
-});
-
-// Map layer toggles (Mutually exclusive listings vs sales + sidebar tab synchronization)
-document.querySelector('.map-layer-toggles').addEventListener('click', e => {
-  if (!e.target.classList.contains('map-toggle-btn')) return;
-  const layer = e.target.dataset.layer;
-  
-  // Set mutual exclusivity
-  STATE.mapLayers.sales = (layer === 'sales');
-  STATE.mapLayers.listings = (layer === 'listings');
-  
-  // Update toggle button active classes
-  document.querySelectorAll('.map-toggle-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.layer === layer);
-  });
-  
-  // Synchronize sidebar tabs instantly
-  const targetTab = (layer === 'sales') ? 'sold' : 'active';
-  STATE.activeTab = targetTab;
-  document.querySelectorAll('.sidebar-tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.tab === targetTab);
-  });
-  
-  if (STATE.data) {
-    renderPropertySidebar(STATE.data);
-    if (mainMap?.isStyleLoaded()) refreshMainMapLayers(STATE.data);
-  }
 });
 
 function renderAIAgentNotes(d) {
