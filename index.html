@@ -941,7 +941,7 @@ body {
         <div class="chart-wrap"><canvas id="buyerEngagementChart"></canvas></div>
       </div>
       <div class="chart-card">
-        <h4 id="liquidityIndexChartTitle">Sub-Region Property Liquidity Index</h4>
+        <h4 id="liquidityIndexChartTitle">Auction Clearance Rate <span style="font-weight:500; color:var(--text-tertiary); font-size:11px;">&mdash; Sutherland Shire, real weekly data</span></h4>
         <div class="chart-wrap"><canvas id="liquidityIndexChart"></canvas></div>
       </div>
     </div>
@@ -1075,12 +1075,8 @@ body {
         <h4>Sales by Price Segment</h4>
         <div class="chart-wrap"><canvas id="segmentChart"></canvas></div>
       </div>
-      <div class="chart-card">
-        <h4>Avg Days on Market</h4>
-        <div class="chart-wrap"><canvas id="domChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h4>Auction Clearance Rate</h4>
+      <div class="chart-card" style="grid-column: span 2;">
+        <h4>Auction Clearance Rate <span style="font-weight:500; color:var(--text-tertiary); font-size:11px;">&mdash; real weekly data, Sutherland Shire vs Greater Sydney</span></h4>
         <div class="chart-wrap"><canvas id="auctionChart"></canvas></div>
       </div>
     </div>
@@ -2914,24 +2910,6 @@ function refreshAccessList() {
 
 // ── CHARTS ──────────────────────────────────────────────────
 function renderCharts(d) {
-  const getAuctionSaturdays = () => {
-    const dates = [];
-    const curr = new Date(2026, 4, 30); // 30 May 2026
-    let day = curr.getDay();
-    let dist = day === 6 ? 0 : -(day + 1);
-    const lastSat = new Date(curr);
-    lastSat.setDate(curr.getDate() + dist);
-    
-    for (let i = 7; i >= 0; i--) {
-      const d = new Date(lastSat);
-      d.setDate(lastSat.getDate() - (i * 7));
-      const dayNum = d.getDate();
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      dates.push(`${dayNum} ${monthNames[d.getMonth()]}`);
-    }
-    return dates;
-  };
-
   const defaults = {
     responsive: true, maintainAspectRatio: false,
     plugins: {
@@ -3097,144 +3075,36 @@ function renderCharts(d) {
     options: defaults
   });
 
-  // Average DOM by Price Segment (Grouped Bar Chart comparison)
-  if (STATE.charts.dom) STATE.charts.dom.destroy();
-
-  let domCategories = ['Under $1M', '$1M–$2M', '$2M–$3M', '$3M–$4M', '$4M+'];
-  if (STATE.transactionFocus === 'renting') {
-    domCategories = ['Under $500/wk', '$500–$1,000/wk', '$1,000–$1,500/wk', '$1,500–$2,500/wk', '$2,500+/wk'];
-  }
-
-  const domDatasets = selectedSuburbs.map((sub, idx) => {
-    const subSales = (d.sales || []).filter(s => sub === 'all' || s.suburb?.toLowerCase() === sub.toLowerCase());
-    const subFiltered = subSales.filter(s => daysSince(s.contract_date) <= STATE.analyticsPeriodDays);
-    
-    const domData = {};
-    domCategories.forEach(cat => { domData[cat] = []; });
-    
-    subFiltered.forEach(s => {
-      const p = s.purchase_price;
-      if (!p) return;
-      const dom = s.days_on_market || (15 + Math.floor(Math.random() * 30));
-      
-      if (STATE.transactionFocus === 'renting') {
-        const isApt = s.property_type?.toLowerCase().includes('unit') || s.property_type?.toLowerCase().includes('apartment');
-        const yieldFactor = isApt ? 0.042 : 0.032;
-        const rent = Math.round((p * yieldFactor) / 52);
-        if (rent < 500) domData['Under $500/wk'].push(dom);
-        else if (rent < 1000) domData['$500–$1,000/wk'].push(dom);
-        else if (rent < 1500) domData['$1,000–$1,500/wk'].push(dom);
-        else if (rent < 2500) domData['$1,500–$2,500/wk'].push(dom);
-        else domData['$2,500+/wk'].push(dom);
-      } else {
-        if (p < 1e6) domData['Under $1M'].push(dom);
-        else if (p < 2e6) domData['$1M–$2M'].push(dom);
-        else if (p < 3e6) domData['$2M–$3M'].push(dom);
-        else if (p < 4e6) domData['$3M–$4M'].push(dom);
-        else domData['$4M+'].push(dom);
-      }
-    });
-    
-    const domAverages = {};
-    domCategories.forEach(key => {
-      const arr = domData[key];
-      if (arr.length) {
-        domAverages[key] = Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
-      } else {
-        const subBaseCoef = sub === 'all' ? 1.0 : ((BASELINE_MEDIANS[sub] || 1650000) / 1650000);
-        let fallbackVal = 25;
-        if (STATE.transactionFocus === 'renting') {
-          const fallbacks = { 
-            'Under $500/wk': Math.round(18 / subBaseCoef), 
-            '$500–$1,000/wk': Math.round(22 / subBaseCoef), 
-            '$1,000–$1,500/wk': Math.round(28 * subBaseCoef), 
-            '$1,500–$2,500/wk': Math.round(35 * subBaseCoef), 
-            '$2,500+/wk': Math.round(42 * subBaseCoef) 
-          };
-          fallbackVal = fallbacks[key] || 25;
-        } else {
-          const fallbacks = { 
-            'Under $1M': Math.round(18 / subBaseCoef), 
-            '$1M–$2M': Math.round(22 / subBaseCoef), 
-            '$2M–$3M': Math.round(28 * subBaseCoef), 
-            '$3M–$4M': Math.round(35 * subBaseCoef), 
-            '$4M+': Math.round(42 * subBaseCoef) 
-          };
-          fallbackVal = fallbacks[key] || 25;
-        }
-        domAverages[key] = Math.max(12, Math.min(60, fallbackVal));
-      }
-    });
-
-    const theme = colorsList[idx] || colorsList[0];
-    return {
-      label: sub === 'all' ? 'All Suburbs' : sub,
-      data: Object.values(domAverages),
-      backgroundColor: theme.border,
-      borderRadius: 6,
-      barPercentage: selectedSuburbs.length > 1 ? 0.8 : 0.65,
-      categoryPercentage: selectedSuburbs.length > 1 ? 0.85 : 0.7
-    };
-  });
-
-  STATE.charts.dom = new Chart(document.getElementById('domChart'), {
-    type: 'bar',
-    data: {
-      labels: domCategories,
-      datasets: domDatasets
-    },
-    options: {
-      ...defaults,
-      plugins: {
-        ...defaults.plugins,
-        legend: { display: selectedSuburbs.length > 1, position: 'top', labels: { boxWidth: 12, font: { family: 'Inter', size: 9 } } }
-      },
-      scales: {
-        ...defaults.scales,
-        y: {
-          ...defaults.scales.y,
-          ticks: { ...defaults.scales.y.ticks, callback: v => v + 'd' }
-        }
-      }
-    }
-  });
-
-  // Auction Clearance Rate Chart (Showing calendar Saturdays dates)
+  // Auction Clearance Rate Chart — REAL weekly data from Supabase `auction_clearance`
+  // (Domain auction-results scrape, GCP job auction-current). Two real series:
+  // Sutherland Shire (our farm area) vs Greater Sydney (city benchmark). There is no
+  // suburb-level clearance data anywhere in the stack, so unlike the trend/segment
+  // charts above this one does NOT respond to the suburb-comparison pills — it's
+  // always shire-wide vs city-wide. Replaces a previous version that faked both lines
+  // with Math.sin() + noise.
   if (STATE.charts.auction) STATE.charts.auction.destroy();
-  
-  const satLabels = getAuctionSaturdays();
-  
-  // Calculate clearance rate based on the average market temp of compared suburbs
-  const avgBenchmark = selectedSuburbs.reduce((acc, sub) => {
-    if (sub === 'all') return acc + 71;
-    const demo = SUBURB_DEMOGRAPHICS[sub] || { supplyMonths: 1.8 };
-    return acc + Math.round(84 - (demo.supplyMonths || 1.8) * 6);
-  }, 0) / selectedSuburbs.length;
-  
-  const selectedClearance = satLabels.map((_, sIdx) => {
-    const wave = Math.sin(sIdx * 0.9) * 3.5;
-    const noise = (sIdx * 11) % 4 - 2;
-    return Math.round(avgBenchmark + wave + noise);
-  });
 
-  const sydneyClearance = satLabels.map((_, sIdx) => {
-    const wave = Math.sin(sIdx * 0.7) * 2.5;
-    const noise = (sIdx * 7) % 3 - 1.5;
-    return Math.round(64 + wave + noise);
-  });
+  const clearanceRows = d.auction_clearance || [];
+  const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  let clearanceWeeks = Array.from(new Set(clearanceRows.map(r => r.week))).sort((a, b) => new Date(a) - new Date(b));
+  clearanceWeeks = clearanceWeeks.slice(-30);
+  const byWeekRegion = {};
+  clearanceRows.forEach(r => { byWeekRegion[`${r.week}|${r.region}`] = r; });
 
-  const regionLabel = selectedSuburbs.includes('all') ? 'Sutherland Shire' : (selectedSuburbs.length > 1 ? 'Selected Suburbs' : selectedSuburbs[0]);
+  const auctionLabels = clearanceWeeks.map(w => { const dt = new Date(w); return `${dt.getDate()} ${monthNamesShort[dt.getMonth()]}`; });
+  const shireClearance = clearanceWeeks.map(w => { const r = byWeekRegion[`${w}|Sutherland Shire`]; return r && r.clearance_rate != null ? Math.round(r.clearance_rate * 100) : null; });
+  const sydneyClearance = clearanceWeeks.map(w => { const r = byWeekRegion[`${w}|Sydney`]; return r && r.clearance_rate != null ? Math.round(r.clearance_rate * 100) : null; });
 
   STATE.charts.auction = new Chart(document.getElementById('auctionChart'), {
     type: 'line',
     data: {
-      labels: satLabels,
+      labels: auctionLabels,
       datasets: [
-        { label: regionLabel, data: selectedClearance, borderColor: '#111827', fill: false, tension: 0.35, borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#111827' },
-        { label: 'Greater Sydney', data: sydneyClearance, borderColor: '#d42020', fill: false, tension: 0.35, borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#d42020', borderDash: [5, 5] }
+        { label: 'Sutherland Shire', data: shireClearance, borderColor: '#111827', fill: false, tension: 0.35, borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#111827', spanGaps: true },
+        { label: 'Greater Sydney', data: sydneyClearance, borderColor: '#d42020', fill: false, tension: 0.35, borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#d42020', borderDash: [5, 5], spanGaps: true }
       ]
     },
-    options: { ...defaults, plugins: { ...defaults.plugins, legend: { display: true, position: 'bottom', labels: { usePointStyle: true, pointStyle: 'line', font: { size: 11, family: 'Inter' }, color: '#6b7280' } } }, scales: { ...defaults.scales, y: { ...defaults.scales.y, ticks: { ...defaults.scales.y.ticks, callback: v => v + '%' }, min: 50, max: 90 } } }
+    options: { ...defaults, plugins: { ...defaults.plugins, legend: { display: true, position: 'bottom', labels: { usePointStyle: true, pointStyle: 'line', font: { size: 11, family: 'Inter' }, color: '#6b7280' } } }, scales: { ...defaults.scales, y: { ...defaults.scales.y, ticks: { ...defaults.scales.y.ticks, callback: v => v + '%' }, min: 0, max: 100 } } }
   });
 }
 
@@ -3889,9 +3759,6 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
     return Math.round(sales * 38 * (0.9 + Math.random() * 0.2));
   });
 
-  const auctionDomData = months.map(() => Math.round(22 + Math.random() * 4));
-  const ptDomData = domTrendData.map(dom => Math.round(dom * 1.35 + (Math.random() * 4 - 2)));
-
   // Update DOM titles and labels
   const titleEl = document.getElementById('vendorDemandSectionTitle');
   const labelEl = document.getElementById('vendorDemandSectionLabel');
@@ -4287,50 +4154,53 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
     });
   }
 
-  // Chart 4: liquidityIndexChart (incorporating Auction Clearance Rate % on right-hand axis yACR)
+  // Chart 4: liquidityIndexChart — REAL weekly Auction Clearance Rate (Sutherland Shire
+  // vs Greater Sydney) from Supabase `auction_clearance`. Previously faked all three
+  // series (two DOM lines + clearance rate) with Math.random()/hardcoded arrays; the DOM
+  // lines are gone for good (no DOM data source exists anywhere), clearance rate is now
+  // the real scraped value. No suburb-level clearance data exists, so — like the
+  // equivalent chart in Market Analytics — this doesn't vary with the suburb selector,
+  // it's always shire-wide vs city-wide.
   const ctx4 = document.getElementById('liquidityIndexChart');
   if (ctx4) {
-    const clearanceRates = [65, 68, 70, 72, 75, 74, 76, 78, 80, 82, 81, 83];
-    
+    const clearanceRows = STATE.data?.auction_clearance || [];
+    const monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let clearanceWeeks = Array.from(new Set(clearanceRows.map(r => r.week))).sort((a, b) => new Date(a) - new Date(b));
+    clearanceWeeks = clearanceWeeks.slice(-30);
+    const byWeekRegion = {};
+    clearanceRows.forEach(r => { byWeekRegion[`${r.week}|${r.region}`] = r; });
+
+    const clearanceLabels = clearanceWeeks.map(w => { const dt = new Date(w); return `${dt.getDate()} ${monthNamesShort[dt.getMonth()]}`; });
+    const shireClearance = clearanceWeeks.map(w => { const r = byWeekRegion[`${w}|Sutherland Shire`]; return r && r.clearance_rate != null ? Math.round(r.clearance_rate * 100) : null; });
+    const sydneyClearance = clearanceWeeks.map(w => { const r = byWeekRegion[`${w}|Sydney`]; return r && r.clearance_rate != null ? Math.round(r.clearance_rate * 100) : null; });
+
     STATE.charts.liquidityIndex = new Chart(ctx4, {
       type: 'line',
       data: {
-        labels: months,
+        labels: clearanceLabels,
         datasets: [
           {
-            label: 'Auction Campaign DOM (left)',
-            data: auctionDomData,
-            borderColor: '#ea580c',
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            pointBackgroundColor: '#ea580c',
-            pointRadius: 3,
-            tension: 0.2,
-            yAxisID: 'yDOM'
-          },
-          {
-            label: 'Private Treaty DOM (left)',
-            data: ptDomData,
+            label: 'Sutherland Shire',
+            data: shireClearance,
             borderColor: '#111827',
             backgroundColor: 'transparent',
             borderWidth: 2,
             pointBackgroundColor: '#111827',
             pointRadius: 3,
             tension: 0.2,
-            borderDash: [4, 4],
-            yAxisID: 'yDOM'
+            spanGaps: true
           },
           {
-            label: 'Auction Clearance Rate % (right)',
-            data: clearanceRates,
-            borderColor: '#059669',
+            label: 'Greater Sydney',
+            data: sydneyClearance,
+            borderColor: '#d42020',
             backgroundColor: 'transparent',
             borderWidth: 2,
-            pointBackgroundColor: '#059669',
+            pointBackgroundColor: '#d42020',
             pointRadius: 3,
             tension: 0.2,
-            yAxisID: 'yACR',
-            type: 'line'
+            borderDash: [4, 4],
+            spanGaps: true
           }
         ]
       },
@@ -4343,22 +4213,11 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
         },
         scales: {
           x: { ticks: { color: '#9ca3af', font: { size: 9 } }, grid: { display: false } },
-          yDOM: {
-            type: 'linear',
-            position: 'left',
-            ticks: { color: '#9ca3af', font: { size: 9 }, callback: v => v + 'd' },
+          y: {
+            ticks: { color: '#9ca3af', font: { size: 9 }, callback: v => v + '%' },
             grid: { color: '#f0f1f3' },
             min: 0,
-            title: { display: true, text: 'Days on Market', font: { size: 9, weight: 'bold' } }
-          },
-          yACR: {
-            type: 'linear',
-            position: 'right',
-            ticks: { color: '#9ca3af', font: { size: 9 }, callback: v => v + '%' },
-            grid: { display: false },
-            min: 40,
-            max: 100,
-            title: { display: true, text: 'Clearance Rate', font: { size: 9, weight: 'bold' } }
+            max: 100
           }
         }
       }
