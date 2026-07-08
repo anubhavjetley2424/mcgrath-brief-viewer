@@ -151,6 +151,10 @@
       <button id="copyBody">📋 Copy</button>
     </div>
 
+    <div class="btn-row" id="returnRow" style="display:none;">
+      <a class="btn" id="returnLink" href="https://apppskgs9zhzdgrux8z.teable.app/sms-drafts-approval">↩ Return to Hub</a>
+    </div>
+
     <div class="footer-note">
       Bridge page · McGrath workflow ·
       <span id="diagPlatform"></span>
@@ -246,6 +250,20 @@
             /* Desktop without an sms handler — leave the UI for manual tap */
           }
         }, 50);
+
+        // Simon/Jill's complaint: after Messages opens, this bridge page is
+        // left sitting behind it, which reads as clutter. We can't force a
+        // tab closed that the OS didn't open via script (browsers block that
+        // for tabs opened by a real link click), so try window.close() as a
+        // best-effort, and otherwise swap to a clear "you're done, go back"
+        // state instead of leaving "Opening Messages…" hanging forever.
+        setTimeout(() => {
+          document.getElementById("title").textContent = "All set";
+          document.getElementById("subtitle").textContent =
+            "Messages should be open in another app now. You can close this tab, or head back to the Hub.";
+          document.getElementById("returnRow").style.display = "flex";
+          try { window.close(); } catch (_) { /* not script-closable — that's fine */ }
+        }, 700);
       }
 
       document.getElementById("copyBody").addEventListener("click", async () => {
