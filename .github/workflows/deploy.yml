@@ -1,41 +1,36 @@
-name: Deploy to GitHub Pages
+name: Vercel Production Deployment
+
+# Vercel handles deployments via its own GitHub integration.
+# This workflow only runs the Vite build check to catch errors before Vercel deploys.
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  pull_request:
+    branches: [main]
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build-check:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject Mapbox Token
-        run: |
-          sed -i "s|__MAPBOX_TOKEN__|${{ secrets.MAPBOX_TOKEN }}|g" index.html
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          path: '.'
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
