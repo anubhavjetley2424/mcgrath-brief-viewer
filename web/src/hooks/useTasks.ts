@@ -25,6 +25,10 @@ export function useUpdateTask() {
     onMutate: async ({ id, data }) => {
       await qc.cancelQueries({ queryKey: ['tasks'] });
       const queries = qc.getQueriesData<Task[]>({ queryKey: ['tasks'] });
+      // Deep-clone the snapshot BEFORE mutating cache so rollback works
+      const previousData = queries.map(
+        ([key, old]) => [key, old ? old.map((t) => ({ ...t })) : old] as const,
+      );
       queries.forEach(([key, old]) => {
         if (old) {
           qc.setQueryData<Task[]>(key, old.map((t) =>
@@ -34,10 +38,10 @@ export function useUpdateTask() {
           ));
         }
       });
-      return { queries };
+      return { previousData };
     },
     onError: (_err, _vars, ctx) => {
-      ctx?.queries.forEach(([key, old]) => {
+      ctx?.previousData.forEach(([key, old]) => {
         if (old) qc.setQueryData(key, old);
       });
     },
