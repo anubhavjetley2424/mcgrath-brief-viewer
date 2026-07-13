@@ -180,7 +180,7 @@ body {
 /* ── KPI ROW ────────────────────────────────────────────── */
 .kpi-row {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 14px;
   margin-top: 20px;
 }
@@ -787,11 +787,6 @@ body {
       <div class="kpi-value" id="kpiActive">—</div>
       <div class="kpi-change" id="kpiActiveSub">Current competition</div>
     </div>
-    <div class="kpi-card data-pending" title="Requires Domain listing-duration data">
-      <div class="kpi-label">Avg Days on Market</div>
-      <div class="kpi-value" id="kpiDOM">—</div>
-      <div class="kpi-change" id="kpiDOMSub">—</div>
-    </div>
     <div class="kpi-card">
       <div class="kpi-label">12-Month Growth</div>
       <div class="kpi-value" id="kpiGrowth">—</div>
@@ -931,14 +926,6 @@ body {
         </div>
 
         <div class="chart-wrap"><canvas id="demandVolumeChart"></canvas></div>
-      </div>
-      <div class="chart-card data-pending" title="Historical DOM requires Domain listing-duration data">
-        <h4 id="historicalDomChartTitle">Historical Days on Market (DOM) for Similar Properties</h4>
-        <div class="chart-wrap"><canvas id="historicalDomChart"></canvas></div>
-      </div>
-      <div class="chart-card data-pending" title="Buyer engagement requires Domain enquiry-volume data">
-        <h4 id="buyerEngagementChartTitle">Active Buyer Engagement Metrics</h4>
-        <div class="chart-wrap"><canvas id="buyerEngagementChart"></canvas></div>
       </div>
       <div class="chart-card">
         <h4 id="liquidityIndexChartTitle">Auction Clearance Rate <span style="font-weight:500; color:var(--text-tertiary); font-size:11px;">&mdash; Sutherland Shire, real weekly data</span></h4>
@@ -1110,35 +1097,6 @@ body {
             <tbody id="daTableBody"></tbody>
           </table>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── FAILED / WITHDRAWN LISTINGS ──────────────────── -->
-  <!-- Was hidden via display:none when empty; now always shown but
-       greyed because the underlying Domain feed is the blocker.    -->
-  <div class="section data-pending" id="failedListingsSection" title="Withdrawn listings come from Domain — pending API access">
-    <div class="section-title">
-      Withdrawn Listings
-      <span class="label">Price ceiling evidence · Domain</span>
-    </div>
-    <div class="card">
-      <div class="card-body" style="padding: 0;">
-        <table class="data-table" id="withdrawnTable">
-          <thead>
-            <tr>
-              <th>Address</th>
-              <th>Beds</th>
-              <th>Last Listed</th>
-              <th>DOM</th>
-              <th>Agency</th>
-              <th>Why it stalled</th>
-            </tr>
-          </thead>
-          <tbody id="withdrawnTbody">
-            <!-- populated by renderWithdrawnListings -->
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -1323,6 +1281,13 @@ const sanitizePriceText = (text) => {
   return (validStart.test(t) && t.length <= 40) ? t : 'Contact Agent';
 };
 const daysSince = (d) => d ? Math.floor((Date.now() - new Date(d).getTime()) / 86400000) : 9999;
+// The webhook's real `sales` rows (data_source: "NSW VG") carry `sold_date` /
+// `settlement_date` — NOT `contract_date`. A lot of chart/filter code below
+// was written against `contract_date` alone with no fallback, which is why
+// period filters, the price-trend charts, and "Sold {date}" labels have been
+// silently treating every real sale as dateless (always excluded / always
+// falling to the synthetic branch) regardless of how much real data existed.
+const saleDate = (s) => s && (s.contract_date || s.sold_date || s.settlement_date || s.date) || null;
 const priceColor = (p) => {
   if (!p) return '#9ca3af';
   if (p >= 4e6) return '#d42020';
@@ -1807,7 +1772,6 @@ function renderAll() {
   renderKPIs(d);
   renderAppraisalRange(d);
   renderPropertyIndex(d);
-  renderWithdrawnListings(d);
   renderPropertySidebar(d);
   renderMainMap(d);
   renderDASection(d);
@@ -1816,8 +1780,7 @@ function renderAll() {
   loadChoroplethMaps();
   renderAIAgentNotes(d);
   renderSocioGrid(subName);
-  renderFailedListingsMaps();
-  
+
   // Populate Vendor Demand Suburb selector if empty
   const vdFilter = document.getElementById('vendorDemandSuburbFilter');
   if (vdFilter && vdFilter.children.length === 0) {
@@ -1968,19 +1931,13 @@ function renderKPIs(d) {
     }).length;
 
   document.getElementById('kpiActive').textContent = activeCount;
-  
-  let avgDOM = d.kpis?.dom_avg || 26;
-  if (STATE.kpiFocus === 'similar') {
-    avgDOM = Math.round(avgDOM * 0.85);
-  }
-  document.getElementById('kpiDOM').textContent = avgDOM;
-  document.getElementById('kpiDOMSub').textContent = STATE.kpiFocus === 'similar' ? 'Similar properties avg' : 'Suburb average';
-  
+
   let growth = d.kpis?.growth_12mo_pct || 7.2;
   document.getElementById('kpiGrowth').textContent = STATE.transactionFocus === 'renting' ? '4.1% Yield' : `+${growth}%`;
-  
-  // Update KPI 5 Label dynamically based on Renting/Selling
-  const growthLabel = document.querySelector('.kpi-card:nth-child(5) .kpi-label');
+
+  // Update Growth KPI Label dynamically based on Renting/Selling
+  // (4th card now — Avg Days on Market was removed, no real source exists anywhere in the stack)
+  const growthLabel = document.querySelector('.kpi-card:nth-child(4) .kpi-label');
   if (growthLabel) {
     growthLabel.textContent = STATE.transactionFocus === 'renting' ? 'Average Gross Yield' : '12-Month Growth';
   }
@@ -1989,7 +1946,7 @@ function renderKPIs(d) {
 
 function filterByPeriod(sales) {
   if (!sales) return [];
-  return sales.filter(s => daysSince(s.contract_date) <= STATE.periodDays);
+  return sales.filter(s => daysSince(saleDate(s)) <= STATE.periodDays);
 }
 
 function getFilteredProperties(d) {
@@ -2025,71 +1982,6 @@ function getFilteredProperties(d) {
 // Drives the Price-Ceiling table from live Domain data. Section
 // hides when no withdrawn listings are in the deal's suburb so
 // Simon never sees stale rows from a different pocket.
-function renderWithdrawnListings(d) {
-  const section = document.getElementById('failedListingsSection');
-  const tbody = document.getElementById('withdrawnTbody');
-  if (!section || !tbody) return;
-
-  // When the section is greyed out via .data-pending (Domain feed offline),
-  // skip the empty-data hide. Stub a single placeholder row so the structure
-  // is visible behind the "Domain API pending" badge.
-  if (section.classList.contains('data-pending')) {
-    section.style.display = '';
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:18px; color:var(--text-tertiary); font-style:italic;">Waiting for Domain feed</td></tr>';
-    return;
-  }
-
-  const subjSuburb = (getSubjectSuburb(d) || '').toLowerCase();
-  const items = (d.active_listings || []).filter(l => {
-    if (!l.is_withdrawn) return false;
-    // Only show withdrawn comps in the subject's suburb (don't mix pockets)
-    return !subjSuburb || (l.suburb || '').toLowerCase() === subjSuburb;
-  });
-
-  if (!items.length) {
-    section.style.display = 'none';
-    tbody.innerHTML = '';
-    return;
-  }
-  section.style.display = '';
-
-  // Suburb baseline for the "why it stalled" hint
-  const baselineMedian = BASELINE_MEDIANS[findSuburbKey(getSubjectSuburb(d))] || 0;
-
-  tbody.innerHTML = items.map(l => {
-    const addr = l.full_address || `${l.street || ''}, ${l.suburb || ''}`.replace(/^,\s*/, '');
-    const land = l.land_size_sqm ? `${l.land_size_sqm} sqm` : '';
-    const withdrawnDate = l.withdrawn_date || l.last_seen || '';
-    const meta = [land, withdrawnDate].filter(Boolean).join(' · ');
-    const price = l.last_listed_price || l.price || 0;
-    const priceStr = l.price_text || (price ? '$' + price.toLocaleString() : '—');
-    const dom = l.days_on_market || '—';
-    const beds = l.beds || '?';
-    const baths = l.baths || '?';
-    const cars = l.parking || '?';
-    const agency = l.agency_name || '—';
-
-    // Plain-English stall reason (no AI buzzwords).
-    let reason = l.stall_reason || '';
-    if (!reason && price && baselineMedian) {
-      const pct = Math.round((price / baselineMedian - 1) * 100);
-      if (pct >= 10) reason = `Priced ${pct}% above suburb median.`;
-      else if (dom > 60) reason = `${dom} days on market without bid.`;
-    }
-
-    return `
-      <tr>
-        <td><strong>${addr}</strong>${meta ? `<br><span style="color:var(--text-tertiary);font-size:11px;">${meta}</span>` : ''}</td>
-        <td>${beds} / ${baths} / ${cars}</td>
-        <td><strong>${priceStr}</strong></td>
-        <td><span class="da-badge major">${dom} days</span></td>
-        <td>${agency}</td>
-        <td style="font-size:12px;color:var(--text-secondary);">${reason || '—'}</td>
-      </tr>
-    `;
-  }).join('');
-}
-
 // ── APPRAISAL RANGE ─────────────────────────────────────────
 // Blends a similar-sale floor with a withdrawn-listing ceiling and
 // applies the SA1 micro-pocket premium implied by SEIFA / retention.
@@ -2331,7 +2223,7 @@ function renderPropertySidebar(d) {
       
     const dateOrAgency = item.is_withdrawn
       ? `<div style="font-size:11px; color:#b91c1c; font-weight:600; margin-top:4px;">Withdrawn after ${item.days_on_market}d on market via ${item.agency_name}</div>`
-      : (isActive && item.agency_name ? `<div class="prop-card-date">${item.agency_name}</div>` : (!isActive && item.contract_date ? `<div class="prop-card-date">Sold ${new Date(item.contract_date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</div>` : ''));
+      : (isActive && item.agency_name ? `<div class="prop-card-date">${item.agency_name}</div>` : (!isActive && saleDate(item) ? `<div class="prop-card-date">Sold ${new Date(saleDate(item)).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</div>` : ''));
 
     card.innerHTML = `
       <div class="prop-carousel" data-idx="0" data-count="${photos.length}">
@@ -2384,98 +2276,7 @@ function slideFailed(id, dir) {
   container.style.transform = `translateX(${pct}%)`;
 }
 
-// Global map instances for failed listings
-let failedMap1Instance = null;
-let failedMap2Instance = null;
-
 // Scatter Map Rendering Engine for Failed listings
-function renderFailedListingsMaps() {
-  // Per-card scatter maps were removed in favour of a single withdrawn-listings table.
-  // No-op if the legacy containers aren't on the page.
-  if (!document.getElementById('failedMap1') || !document.getElementById('failedMap2')) return;
-  if (typeof mapboxgl === 'undefined') return;
-  mapboxgl.accessToken = CONFIG.mapboxToken;
-
-  const d = STATE.data;
-  if (!d) return;
-
-  // Filter sold properties within Cronulla suburb (since withdrawn listings are in Cronulla)
-  const cronullaSales = filterByPeriod(d.sales || []).filter(s => {
-    return s.latitude && s.longitude && s.suburb?.toLowerCase() === 'cronulla';
-  });
-
-  const gjData = {
-    type: 'FeatureCollection',
-    features: cronullaSales.map(s => ({
-      type: 'Feature',
-      geometry: {
-        type: 'Point',
-        coordinates: [s.longitude, s.latitude]
-      },
-      properties: {
-        price: s.purchase_price || s.price
-      }
-    }))
-  };
-
-  const setupMap = (mapId, centerCoords, getInst, setInst) => {
-    let mapInst = getInst();
-    if (!mapInst) {
-      mapInst = new mapboxgl.Map({
-        container: mapId,
-        style: 'mapbox://styles/mapbox/light-v11',
-        center: centerCoords,
-        zoom: 14.8,
-        interactive: false,
-        attributionControl: false
-      });
-
-      mapInst.on('load', () => {
-        mapInst.addSource('sold-properties', {
-          type: 'geojson',
-          data: gjData
-        });
-
-        mapInst.addLayer({
-          id: 'sold-circles',
-          type: 'circle',
-          source: 'sold-properties',
-          paint: {
-            'circle-radius': 5.5,
-            'circle-color': '#ffffff',
-            'circle-stroke-color': '#111827',
-            'circle-stroke-width': 1.5
-          }
-        });
-
-        // Add the McGrath Red (#E2231A) marker
-        const el = document.createElement('div');
-        el.style.width = '14px';
-        el.style.height = '14px';
-        el.style.borderRadius = '50%';
-        el.style.backgroundColor = '#E2231A';
-        el.style.border = '2px solid #ffffff';
-        el.style.boxShadow = '0 0 0 1.5px #E2231A, 0 2px 4px rgba(0,0,0,0.35)';
-
-        new mapboxgl.Marker({ element: el })
-          .setLngLat(centerCoords)
-          .addTo(mapInst);
-      });
-
-      setInst(mapInst);
-    } else {
-      if (mapInst.isStyleLoaded()) {
-        const src = mapInst.getSource('sold-properties');
-        if (src) src.setData(gjData);
-      }
-    }
-  };
-
-  setupMap('failedMap1', [151.1542, -34.0581], () => failedMap1Instance, (val) => { failedMap1Instance = val; });
-  setupMap('failedMap2', [151.1492, -34.0620], () => failedMap2Instance, (val) => { failedMap2Instance = val; });
-}
-
-
 // ── MAIN MAP ────────────────────────────────────────────────
 let mainMap;
 function renderMainMap(d) {
@@ -2583,7 +2384,7 @@ function refreshMainMapLayers(d) {
     const gj = { type: 'FeatureCollection', features: filtered.filter(s => s.latitude && s.longitude).map(s => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [s.longitude, s.latitude] },
-      properties: { id: s.property_id, price: s.purchase_price, addr: s.full_address, date: s.contract_date, color: priceColor(s.purchase_price) }
+      properties: { id: s.property_id, price: s.purchase_price, addr: s.full_address, date: saleDate(s), color: priceColor(s.purchase_price) }
     }))};
     mainMap.addSource('sales-pts', { type: 'geojson', data: gj });
     mainMap.addLayer({ id: 'sales-pts', type: 'circle', source: 'sales-pts', paint: {
@@ -2955,24 +2756,38 @@ function renderCharts(d) {
     { border: '#059669', bg: 'rgba(5,150,105,0.02)' }
   ];
 
+  // Real monthly medians from vg_sales — the only solid data source we have.
+  // A month with no real settled sales is a gap (null, spanGaps draws through
+  // it) rather than a smoothed-in fake number. Previously this whole chart was
+  // Math.sin()-wave noise around a hardcoded BASELINE_MEDIANS constant with
+  // zero real data input, regardless of how much real vg_sales data existed.
+  const monthAbbrs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const trendDatasets = selectedSuburbs.map((sub, idx) => {
     const isAll = sub === 'all';
-    const allPrices = Object.values(BASELINE_MEDIANS);
-    const avgBase = allPrices.reduce((a, b) => a + b, 0) / allPrices.length;
-    const basePrice = isAll ? Math.round(avgBase) : (BASELINE_MEDIANS[sub] || 1650000);
-    
-    // Generate beautiful organic growth curves per suburb to avoid flat straight lines
-    const trendValues = slicedMonths.map((mLabel, mIdx) => {
-      const pct = (mIdx - (slicedMonths.length - 1)) * 0.004;
-      const wave = Math.sin((mIdx + (sub.charCodeAt(0) || 0)) * 0.45) * 0.028;
-      const noise = (((mIdx * 73) % 19) / 800) - 0.01;
-      const rawVal = Math.round(basePrice * (1 + pct + wave + noise));
+    const subSales = isAll ? (d.sales || []) : (d.sales || []).filter(s => (s.suburb || '').toLowerCase() === sub.toLowerCase());
+
+    const trendValues = slicedMonths.map((mLabel) => {
+      const parts = mLabel.split(' ');
+      const mIdx = monthAbbrs.indexOf(parts[0]);
+      const yr = 2000 + parseInt(parts[1]);
+      const monthStart = new Date(yr, mIdx, 1);
+      const monthEnd = new Date(yr, mIdx + 1, 0);
+      const monthSales = subSales.filter(s => {
+        const dt = saleDate(s);
+        if (!dt) return false;
+        const sd = new Date(dt);
+        return sd >= monthStart && sd <= monthEnd;
+      });
+      const prices = monthSales.map(s => s.purchase_price).filter(p => p != null).sort((a, b) => a - b);
+      if (!prices.length) return null;
+      const pMid = Math.floor(prices.length / 2);
+      const median = prices.length % 2 !== 0 ? prices[pMid] : (prices[pMid - 1] + prices[pMid]) / 2;
       if (STATE.transactionFocus === 'renting') {
         const isApt = STATE.propertyFocus === 'apartments';
         const yieldFactor = isApt ? 0.042 : 0.032;
-        return Math.round((rawVal * yieldFactor) / 52);
+        return Math.round((median * yieldFactor) / 52);
       }
-      return rawVal;
+      return Math.round(median);
     });
 
     const theme = colorsList[idx] || colorsList[0];
@@ -2986,7 +2801,8 @@ function renderCharts(d) {
       pointRadius: 4,
       pointHoverRadius: 6,
       pointBackgroundColor: theme.border,
-      borderWidth: 2
+      borderWidth: 2,
+      spanGaps: true
     };
   });
 
@@ -3020,7 +2836,7 @@ function renderCharts(d) {
   
   // Filter sales dynamically for segment chart based on analyticsPeriodDays & selected suburbs
   const filteredSales = (d.sales || []).filter(s => {
-    const ageDays = daysSince(s.contract_date);
+    const ageDays = daysSince(saleDate(s));
     if (ageDays > STATE.analyticsPeriodDays) return false;
     if (selectedSuburbs.includes('all')) return true;
     return selectedSuburbs.some(sub => s.suburb?.toLowerCase() === sub.toLowerCase());
@@ -3052,22 +2868,9 @@ function renderCharts(d) {
     }
   });
 
-  // Inject beautiful baselines if the filtered dataset doesn't have sales to prevent empty charts
-  const totalSalesCount = Object.values(seg).reduce((a, b) => a + b, 0);
-  if (totalSalesCount === 0) {
-    selectedSuburbs.forEach(sub => {
-      if (STATE.transactionFocus === 'renting') {
-        seg['$1,000–$1,500/wk'] += 15;
-        seg['$1,500–$2,500/wk'] += 10;
-        seg['$500–$1,000/wk'] += 5;
-      } else {
-        const base = BASELINE_MEDIANS[sub] || 1650000;
-        if (base >= 2.5e6) { seg['$4M+'] += 9; seg['$3M–$4M'] += 14; seg['$2M–$3M'] += 5; }
-        else if (base >= 1.8e6) { seg['$3M–$4M'] += 4; seg['$2M–$3M'] += 16; seg['$1M–$2M'] += 7; }
-        else { seg['$2M–$3M'] += 3; seg['$1M–$2M'] += 18; seg['Under $1M'] += 10; }
-      }
-    });
-  }
+  // No fake-baseline injection when there are zero real sales in this window —
+  // an honestly empty chart beats a populated-looking one that's entirely
+  // fabricated. (Previously filled bars from BASELINE_MEDIANS when thin.)
 
   STATE.charts.segment = new Chart(document.getElementById('segmentChart'), {
     type: 'bar',
@@ -3723,42 +3526,10 @@ function updatePricingCard(name, type, coef = 1.0, sa1Code = null) {
 function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
   const norm = findSuburbKey(suburb) || 'Cronulla';
   window.ACTIVE_VENDOR_DEMAND_PARAMS = { suburb: norm, type: type, coef: coef, sa1Code: sa1Code };
-  
-  const demo = SUBURB_DEMOGRAPHICS[norm] || SUBURB_DEMOGRAPHICS['Cronulla'];
-  const baseSupply = demo.supplyMonths || 2.0;
-  const supply = parseFloat((baseSupply / coef).toFixed(1));
 
   // 12 Months Labels (concluding in May 2026)
   const months = ['Jun 25', 'Jul 25', 'Aug 25', 'Sep 25', 'Oct 25', 'Nov 25', 'Dec 25', 'Jan 26', 'Feb 26', 'Mar 26', 'Apr 26', 'May 26'];
   
-  // Transaction Volume & Active Demand data
-  const popFactor = Math.max(0.5, Math.min(3.0, (demo.population || 10000) / 10000));
-  const baseSales = Math.round(8 * popFactor);
-  const salesData = months.map((m, idx) => {
-    // Seasonal variation (higher in spring/autumn, lower in winter/january)
-    const season = [0.9, 0.8, 1.1, 1.2, 1.3, 1.1, 0.8, 0.7, 0.9, 1.2, 1.1, 1.0][idx];
-    return Math.max(2, Math.round(baseSales * season));
-  });
-  
-  const activeDemandData = salesData.map(sales => {
-    // Tight supply (low supply number) = higher multiplier of active buyers
-    const demandMultiplier = 25 / Math.max(0.8, supply); 
-    return Math.round(sales * demandMultiplier * (0.95 + Math.random() * 0.1));
-  });
-
-  const baseDom = Math.round(supply * 18);
-  const domTrendData = months.map((m, idx) => {
-    const trendNoise = (11 - idx) * 1.5 + (Math.random() * 4 - 2);
-    return Math.max(12, Math.round(baseDom + trendNoise));
-  });
-
-  const inquiries = salesData.map((sales, idx) => {
-    return Math.round(sales * 10 * (0.9 + Math.random() * 0.2));
-  });
-  const shortlists = salesData.map((sales, idx) => {
-    return Math.round(sales * 38 * (0.9 + Math.random() * 0.2));
-  });
-
   // Update DOM titles and labels
   const titleEl = document.getElementById('vendorDemandSectionTitle');
   const labelEl = document.getElementById('vendorDemandSectionLabel');
@@ -3825,6 +3596,20 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
   let trendData = [];
   let zoomText = "";
 
+  // Real median for a window of comps, or null (a gap in the line — see
+  // spanGaps below) when there are no real sales for that window. Previously
+  // this blended 65% real median with 35% of a fabricated "base curve" ALWAYS,
+  // and fell back to 100% Math.sin() noise when there was no real data at all.
+  // vg_sales is genuinely the only solid source here (real, but laggy) — so
+  // an honest gap beats a smoothed-in fake number.
+  const realMedianOrNull = (windowSales) => {
+    const prices = windowSales.map(ws => ws.purchase_price).filter(p => p != null).sort((a, b) => a - b);
+    if (!prices.length) return null;
+    const mid = Math.floor(prices.length / 2);
+    const median = prices.length % 2 !== 0 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
+    return Math.round(median);
+  };
+
   if (zoom >= 6) {
     // Standard Monthly Slicing (6 Mos to 3 Yrs)
     const allMonths36 = [
@@ -3836,39 +3621,25 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
     slicedLabels = allMonths36.slice(-zoom);
     zoomText = zoom === 36 ? "3-Year" : zoom === 24 ? "2-Year" : zoom === 12 ? "1-Year" : "6-Month";
 
-    trendData = slicedLabels.map((mLabel, idx) => {
+    trendData = slicedLabels.map((mLabel) => {
       const parts = mLabel.split(' ');
       const mIdx = monthNames.indexOf(parts[0]);
       const yr = 2000 + parseInt(parts[1]);
-      
       const endWin = new Date(yr, mIdx + 1, 0);
       const startWin = new Date(yr, mIdx - 5, 1); // 6 Months window
-      
       const windowSales = similarSales.filter(sale => {
-        if (!sale.contract_date) return false;
-        const sDate = new Date(sale.contract_date);
+        const saleDt = saleDate(sale);
+        if (!saleDt) return false;
+        const sDate = new Date(saleDt);
         return sDate >= startWin && sDate <= endWin;
       });
-      
-      // Stable base curve (0.84 to 1.05)
-      const baseCurve = estSubjectPrice * (0.84 + (idx / (slicedLabels.length - 1 || 1)) * 0.21);
-      
-      if (windowSales.length > 0) {
-        const prices = windowSales.map(ws => ws.purchase_price).filter(p => p != null).sort((a, b) => a - b);
-        if (prices.length > 0) {
-          const mid = Math.floor(prices.length / 2);
-          const median = prices.length % 2 !== 0 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
-          return Math.round(median * 0.65 + baseCurve * 0.35); // 65% real median, 35% curve
-        }
-      }
-      const noise = Math.sin(idx * 0.9) * 0.012; // 1.2% noise
-      return Math.round(baseCurve * (1 + noise));
+      return realMedianOrNull(windowSales);
     });
   } else if (zoom === 3 || zoom === 2) {
     // Weekly Slicing (2 Mos or 3 Mos)
     const weeksCount = zoom === 3 ? 12 : 8;
     zoomText = zoom === 3 ? "3-Month" : "2-Month";
-    
+
     for (let w = weeksCount - 1; w >= 0; w--) {
       const d = new Date(2026, 4, 30);
       d.setDate(d.getDate() - (w * 7));
@@ -3877,34 +3648,21 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
       slicedLabels.push(`${day} ${mName}`);
     }
 
-    trendData = slicedLabels.map((wLabel, idx) => {
+    trendData = slicedLabels.map((wLabel) => {
       const parts = wLabel.split(' ');
       const day = parseInt(parts[0]);
       const mIdx = monthNames.indexOf(parts[1]);
       const yr = 2026;
-      
       const endWin = new Date(yr, mIdx, day);
       const startWin = new Date(yr, mIdx, day);
       startWin.setMonth(startWin.getMonth() - 2); // 2-Month window
-      
       const windowSales = similarSales.filter(sale => {
-        if (!sale.contract_date) return false;
-        const sDate = new Date(sale.contract_date);
+        const saleDt = saleDate(sale);
+        if (!saleDt) return false;
+        const sDate = new Date(saleDt);
         return sDate >= startWin && sDate <= endWin;
       });
-      
-      const baseCurve = estSubjectPrice * (0.97 + (idx / (slicedLabels.length - 1 || 1)) * 0.05);
-      
-      if (windowSales.length > 0) {
-        const prices = windowSales.map(ws => ws.purchase_price).filter(p => p != null).sort((a, b) => a - b);
-        if (prices.length > 0) {
-          const mid = Math.floor(prices.length / 2);
-          const median = prices.length % 2 !== 0 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
-          return Math.round(median * 0.65 + baseCurve * 0.35);
-        }
-      }
-      const noise = Math.sin(idx * 1.3) * 0.008;
-      return Math.round(baseCurve * (1 + noise));
+      return realMedianOrNull(windowSales);
     });
   } else if (zoom === 1) {
     // Weekly Slicing (1 Month - 5 points)
@@ -3917,34 +3675,21 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
       slicedLabels.push(`Wk ending ${day} ${mName}`);
     }
 
-    trendData = slicedLabels.map((wLabel, idx) => {
+    trendData = slicedLabels.map((wLabel) => {
       const parts = wLabel.split(' ');
       const day = parseInt(parts[parts.length - 2]);
       const mIdx = monthNames.indexOf(parts[parts.length - 1]);
       const yr = 2026;
-      
       const endWin = new Date(yr, mIdx, day);
       const startWin = new Date(yr, mIdx, day);
       startWin.setDate(startWin.getDate() - 40); // 40-day window
-      
       const windowSales = similarSales.filter(sale => {
-        if (!sale.contract_date) return false;
-        const sDate = new Date(sale.contract_date);
+        const saleDt = saleDate(sale);
+        if (!saleDt) return false;
+        const sDate = new Date(saleDt);
         return sDate >= startWin && sDate <= endWin;
       });
-      
-      const baseCurve = estSubjectPrice * (0.98 + (idx / (slicedLabels.length - 1 || 1)) * 0.03);
-      
-      if (windowSales.length > 0) {
-        const prices = windowSales.map(ws => ws.purchase_price).filter(p => p != null).sort((a, b) => a - b);
-        if (prices.length > 0) {
-          const mid = Math.floor(prices.length / 2);
-          const median = prices.length % 2 !== 0 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
-          return Math.round(median * 0.65 + baseCurve * 0.35);
-        }
-      }
-      const noise = Math.sin(idx * 1.5) * 0.005;
-      return Math.round(baseCurve * (1 + noise));
+      return realMedianOrNull(windowSales);
     });
   } else {
     // Daily Slicing (2 Weeks - 14 points)
@@ -3957,34 +3702,21 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
       slicedLabels.push(`${day} ${mName}`);
     }
 
-    trendData = slicedLabels.map((wLabel, idx) => {
+    trendData = slicedLabels.map((wLabel) => {
       const parts = wLabel.split(' ');
       const day = parseInt(parts[0]);
       const mIdx = monthNames.indexOf(parts[1]);
       const yr = 2026;
-      
       const endWin = new Date(yr, mIdx, day);
       const startWin = new Date(yr, mIdx, day);
       startWin.setDate(startWin.getDate() - 30); // 30-day window
-      
       const windowSales = similarSales.filter(sale => {
-        if (!sale.contract_date) return false;
-        const sDate = new Date(sale.contract_date);
+        const saleDt = saleDate(sale);
+        if (!saleDt) return false;
+        const sDate = new Date(saleDt);
         return sDate >= startWin && sDate <= endWin;
       });
-      
-      const baseCurve = estSubjectPrice * (0.99 + (idx / (slicedLabels.length - 1 || 1)) * 0.015);
-      
-      if (windowSales.length > 0) {
-        const prices = windowSales.map(ws => ws.purchase_price).filter(p => p != null).sort((a, b) => a - b);
-        if (prices.length > 0) {
-          const mid = Math.floor(prices.length / 2);
-          const median = prices.length % 2 !== 0 ? prices[mid] : (prices[mid - 1] + prices[mid]) / 2;
-          return Math.round(median * 0.65 + baseCurve * 0.35);
-        }
-      }
-      const noise = Math.sin(idx * 2.0) * 0.003;
-      return Math.round(baseCurve * (1 + noise));
+      return realMedianOrNull(windowSales);
     });
   }
 
@@ -4015,7 +3747,12 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
             order: 1
           },
           {
-            label: 'Comparable Median Price (NSW VG + Domain)',
+            // Real median only (NSW VG sales, laggy but genuine) — windows with
+            // no real comps are gaps (null), not filled in. spanGaps draws a
+            // dashed-feeling continuous line across those gaps without implying
+            // there's real data there; tooltips simply won't show a value for
+            // a null point.
+            label: 'Comparable Median Price (NSW VG sales)',
             data: trendData,
             borderColor: '#111827',
             backgroundColor: 'rgba(17, 24, 39, 0.03)',
@@ -4025,6 +3762,7 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
             pointBackgroundColor: '#111827',
             tension: 0.3,
             fill: true,
+            spanGaps: true,
             order: 2
           }
         ]
@@ -4070,89 +3808,10 @@ function renderVendorDemandCharts(suburb, type, coef = 1.0, sa1Code = null) {
     });
   }
 
-  // Chart 2: historicalDomChart (forcing y-axis to start at 0)
-  const ctx2 = document.getElementById('historicalDomChart');
-  if (ctx2) {
-    STATE.charts.historicalDom = new Chart(ctx2, {
-      type: 'line',
-      data: {
-        labels: months,
-        datasets: [
-          {
-            label: 'Avg. Days on Market (DOM)',
-            data: domTrendData,
-            borderColor: '#111827',
-            backgroundColor: 'rgba(17, 24, 39, 0.03)',
-            borderWidth: 2,
-            pointBackgroundColor: '#111827',
-            pointRadius: 3,
-            tension: 0.3,
-            fill: true
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { backgroundColor: '#111827', titleFont: { family: 'Inter', size: 11 }, bodyFont: { family: 'Inter', size: 11 }, padding: 8, cornerRadius: 6 }
-        },
-        scales: {
-          x: { ticks: { color: '#9ca3af', font: { size: 9 } }, grid: { display: false } },
-          y: {
-            ticks: { color: '#9ca3af', font: { size: 9 }, callback: v => v + 'd' },
-            grid: { color: '#f0f1f3' },
-            min: 0
-          }
-        }
-      }
-    });
-  }
-
-  // Chart 3: buyerEngagementChart
-  const ctx3 = document.getElementById('buyerEngagementChart');
-  if (ctx3) {
-    STATE.charts.buyerEngagement = new Chart(ctx3, {
-      type: 'bar',
-      data: {
-        labels: months,
-        datasets: [
-          {
-            label: 'Shortlists & Shares',
-            data: shortlists,
-            backgroundColor: '#4b5563',
-            borderRadius: 4,
-            barPercentage: 0.7,
-            categoryPercentage: 0.7
-          },
-          {
-            label: 'Direct Inquiries',
-            data: inquiries,
-            backgroundColor: '#ea580c',
-            borderRadius: 4,
-            barPercentage: 0.7,
-            categoryPercentage: 0.7
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { family: 'Inter', size: 10 } } },
-          tooltip: { backgroundColor: '#111827', titleFont: { family: 'Inter', size: 11 }, bodyFont: { family: 'Inter', size: 11 }, padding: 8, cornerRadius: 6 }
-        },
-        scales: {
-          x: { ticks: { color: '#9ca3af', font: { size: 9 } }, grid: { display: false } },
-          y: {
-            ticks: { color: '#9ca3af', font: { size: 9 } },
-            grid: { color: '#f0f1f3' }
-          }
-        }
-      }
-    });
-  }
+  // historicalDomChart and buyerEngagementChart removed — no real DOM or buyer-
+  // engagement data source exists anywhere in the stack (Domain API access only,
+  // which we don't have). Both were 100% Math.random()-generated. Their canvas
+  // elements are gone from the HTML too.
 
   // Chart 4: liquidityIndexChart — REAL weekly Auction Clearance Rate (Sutherland Shire
   // vs Greater Sydney) from Supabase `auction_clearance`. Previously faked all three
